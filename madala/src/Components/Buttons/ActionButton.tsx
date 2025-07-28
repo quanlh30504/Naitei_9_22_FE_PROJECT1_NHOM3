@@ -8,6 +8,10 @@ interface ActionButtonProps extends ButtonProps {
   loadingText?: string;
   children: ReactNode; 
   className?: string; 
+  variant?: "default" | "destructive" | "outline" | "secondary";
+  type?: "button" | "submit" | "reset";
+  asChild?: boolean; 
+  disabled?: boolean;
 }
 
 export default function ActionButton({
@@ -15,12 +19,19 @@ export default function ActionButton({
   loading = false, 
   loadingText = "Đang xử lý...",
   className,
+  variant = "default",
+  type = "button",
+  asChild = false,
+  disabled = false,
   ...rest // props còn lại của Button (variant, size, type, asChild,...)
 }: ActionButtonProps) {
   return (
     <Button
       className={cn("flex items-center justify-center", className)}
-      disabled={loading || rest.disabled}
+      disabled={loading || disabled}
+      variant={variant}
+      type={type}
+      asChild={asChild}
       {...rest}
     >
       {loading ? (

@@ -24,11 +24,9 @@ export default function LoginPage() {
       
       window.dispatchEvent(new CustomEvent('loginSuccess'));
       
-      const timer = setTimeout(() => {
-        router.push("/");
-      }, 1500);
-      return () => clearTimeout(timer);
+      router.push("/");
     }
+    
     if (state && !state.success && !state.errors) {
       toast.error(state.message);
     }
