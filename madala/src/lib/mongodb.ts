@@ -1,3 +1,4 @@
+// Tạo connect đến MongoDB với MongoDB Driver (native connect cho nextauth)
 import { MongoClient } from 'mongodb';
 
 if (!process.env.MONGODB_URI) {
