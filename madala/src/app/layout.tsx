@@ -7,7 +7,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Header from "@/Components/header";
 import Footer from "@/Components/footer";
 import "./globals.css";
-
+import { getUserForHeader } from "@/lib/actions/user";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,14 +21,17 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Madala - Cửa hàng thời trang và phụ kiện",
-  description: "Madala - Điểm đến hoàn hảo cho thời trang và phụ kiện chất lượng cao",
+  description:
+    "Madala - Điểm đến hoàn hảo cho thời trang và phụ kiện chất lượng cao",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const userData = await getUserForHeader();
+
   return (
     <html lang="vi">
       <body
@@ -36,10 +39,8 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ToastProvider />
-          <Header />
-          <main className="min-h-screen">
-            {children}
-          </main>
+          <Header initialUserData={userData} />
+          <main className="min-h-screen">{children}</main>
           <Footer />
         </AuthProvider>
       </body>
