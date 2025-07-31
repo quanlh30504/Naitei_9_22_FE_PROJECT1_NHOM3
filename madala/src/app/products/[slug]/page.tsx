@@ -2,12 +2,11 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { productService } from '@/services/productService';
 import { getImageUrl } from '@/lib/getImageUrl';
-import { Product } from '@/types/product';
+import { IProduct } from '@/models/Product';
 import ProductImageGallery from '@/Components/products/ProductImageGallery';
 import ProductInfo from '@/Components/products/ProductInfo';
 import ProductTabs from '@/Components/products/ProductTabs';
 import RelatedProducts from '@/Components/products/RelatedProducts';
-
 
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -17,15 +16,13 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
   const { slug } = await params;
   
   try {
-    const response = await productService.getProductBySlug(slug);
+    const product = await productService.getProductBySlug(slug);
     
-    if (!response.success || !response.data.product) {
+    if (!product) {
       return {
         title: 'Sản phẩm không tìm thấy',
       };
     }
-    
-    const product = response.data.product;
     
     return {
       title: `${product.name} | Mandala Store`,
@@ -46,21 +43,28 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { slug } = await params;
   
-  let product: Product | null = null;
-  let relatedProducts: Product[] = [];
+  let product: IProduct | null = null;
+  let relatedProducts: IProduct[] = [];
   
   try {
-    const response = await productService.getProductBySlug(slug);
+    const productResult = await productService.getProductBySlug(slug);
     
-    if (!response.success || !response.data.product) {
-      notFound();
+    if (!productResult) {
+      return notFound();
     }
     
-    product = response.data.product;
-    relatedProducts = response.data.relatedProducts || [];
+    product = productResult;
+    
+    // Lấy sản phẩm liên quan (cùng category)
+    if (product.categoryIds && product.categoryIds.length > 0) {
+      const allCategoryProducts = await productService.getProductsByCategory(product.categoryIds[0]);
+      relatedProducts = allCategoryProducts
+        .filter(p => p._id !== product?._id)
+        .slice(0, 4);
+    }
   } catch (error) {
     console.error('Error fetching product:', error);
-    notFound();
+    return notFound();
   }
 
   const formatPrice = (price: number) => {
@@ -109,22 +113,22 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             />
           </div>
 
-          {/* Related Products */}
-          <div>
-            {relatedProducts && relatedProducts.length > 0 && (
-              <RelatedProducts products={relatedProducts} />
-            )}
+          {/* Tabs and Details */}
+          <div className="lg:col-span-1">
+            <ProductTabs 
+              description={product.description}
+              attributes={product.attributes}
+              rating={product.rating}
+            />
           </div>
         </div>
 
-        {/* Product Details Section */}
-        <div className="mt-12">
-          <ProductTabs 
-            description={product.description}
-            attributes={product.attributes}
-            rating={product.rating}
-          />
-        </div>
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16">
+            <RelatedProducts products={relatedProducts} />
+          </div>
+        )}
       </div>
     </div>
   );

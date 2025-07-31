@@ -1,6 +1,7 @@
 import { SessionProvider } from "next-auth/react";
 import AuthProvider from "@/Components/Auth/AuthProvider";
-import ToastProvider from "@/Components/ToastProvider";
+import ToastProvider from "@/app/products/components/ToastProvider";
+import CompareProvider from "@/contexts/CompareContext";
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -35,12 +36,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <ToastProvider />
-          <Header />
-          <main className="min-h-screen">
-            {children}
-          </main>
-          <Footer />
+          <CompareProvider>
+            <ToastProvider />
+            <Header />
+            <main className="min-h-screen">
+              {children}
+            </main>
+            <Footer />
+          </CompareProvider >
         </AuthProvider>
       </body>
     </html>

@@ -8,7 +8,7 @@ import ProductCard from "@/Components/products/ProductCard";
 import { getImageUrl } from "@/lib/getImageUrl";
 import userImage from "@/assets/images/Users/user-image.jpg";
 import { productService } from "@/services/productService";
-import { Product } from "@/types/product";
+import { IProduct } from "@/models/Product";
 
 const features = [
   {
@@ -44,14 +44,14 @@ const heroButtons = [
 ];
 
 export default async function Home() {
-  let hotTrendProducts: Product[] = [];
+  let hotTrendProducts: IProduct[] = [];
 
   try {
-    const response = await productService.getProducts({
+    const products = await productService.getProducts({
       hotTrend: true,
-      limit: 9,
     });
-    hotTrendProducts = response.data.products;
+    // Giới hạn chỉ lấy 9 sản phẩm đầu tiên
+    hotTrendProducts = products.slice(0, 9);
   } catch (error) {
     console.error("Error fetching hot trend products:", error);
   }
@@ -120,7 +120,7 @@ export default async function Home() {
           {/* Products Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {hotTrendProducts.length > 0 ? (
-              hotTrendProducts.map((product: Product) => (
+              hotTrendProducts.map((product: IProduct) => (
                 <ProductCard
                   key={product.productId as string}
                   id={product.productId as string}
