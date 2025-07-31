@@ -31,6 +31,7 @@ import {
   MenuItem,
 } from "@/constants/headerLinks";
 import { getUserForHeader, UserHeaderData } from "@/lib/actions/user";
+import { useCart } from "@/app/cart/context/CartContext";
 
 export default function Header({
   initialUserData,
@@ -45,6 +46,9 @@ export default function Header({
 
   // State mới để lưu dữ liệu người dùng lấy từ DB
   const [userData, setUserData] = useState(initialUserData);
+
+  // dữ liệu giỏ hàng
+  const { totalItems } = useCart();
 
   useEffect(() => {
     setUserData(initialUserData);
@@ -197,9 +201,11 @@ export default function Header({
             >
               <ShoppingCart className="h-6 w-6" />
               <span className="text-xs mt-1">Giỏ hàng</span>
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                2
-              </span>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                  {totalItems}
+                </span>
+              )}
             </Link>
           </div>
         </div>

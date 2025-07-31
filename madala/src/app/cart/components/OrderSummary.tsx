@@ -1,7 +1,6 @@
 "use client";
 import { Button } from "@/Components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-import { CartProduct } from "./CartItem";
 import { useCart } from "../context/CartContext";
 import { useMemo } from "react";
 
@@ -12,29 +11,29 @@ interface OrderSummaryProps {
 export default function OrderSummary({ address }: OrderSummaryProps) {
   const { items, selectedItemIds } = useCart();
 
-  const { selectedItems, totalOriginal, totalDiscount, totalFinal } =
-    useMemo(() => {
-      const selected = items.filter((item) =>
-        selectedItemIds.includes(item.id)
-      );
+  const { totalOriginal, totalDiscount, totalFinal, selectedCount } = useMemo(() => {
+    const selectedItems = items.filter((item) =>
+      selectedItemIds.includes(item._id) 
+    );
 
-      const original = selected.reduce(
-        (acc, item) => acc + item.price * item.quantity,
-        0
-      );
+    const original = selectedItems.reduce(
+      (acc, item) => acc + item.product.price * item.quantity, 
+      0
+    );
 
-      const final = selected.reduce(
-        (acc, item) => acc + (item.salePrice ?? item.price) * item.quantity,
-        0
-      );
+    const final = selectedItems.reduce(
+      (acc, item) =>
+        acc + (item.product.salePrice ?? item.product.price) * item.quantity,
+      0
+    );
 
-      return {
-        selectedItems: selected,
-        totalOriginal: original,
-        totalFinal: final,
-        totalDiscount: original - final,
-      };
-    }, [items, selectedItemIds]);
+    return {
+      totalOriginal: original,
+      totalFinal: final,
+      totalDiscount: original - final,
+      selectedCount: selectedItems.length, //số lượng item đã chọn
+    };
+  }, [items, selectedItemIds]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -72,19 +71,22 @@ export default function OrderSummary({ address }: OrderSummaryProps) {
             </div>
             <div className="flex justify-between text-sm">
               <p>Giảm giá</p>
-              <p>-{formatPrice(totalDiscount)}</p>
+              <p className="text-red-500">-{formatPrice(totalDiscount)}</p>
             </div>
           </div>
           <div className="border-t my-4"></div>
           <div className="flex justify-between font-semibold">
-            <p>Tổng tiền thanh toán</p>
+            <p>Tổng tiền</p>
             <p className="text-red-600 text-lg">{formatPrice(totalFinal)}</p>
           </div>
           <p className="text-xs text-gray-500 text-right">
             (Đã bao gồm VAT nếu có)
           </p>
-          <Button className="w-full mt-6 bg-red-600 hover:bg-red-700 text-lg h-12">
-            Mua Hàng ({selectedItemIds.length})
+          <Button
+            className="w-full mt-6 bg-red-600 hover:bg-red-700 text-lg h-12"
+            disabled={selectedCount === 0} // Vô hiệu hóa nút nếu chưa chọn sản phẩm nào
+          >
+            Mua Hàng ({selectedCount})
           </Button>
         </CardContent>
       </Card>
