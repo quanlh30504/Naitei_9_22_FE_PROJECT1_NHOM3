@@ -107,7 +107,8 @@ export default async function ProductDetailPage({
 
           {/* Product Info */}
           <div>
-            <ProductInfo
+            <ProductInfo 
+              productId={product._id}  
               name={product.name}
               price={product.price}
               salePrice={product.salePrice}

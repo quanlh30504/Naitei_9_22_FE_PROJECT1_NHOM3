@@ -7,12 +7,18 @@ import { useCart } from "../context/CartContext";
 import { useMemo } from "react";
 
 export default function CartItemsList() {
-  const { items, selectedItemIds, toggleSelectAll } = useCart();
+  const { items, selectedItemIds, toggleSelectAll, removeItems, isPending } = useCart();
 
   const allSelected = useMemo(
     () => items.length > 0 && selectedItemIds.length === items.length,
     [items, selectedItemIds]
   );
+
+  const handleDeleteSelected = () => {
+    if (selectedItemIds.length > 0) {
+      removeItems(selectedItemIds);
+    }
+  };
 
   return (
     <div className="w-full lg:w-2/3 space-y-4">
@@ -29,7 +35,13 @@ export default function CartItemsList() {
         <div className="col-span-2 text-center">Số lượng</div>
         <div className="col-span-1 text-center">Thành tiền</div>
         <div className="col-span-1 flex justify-center">
-          <Button variant="ghost" size="icon">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDeleteSelected}
+            disabled={selectedItemIds.length === 0 || isPending} // Vô hiệu hóa nút khi không có gì được chọn hoặc đang xử lý
+            title="Xóa các mục đã chọn"
+          >
             <Trash2 className="h-5 w-5" />
           </Button>
         </div>
@@ -37,8 +49,13 @@ export default function CartItemsList() {
 
       <div className="space-y-4">
         {items.map((item) => (
-          <CartItem key={item.id} item={item} />
+          <CartItem key={item._id} item={item} />
         ))}
+        {items.length === 0 && (
+          <div className="bg-white p-8 text-center rounded-lg">
+            <p>Giỏ hàng của bạn đang trống.</p>
+          </div>
+        )}
       </div>
     </div>
   );

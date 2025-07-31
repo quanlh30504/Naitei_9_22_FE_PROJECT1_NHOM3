@@ -1,94 +1,108 @@
 "use client";
 
-import { createContext, useState, useContext, ReactNode } from "react";
-import { CartProduct } from "../components/CartItem"; // Import kiểu dữ liệu
-import image1 from "@/assets/images/Users/user-image.jpg";
+import { createContext, useState, useContext, ReactNode, useEffect, useTransition, useMemo } from "react";
+import { 
+  updateItemQuantity, 
+  removeItemsFromCart 
+} from "@/lib/actions/cart";
+import { toast } from "react-hot-toast";
 
-// Dữ liệu test
-const initialCartItems: CartProduct[] = [
-  {
-    id: "1",
-    name: "Nồi Cơm Điện Mini Lock&Lock EJR426 Dung Tích 0.8 lít (Hàng chính hãng)",
-    image: image1.src,
-    salePrice: 558000,
-    price: 1070000,
-    quantity: 1,
-    stock: 3,
-  },
-  {
-    id: "2",
-    name: "Sách Đường Mây Qua Xứ Tuyết - Nguyên Phong (Tái Bản)",
-    image: image1.src,
-    price: 88000,
-    salePrice: 66000,
-    quantity: 1,
-    stock: 2,
-  },
-];
+export interface PopulatedCartItem {
+  _id: string; 
+  quantity: number;
+  product: {
+    _id: string; 
+    name: string;
+    images: string[];
+    price: number;
+    salePrice?: number;
+    stock: number;
+    slug: string;
+  };
+}
+
+export interface PopulatedCart {
+  _id: string;
+  user: string;
+  items: PopulatedCartItem[];
+  totalItems: number;
+}
 
 interface CartContextType {
-  items: CartProduct[];
-  updateQuantity: (productId: string, newQuantity: number) => void;
-  removeItem: (productId: string) => void;
+  items: PopulatedCartItem[];
+  totalItems: number;
+  updateQuantity: (cartItemId: string, newQuantity: number) => void;
+  removeItems: (cartItemIds: string[]) => void;
   selectedItemIds: string[];
-  toggleItemSelected: (productId: string) => void;
+  toggleItemSelected: (cartItemId: string) => void;
   toggleSelectAll: () => void;
+  isPending: boolean; // Trạng thái chờ cho các action
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartProduct[]>(initialCartItems);
+export function CartProvider({ children, initialCart }: { children: ReactNode, initialCart: PopulatedCart | null }) {
+  const [items, setItems] = useState<PopulatedCartItem[]>(initialCart?.items || []);
+  const [totalItems, setTotalItems] = useState<number>(initialCart?.totalItems || 0);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+  const [isPending, startTransition] = useTransition();
 
-  const updateQuantity = (productId: string, newQuantity: number) => {
-    setItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
-      )
-    );
-    // todo: Gọi Server Action để cập nhật DB 
-  };
 
-  const removeItem = (productId: string) => {
-    setItems((currentItems) =>
-      currentItems.filter((item) => item.id !== productId)
-    );
-    // todo: Gọi Server Action để cập nhật DB
-  };
+  useEffect(() => {
+    setItems(initialCart?.items || []);
+    setTotalItems(initialCart?.totalItems || 0);
+  }, [initialCart]);
 
-  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]); 
-
-  const toggleItemSelected = (productId: string) => {
-    setSelectedItemIds((currentSelectedIds) => {
-      if (currentSelectedIds.includes(productId)) {
-        return currentSelectedIds.filter((id) => id !== productId);
-      } else {
-        return [...currentSelectedIds, productId];
+  const updateQuantity = (cartItemId: string, newQuantity: number) => {
+    startTransition(async () => {
+      const result = await updateItemQuantity(cartItemId, newQuantity);
+      if (!result.success) {
+        toast.error(result.message);
       }
     });
+  };
+
+  const removeItems = (cartItemIds: string[]) => {
+    startTransition(async () => {
+      const result = await removeItemsFromCart(cartItemIds);
+      if (result.success) {
+        toast.success(result.message);
+        setSelectedItemIds(prev => prev.filter(id => !cartItemIds.includes(id)));
+      } else {
+        toast.error(result.message);
+      }
+    });
+  };
+
+  const toggleItemSelected = (cartItemId: string) => {
+    setSelectedItemIds((current) =>
+      current.includes(cartItemId)
+        ? current.filter((id) => id !== cartItemId)
+        : [...current, cartItemId]
+    );
   };
 
   const toggleSelectAll = () => {
-    setSelectedItemIds((currentSelectedIds) => {
-      if (currentSelectedIds.length === items.length) {
-        return [];
-      } else {
-        return items.map((item) => item.id);
-      }
-    });
+    if (selectedItemIds.length === items.length) {
+      setSelectedItemIds([]);
+    } else {
+      setSelectedItemIds(items.map((item) => item._id));
+    }
   };
 
+  const contextValue = useMemo(() => ({
+    items,
+    totalItems,
+    selectedItemIds,
+    isPending,
+    updateQuantity,
+    removeItems,
+    toggleItemSelected,
+    toggleSelectAll,
+  }), [items, totalItems, selectedItemIds, isPending]);
+
   return (
-    <CartContext.Provider
-      value={{
-        items,
-        selectedItemIds,
-        updateQuantity,
-        removeItem,
-        toggleItemSelected,
-        toggleSelectAll,
-      }}
-    >
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );
