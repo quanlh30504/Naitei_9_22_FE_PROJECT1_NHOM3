@@ -21,6 +21,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (state?.success) {
       toast.success(state.message);
+      
+      window.dispatchEvent(new CustomEvent('loginSuccess'));
+      
       const timer = setTimeout(() => {
         router.push("/");
       }, 1500);
