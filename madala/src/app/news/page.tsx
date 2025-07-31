@@ -12,7 +12,7 @@ import {
   formatDate,
 } from "@/services/blogService";
 import { BlogPostCard } from "@/Components/news/BlogPostCard";
-import { Pagination } from "@/Components/Pagination";
+import { PaginationWrapper } from "@/Components/ui/pagination-wrapper";
 
 export default function NewsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -109,7 +109,7 @@ export default function NewsPage() {
       </div>
 
       {/* Pagination */}
-      <Pagination
+      <PaginationWrapper
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}

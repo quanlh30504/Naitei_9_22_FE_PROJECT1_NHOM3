@@ -7,10 +7,10 @@ import { Card, CardContent } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Star } from 'lucide-react';
 import { getImageUrl } from '@/lib/getImageUrl';
-import { Product } from '@/types/product';
+import { IProduct } from '@/models/Product';
 
 interface RelatedProductsProps {
-  products: Product[];
+  products: IProduct[];
   title?: string;
 }
 
