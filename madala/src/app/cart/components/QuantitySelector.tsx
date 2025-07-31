@@ -1,29 +1,48 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { Minus, Plus } from "lucide-react";
 import { useCart } from "../context/CartContext";
-
+import { useDebounce } from "use-debounce"; 
 
 interface QuantitySelectorProps {
-  productId: string;
+  cartItemId: string;
+  initialQuantity: number;
+  stock: number;
+  onQuantityChange: (newQuantity: number) => void; 
 }
 
-export default function QuantitySelector({ productId }: QuantitySelectorProps) {
+export default function QuantitySelector({
+  cartItemId,
+  initialQuantity,
+  stock,
+  onQuantityChange,
+}: QuantitySelectorProps) {
+  const { isPending } = useCart();
+  const [quantity, setQuantity] = useState(initialQuantity);
+  
+  const [debouncedQuantity] = useDebounce(quantity, 500); // Trì hoãn 500ms
 
-  const { items, updateQuantity } = useCart();
-  const item = items.find((i) => i.id === productId);
-
-  if (!item) return null;
+  useEffect(() => {
+    if (debouncedQuantity !== initialQuantity) {
+      onQuantityChange(debouncedQuantity);
+    }
+  }, [debouncedQuantity, initialQuantity, onQuantityChange]);
+  
+  useEffect(() => {
+    setQuantity(initialQuantity);
+  }, [initialQuantity]);
 
   const handleDecrement = () => {
-    updateQuantity(productId, Math.max(1, item.quantity - 1));
+    setQuantity((prev) => Math.max(1, prev - 1));
   };
 
   const handleIncrement = () => {
-    updateQuantity(productId, item.quantity + 1);
+    setQuantity((prev) => Math.min(stock, prev + 1));
   };
+
   return (
     <div className="flex items-center">
       <Button
@@ -31,13 +50,14 @@ export default function QuantitySelector({ productId }: QuantitySelectorProps) {
         size="icon"
         className="h-8 w-8"
         onClick={handleDecrement}
+        disabled={isPending || quantity <= 1}
       >
         <Minus className="h-4 w-4" />
       </Button>
       <Input
         type="number"
         className="h-8 w-14 text-center border-x-0 rounded-none focus-visible:ring-0"
-        value={item.quantity}
+        value={quantity}
         readOnly
       />
       <Button
@@ -45,6 +65,7 @@ export default function QuantitySelector({ productId }: QuantitySelectorProps) {
         size="icon"
         className="h-8 w-8"
         onClick={handleIncrement}
+        disabled={isPending || quantity >= stock}
       >
         <Plus className="h-4 w-4" />
       </Button>
