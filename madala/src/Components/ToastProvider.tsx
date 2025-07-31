@@ -13,7 +13,7 @@ const ToastProvider = () => {
           color: "#fff",
         },
         success: {
-          duration: 3000,
+          duration: 3500,
           theme: {
             primary: "green",
             secondary: "black",
