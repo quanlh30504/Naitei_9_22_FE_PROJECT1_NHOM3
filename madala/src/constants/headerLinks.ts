@@ -32,7 +32,7 @@ export const userMenuItems: MenuItem[] = [
 
 export const HEADER_ROUTES = {
   HOME: "/",
-  ABOUT: "/about",
+  ABOUT: "/aboutus",
   PRODUCTS: "/products",
   NEWS: "/news",
   MAP: "/map",
