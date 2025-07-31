@@ -11,14 +11,37 @@ export async function GET(
     const db = client.db(process.env.MONGODB_DB);
 
     const { slug } = await params;
+    
+    if (!slug) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Slug is required",
+        },
+        { status: 400 }
+      );
+    }
 
-    // Tìm sản phẩm theo slug
+    // Loại bỏ extension nếu có (.jpg, .png, etc.)
+    const cleanSlug = slug.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '');
+    
+    console.log(`Looking for product with slug: ${cleanSlug} (original: ${slug})`);
+
+    // Tìm sản phẩm theo slug (thử cả slug gốc và slug đã clean)
     const product = await db.collection("products").findOne({
-      slug: slug,
-      $or: [{ isActive: { $exists: false } }, { isActive: true }],
+      $or: [
+        { slug: slug },
+        { slug: cleanSlug },
+        { productId: slug },
+        { productId: cleanSlug }
+      ],
+      $and: [
+        { $or: [{ isActive: { $exists: false } }, { isActive: true }] }
+      ]
     });
 
     if (!product) {
+      console.log(`Product not found for slug: ${slug} or cleaned slug: ${cleanSlug}`);
       return NextResponse.json(
         {
           success: false,
@@ -28,16 +51,21 @@ export async function GET(
       );
     }
 
+    // Cập nhật view count
     await db
       .collection("products")
-      .updateOne({ slug: slug }, { $inc: { viewCount: 1 } });
+      .updateOne(
+        { _id: product._id }, 
+        { $inc: { viewCount: 1 } }
+      );
 
+    // Lấy related products
     const relatedProducts = await db
       .collection("products")
       .find({
         _id: { $ne: product._id },
-        categoryIds: { $in: product.categoryIds },
-        isActive: true,
+        categoryIds: { $in: product.categoryIds || [] },
+        $or: [{ isActive: { $exists: false } }, { isActive: true }],
       })
       .limit(4)
       .toArray();
