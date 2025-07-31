@@ -96,6 +96,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           {/* Product Info */}
           <div>
             <ProductInfo 
+              productId={product._id}  
               name={product.name}
               price={product.price}
               salePrice={product.salePrice}

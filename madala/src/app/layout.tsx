@@ -8,6 +8,9 @@ import Header from "@/Components/header";
 import Footer from "@/Components/footer";
 import "./globals.css";
 import { getUserForHeader } from "@/lib/actions/user";
+import { getCart } from "@/lib/actions/cart";
+import { CartProvider } from "@/app/cart/context/CartContext";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +34,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const userData = await getUserForHeader();
+  
+  // lấy dữ liệu giỏ hàng của người dùng
+  const cartResult = await getCart();
+  const initialCart = cartResult.success ? cartResult.data : null;
 
   return (
     <html lang="vi">
@@ -38,10 +45,12 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <ToastProvider />
-          <Header initialUserData={userData} />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
+          <CartProvider initialCart={initialCart}>
+            <ToastProvider />
+            <Header initialUserData={userData} />
+            <main className="min-h-screen">{children}</main>
+            <Footer />
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

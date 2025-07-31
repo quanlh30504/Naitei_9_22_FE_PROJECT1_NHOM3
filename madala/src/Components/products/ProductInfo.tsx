@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useTransition } from 'react';
 import { Card } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Star, Heart, Share2, ShoppingCart, Minus, Plus } from 'lucide-react';
+import { addItemToCart } from '@/lib/actions/cart'; 
+import { toast } from 'react-hot-toast';
 
 interface ProductAttribute {
   brand?: string;
@@ -29,6 +31,7 @@ interface ProductRating {
 }
 
 interface ProductInfoProps {
+  productId: string;
   name: string;
   price: number;
   salePrice?: number;
@@ -42,6 +45,7 @@ interface ProductInfoProps {
 }
 
 const ProductInfo: React.FC<ProductInfoProps> = ({
+  productId,
   name,
   price,
   salePrice,
@@ -54,6 +58,9 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   discountPercentage
 }) => {
   const [quantity, setQuantity] = useState(1);
+
+  const [isPending, startTransition] = useTransition();
+
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -71,8 +78,15 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
     ));
   };
 
-  const handleAddToCart = () => {
-    console.log("Added to cart:", { name, quantity });
+   const handleAddToCart = () => {
+    startTransition(async () => {
+      const result = await addItemToCart(productId, quantity);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    });
   };
 
   const handleBuyNow = () => {
