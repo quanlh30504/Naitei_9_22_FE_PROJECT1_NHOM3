@@ -4,7 +4,7 @@ import { Toaster } from "react-hot-toast";
 const ToastProvider = () => {
   return (
     <Toaster
-      position="top-right" // vị trí hiển thị
+      position="top-right" 
       toastOptions={{
         className: "",
         duration: 5000,

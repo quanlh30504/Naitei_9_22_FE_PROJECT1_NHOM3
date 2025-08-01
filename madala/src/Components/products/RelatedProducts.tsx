@@ -73,7 +73,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
                         {renderStars(product.rating.average)}
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        ({product.rating.count})
+                        ({product.rating.count || 0})
                       </span>
                     </div>
                     
