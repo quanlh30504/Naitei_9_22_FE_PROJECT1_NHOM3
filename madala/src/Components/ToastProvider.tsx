@@ -4,7 +4,7 @@ import { Toaster } from "react-hot-toast";
 const ToastProvider = () => {
   return (
     <Toaster
-      position="top-right" // vị trí hiển thị
+      position="top-right" 
       toastOptions={{
         className: "",
         duration: 5000,
@@ -13,8 +13,8 @@ const ToastProvider = () => {
           color: "#fff",
         },
         success: {
-          duration: 3500,
-          theme: {
+          duration: 3000,
+          iconTheme: {
             primary: "green",
             secondary: "black",
           },
