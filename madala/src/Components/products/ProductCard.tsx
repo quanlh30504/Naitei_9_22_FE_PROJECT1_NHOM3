@@ -111,7 +111,7 @@ const ProductCard = ({
             />
           ))}
           <span className="text-xs text-muted-foreground ml-1">
-            ({rating.count})
+            ({rating.count || 0})
           </span>
         </div>
 
