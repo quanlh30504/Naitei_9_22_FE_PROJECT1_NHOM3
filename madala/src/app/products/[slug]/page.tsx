@@ -131,7 +131,8 @@ export default async function ProductDetailPage({
 
         {/* Product Details Section */}
         <div className="mt-12">
-          <ProductTabs
+          <ProductTabs 
+            productId={product.slug}
             description={product.description}
             attributes={product.attributes}
             rating={product.rating}
