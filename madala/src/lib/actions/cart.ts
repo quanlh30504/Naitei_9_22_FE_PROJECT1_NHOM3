@@ -5,8 +5,17 @@ import { auth } from "@/auth";
 import connectToDB from "../db";
 import Cart from "@/models/Cart";
 import CartItem from "@/models/CartItem";
-import Product from "@/models/Product";
-import { Types } from "mongoose";
+import Product, {IProduct} from "@/models/Product";
+import { PopulatedCartItem } from "@/app/cart/context/CartContext";
+import { redirect } from "next/navigation"; 
+
+
+type ActionResponseWithId = {
+    success: boolean;
+    message: string;
+    data?: { cartItemId: string };
+};
+
 
 type ActionResponse = {
   success: boolean;
@@ -212,4 +221,147 @@ export async function removeItemsFromCart(cartItemIds: string[]): Promise<Action
     console.error("[REMOVE_ITEMS_ERROR]", error);
     return { success: false, message: "Lỗi khi xóa sản phẩm." };
   }
+}
+
+
+
+export async function getCheckoutItems(itemIds: string[]): Promise<{ success: boolean; message: string; data?: PopulatedCartItem[] }> {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return { success: false, message: "Người dùng chưa đăng nhập." };
+    }
+
+    try {
+        await connectToDB();
+        // Lấy thông tin các CartItem được chọn và populate sản phẩm
+        const items = await CartItem.find({
+            _id: { $in: itemIds },
+        }).populate<{ product: IProduct }>({
+            path: "product",
+            select: "name images price salePrice stock slug",
+        });
+
+        // Đảm bảo các item này thuộc về giỏ hàng của người dùng (tăng cường bảo mật)
+        const userCart = await Cart.findOne({ user: session.user.id }).select('items').lean();
+        if (!userCart) {
+            return { success: false, message: "Không tìm thấy giỏ hàng." };
+        }
+        const userItemIdsSet = new Set(userCart.items.map(id => id.toString()));
+        const validItems = items.filter(item => userItemIdsSet.has(item._id.toString()));
+
+        return { success: true, message: "Lấy sản phẩm thanh toán thành công.", data: validItems };
+    } catch (error) {
+        console.error("[GET_CHECKOUT_ITEMS_ERROR]", error);
+        return { success: false, message: "Lỗi khi lấy thông tin sản phẩm thanh toán." };
+    }
+}
+
+
+/**
+ * Thêm một sản phẩm vào giỏ hàng và trả về ID của CartItem.
+ * @param {string} productId - ID của sản phẩm cần thêm.
+ * @param {number} quantity - Số lượng cần thêm.
+ * @returns {Promise<ActionResponseWithId>} Kết quả và ID của CartItem.
+ */
+export async function addItemAndGetId(productId: string, quantity: number): Promise<ActionResponseWithId> {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return { success: false, message: "Vui lòng đăng nhập để thêm sản phẩm." };
+    }
+
+    if (!productId || quantity <= 0) {
+        return { success: false, message: "Dữ liệu không hợp lệ." };
+    }
+
+    try {
+        await connectToDB();
+        let cart = await Cart.findOne({ user: session.user.id });
+
+        if (!cart) {
+            cart = new Cart({ user: session.user.id, items: [] });
+        }
+
+        let cartItem = await CartItem.findOne({
+            _id: { $in: cart.items },
+            product: productId,
+        });
+
+        if (cartItem) {
+            cartItem.quantity += quantity;
+            await cartItem.save();
+        } else {
+            cartItem = new CartItem({ product: productId, quantity });
+            await cartItem.save();
+            cart.items.push(cartItem._id);
+        }
+        
+        await cart.save();
+        revalidatePath("/cart"); 
+        
+        return { 
+            success: true, 
+            message: "Thêm sản phẩm thành công.",
+            data: { cartItemId: cartItem._id.toString() } 
+        };
+
+    } catch (error) {
+        console.error("[ADD_ITEM_AND_GET_ID_ERROR]", error);
+        return { success: false, message: "Lỗi khi thêm sản phẩm." };
+    }
+}
+
+
+/**
+ * Thêm sản phẩm vào giỏ hàng và chuyển hướng đến trang giỏ hàng
+ * với sản phẩm đó đã được chọn sẵn.
+ * @param {string} productId - ID của sản phẩm.
+ * @param {number} quantity - Số lượng.
+ */
+export async function buyNowAndRedirect(productId: string, quantity: number) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        // Trong action có redirect, nên throw error thay vì return
+        throw new Error("Vui lòng đăng nhập để mua hàng.");
+    }
+
+    if (!productId || quantity <= 0) {
+        throw new Error("Dữ liệu không hợp lệ.");
+    }
+
+    try {
+        await connectToDB();
+        let cart = await Cart.findOne({ user: session.user.id });
+
+        if (!cart) {
+            cart = new Cart({ user: session.user.id, items: [] });
+        }
+
+        let cartItem = await CartItem.findOne({
+            _id: { $in: cart.items },
+            product: productId,
+        });
+
+        if (cartItem) {
+            cartItem.quantity += quantity;
+            await cartItem.save();
+        } else {
+            cartItem = new CartItem({ product: productId, quantity });
+            await cartItem.save();
+            cart.items.push(cartItem._id);
+        }
+        
+        await cart.save();
+        revalidatePath("/cart");
+        
+        // Sau khi tất cả các thao tác DB hoàn tất, thực hiện chuyển hướng
+        redirect(`/cart?selectItemId=${cartItem._id.toString()}`);
+
+    } catch (error: any) {
+         if (error.digest?.startsWith('NEXT_REDIRECT')) {
+            throw error; 
+        }
+        
+        console.error("[BUY_NOW_ACTION_ERROR]", error);
+        return { error: error.message || "Lỗi khi thực hiện mua hàng." };
+    }
 }
