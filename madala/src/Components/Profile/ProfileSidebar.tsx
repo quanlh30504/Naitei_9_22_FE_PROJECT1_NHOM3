@@ -9,7 +9,7 @@ import userImage from "@/assets/images/Users/user-image.jpg";
 
 const menuItems = [
   { name: "Thông tin tài khoản", href: "/profile", icon: User },
-  { name: "Số địa chỉ", href: "/profile/addresses", icon: MapPin },
+  { name: "Danh sách địa chỉ", href: "/profile/addresses", icon: MapPin },
   { name: "Thông tin thanh toán", href: "/profile/payment", icon: CreditCard },
   { name: "Đánh giá sản phẩm", href: "/profile/reviews", icon: Star },
   { name: "Sản phẩm bạn đã xem", href: "/profile/viewed", icon: Eye },
