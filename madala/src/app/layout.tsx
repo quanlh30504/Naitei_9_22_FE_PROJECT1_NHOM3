@@ -1,11 +1,9 @@
 import { SessionProvider } from "next-auth/react";
 import AuthProvider from "@/Components/Auth/AuthProvider";
 import ToastProvider from "@/Components/ToastProvider";
-
+import { ConditionalLayout } from "@/Components/ConditionalLayout";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Header from "@/Components/header";
-import Footer from "@/Components/footer";
 import "./globals.css";
 
 
@@ -36,11 +34,11 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ToastProvider />
-          <Header />
-          <main className="min-h-screen">
-            {children}
-          </main>
-          <Footer />
+          <ConditionalLayout>
+            <main className="min-h-screen">
+              {children}
+            </main>
+          </ConditionalLayout>
         </AuthProvider>
       </body>
     </html>
