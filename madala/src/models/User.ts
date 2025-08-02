@@ -7,6 +7,11 @@ export interface IUser extends Document {
   password?: string;
   image?: string;
   roles?: string; 
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  phone?: string;
+  isActive?: boolean;
 }
 
 const UserSchema: Schema = new Schema(
@@ -30,6 +35,22 @@ const UserSchema: Schema = new Schema(
     roles: {
       type: String, 
       default: 'user',
+    },
+    firstName: {
+      type: String,
+    },
+    lastName: {
+      type: String,
+    },
+    fullName: {
+      type: String,
+    },
+    phone: {
+      type: String,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     }
   },
   { timestamps: true }

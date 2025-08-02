@@ -107,6 +107,14 @@ export default function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-lg border border-gray-100 p-2 bg-white">
+                {/* Admin Link for admin users */}
+                {session?.user && (session.user as any)?.roles === 'admin' && (
+                  <DropdownMenuItem asChild className="rounded-lg px-4 py-2 text-base text-red-700 hover:bg-red-50 hover:text-red-800 transition-colors font-medium border-b border-gray-100 mb-2">
+                    <Link href="/admin" className="w-full block">
+                      🛠️ Admin Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 {currentMenuItems.map((item, index) => (
                   <DropdownMenuItem key={index} asChild={!item.action} className="rounded-lg px-4 py-2 text-base text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors font-medium">
                     {item.action === "logout" ? (

@@ -8,17 +8,19 @@ export interface Address {
 }
 
 export interface User {
-  id: string;
+  _id: string;  // Consistent với MongoDB
   email: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
-  phone: string;
-  avatar: string;
-  address: Address;
-  role: 'user' | 'admin';
-  isActive: boolean;
-  registeredAt: string;
-  lastLogin: string;
+  name: string;  // Consistent với model
+  firstName?: string;  // Optional fields
+  lastName?: string;
+  fullName?: string;
+  phone?: string;
+  image?: string;  // Consistent với model
+  address?: Address;
+  roles: 'user' | 'admin';  // Consistent với model và admin.ts
+  isActive?: boolean;
+  createdAt: string;  // Consistent với MongoDB
+  updatedAt: string;  // Consistent với MongoDB
+  registeredAt?: string;  // Alias for createdAt
+  lastLogin?: string;
 }

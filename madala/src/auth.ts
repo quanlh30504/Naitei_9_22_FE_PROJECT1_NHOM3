@@ -33,7 +33,14 @@ export const authConfig = {
             return null;
           }
 
-          return user;
+          // Return user object with proper structure
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            roles: user.roles || 'user'
+          };
         } catch (error) {
           console.error("Auth error:", error);
           return null;
@@ -41,7 +48,6 @@ export const authConfig = {
       },
     }),
   ],
-  adapter: MongoDBAdapter(clientPromise),
   session: {
     strategy: "jwt",
   },
@@ -49,12 +55,8 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-         if ((user as any)._id) {
-          token.id = (user as any)._id.toString();
-        } else {
-          token.id = user.id;
-        }
-        token.role = user.role;
+        token.id = user.id;
+        token.roles = user.roles || 'user';
         token.name = user.name;
         token.email = user.email;
         token.image = user.image;
@@ -66,7 +68,7 @@ export const authConfig = {
       if (token && session.user) {
         // lấy thông tin từ token và gán vào session.user
         session.user.id = token.id as string;
-        session.user.role = token.role as "user" | "admin";
+        (session.user as any).roles = token.roles as "user" | "admin";
         session.user.name = token.name;
         session.user.email = token.email;
         session.user.image = token.image as string | null;
