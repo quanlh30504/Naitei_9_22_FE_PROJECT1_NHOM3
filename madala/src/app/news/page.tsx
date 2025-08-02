@@ -6,7 +6,7 @@ import { Button } from '@/Components/ui/button';
 import { ChevronLeft, ChevronRight, Grid, List } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/Components/ui/card';
-import { BlogService, BlogPost, formatDate, getImageUrl } from '@/services/blogService';
+import { BlogService, BlogPost, formatDate } from '@/services/blogService';
 
 export default function NewsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -101,7 +101,7 @@ export default function NewsPage() {
               <div className={`${viewMode === 'list' ? 'w-1/3 flex-shrink-0' : ''}`}>
                 <Link href={`/news/${post.slug}`}>
                   <img
-                    src={getImageUrl(post.featuredImage)}
+                    src={post.featuredImage}
                     alt={post.title}
                     className="w-full h-48 object-cover hover:opacity-90 transition-opacity"
                   />
