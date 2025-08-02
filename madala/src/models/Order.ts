@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
-export type PaymentMethod = 'COD' | 'VNPAY' | 'MOMO' | 'CreditCard';
+export type PaymentMethod = 'COD' | 'VNPAY' | 'MOMO' | 'CreditCard' | 'MandalaPay';
 
 
 export interface IOrderItem {
@@ -78,7 +78,7 @@ const OrderSchema = new Schema<IOrder>(
             ward: { type: String, required: true },
         },
         payment: {
-            method: { type: String, enum: ['COD', 'VNPAY', 'MOMO', 'CreditCard'], required: true },
+            method: { type: String, enum: ['COD', 'VNPAY', 'MOMO', 'CreditCard', 'MandalaPay'], required: true },
             status: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
             transactionId: { type: String },
         },

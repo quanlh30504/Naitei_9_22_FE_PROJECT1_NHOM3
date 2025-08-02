@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IUser extends Document {
   name?: string;
@@ -10,7 +10,8 @@ export interface IUser extends Document {
   nickname?: string;
   gender?: string;
   country?: string;
-  birthDate?: Date; 
+  birthDate?: Date;
+  mandalaPayBalance: number; 
 }
 
 const UserSchema: Schema = new Schema(
@@ -37,7 +38,7 @@ const UserSchema: Schema = new Schema(
     },
     roles: {
       type: String,
-      default: 'user',
+      default: "user",
     },
     nickname: {
       type: String,
@@ -49,12 +50,17 @@ const UserSchema: Schema = new Schema(
       type: String,
     },
     birthDate: {
-      type: Date, 
+      type: Date,
+    },
+    mandalaPayBalance: {
+      type: Number,
+      required: true,
+      default: 5000000, // Demo: mỗi user mới vó 5.000.000đ trong ví 
     },
   },
   { timestamps: true }
 );
 
-const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+const User = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
 
 export default User;
