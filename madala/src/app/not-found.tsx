@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/Components/ui/button";
+import { Card, CardContent } from "@/Components/ui/card";
+import { usePathname } from "next/navigation";
 
 const actionButtons = [
   {
@@ -17,7 +18,24 @@ const actionButtons = [
   }
 ];
 
+const actionButtonAdmin = [
+  {
+    href: "/admin",
+    text: "Quay về Dashboard Admin",
+    variant: "default" as const
+  },
+  {
+    href: "/",
+    text: "Về trang chủ",
+    variant: "outline" as const
+  }
+]
+
 const NotFound = () => {
+  const pathname = usePathname(); 
+  const isAdminRoute = pathname?.startsWith('/admin');
+  const buttonsToShow = isAdminRoute ? actionButtonAdmin : actionButtons;
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <Card className="w-full max-w-md">
@@ -28,7 +46,7 @@ const NotFound = () => {
             Rất tiếc, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.
           </p>
           <div className="space-y-4">
-            {actionButtons.map((button, index) => (
+            {buttonsToShow.map((button, index) => (
               <Button key={index} variant={button.variant} asChild className="w-full">
                 <Link href={button.href}>
                   {button.text}

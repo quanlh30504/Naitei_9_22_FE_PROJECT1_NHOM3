@@ -1,13 +1,13 @@
 import { SessionProvider } from "next-auth/react";
 import AuthProvider from "@/Components/Auth/AuthProvider";
 import ToastProvider from "@/Components/ToastProvider";
-
+import { ConditionalLayout } from "@/Components/ConditionalLayout";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Header from "@/Components/header";
-import Footer from "@/Components/footer";
 import "./globals.css";
 import { getUserForHeader } from "@/lib/actions/user";
+import Header from "@/Components/header";
+import Footer from "@/Components/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,9 +39,12 @@ export default async function RootLayout({
       >
         <AuthProvider>
           <ToastProvider />
-          <Header initialUserData={userData} />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
+          <ConditionalLayout
+            header={<Header initialUserData={userData} />}
+            footer={<Footer />}
+          >
+            <main className="min-h-screen">{children}</main>
+          </ConditionalLayout>
         </AuthProvider>
       </body>
     </html>
