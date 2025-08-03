@@ -19,7 +19,7 @@ export const adminNavItems = [
   },
   {
     title: 'Blog',
-    href: '/admin/blogs',
+    href: '/admin/blog',
     icon: FileText,
   },
   {
