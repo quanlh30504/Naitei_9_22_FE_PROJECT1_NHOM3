@@ -7,6 +7,8 @@ import { Button } from '@/Components/ui/button';
 import { Textarea } from '@/Components/ui/textarea';
 import toast from 'react-hot-toast';
 import { Star } from 'lucide-react';
+import StarRating from '@/Components/products/StarRating';
+import RatingSummary from './RatingSummary';
 import { RatingService, CommentService, ProductStatsService, formatDate } from '@/services/ratingCommentService';
 
 interface ProductAttribute {
@@ -220,7 +222,7 @@ const ProductTabs: React.FC<ProductTabsProps> = ({
       {/* Tab Content */}
       <div className="mt-6">
         {activeTab === 'features' && (
-          <Card className="p-6">
+          <Card className="p-6 bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 transition-colors duration-300">
             <h3 className="text-lg font-semibold mb-4">Đặc điểm nổi bật</h3>
             <div className="prose max-w-none">
               <p className="text-muted-foreground leading-relaxed">
@@ -293,18 +295,11 @@ const ProductTabs: React.FC<ProductTabsProps> = ({
             <h3 className="text-lg font-semibold mb-4">Đánh giá khách hàng</h3>
             
             {/* Rating Summary */}
-            <div className="flex items-center space-x-6 mb-6 p-4 bg-gray-50 rounded-lg">
-              <div className="text-center">
-                <div className="text-3xl font-bold">
-                  {productStats?.rating?.average ? productStats.rating.average.toFixed(1) : safeRating.average.toFixed(1)}
-                </div>
-                <div className="flex items-center justify-center mt-1">
-                  {renderStars(Math.floor(productStats?.rating?.average || safeRating.average))}
-                </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {comments.length} nhận xét
-                </div>
-              </div>
+            <div className="flex items-center space-x-6 mb-6 p-4 bg-white dark:bg-zinc-800 rounded-lg border border-gray-100 dark:border-zinc-700 transition-colors duration-300">
+              <RatingSummary
+                average={productStats?.rating?.average || safeRating.average}
+                reviewCount={comments.length}
+              />
               
               {(productStats?.rating?.details || safeRating.details) && (
                 <div className="flex-1 space-y-2">
@@ -334,19 +329,23 @@ const ProductTabs: React.FC<ProductTabsProps> = ({
 
             {/* User Rating Form */}
             {userId && (
-              <div className="mb-8 p-4 border rounded-lg bg-gray-50">
+              <div className="mb-8 p-4 border rounded-lg bg-gray-50 dark:bg-zinc-900 border-gray-200 dark:border-zinc-700 transition-colors duration-300">
                 <h4 className="font-medium mb-3">Đánh giá của bạn</h4>
                 
                 {/* Star Rating */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-medium mb-2 text-gray-800 dark:text-gray-100 transition-colors">
                     Đánh giá sao {userRating > 0 && `(${userRating}/5)`}
                   </label>
-                  <div className="flex items-center space-x-1">
-                    {renderInteractiveStars(userRating, handleRatingSubmit)}
-                  </div>
+                  <StarRating
+                    rating={userRating}
+                    interactive={true}
+                    hoverRating={hoverRating}
+                    onRate={handleRatingSubmit}
+                    setHoverRating={setHoverRating}
+                  />
                   {userRating > 0 && (
-                    <p className="text-sm text-green-600 mt-1">
+                    <p className="text-sm text-green-600 dark:text-green-400 mt-1">
                       Bạn đã đánh giá {userRating} sao cho sản phẩm này
                     </p>
                   )}

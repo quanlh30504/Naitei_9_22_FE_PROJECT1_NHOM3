@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
 import { Upload } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
-import { uploadBlogImage } from "@/services/blogService";
-import { Label } from "@/Components/ui/label";
 
 interface BlogImageUploadProps {
     featuredImage: string;
@@ -30,8 +27,12 @@ export default function BlogImageUpload({
 
         try {
             setImageUploading(true);
+            const response = await fetch('/api/blog/upload-image', {
+                method: 'POST',
+                body: formDataImg,
+            });
 
-            const result = await uploadBlogImage(formDataImg);
+            const result = await response.json();
 
             if (result.success) {
                 onImageChange(result.data.url);
@@ -66,7 +67,7 @@ export default function BlogImageUpload({
                         <div className="flex space-x-2">
                             {showChangeButton && (
                                 <>
-                                    <Input
+                                    <input
                                         type="file"
                                         accept="image/*"
                                         onChange={handleImageUpload}
@@ -74,7 +75,7 @@ export default function BlogImageUpload({
                                         id="featured-image-change"
                                         disabled={imageUploading}
                                     />
-                                    <Label htmlFor="featured-image-change" className="flex-1">
+                                    <label htmlFor="featured-image-change" className="flex-1">
                                         <Button
                                             variant="outline"
                                             size="sm"
@@ -86,7 +87,7 @@ export default function BlogImageUpload({
                                                 {imageUploading ? 'Đang tải...' : 'Thay đổi ảnh'}
                                             </span>
                                         </Button>
-                                    </Label>
+                                    </label>
                                 </>
                             )}
                             <Button
@@ -100,7 +101,7 @@ export default function BlogImageUpload({
                     </div>
                 ) : (
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                        <Input
+                        <input
                             type="file"
                             accept="image/*"
                             onChange={handleImageUpload}
@@ -108,7 +109,7 @@ export default function BlogImageUpload({
                             id="featured-image"
                             disabled={imageUploading}
                         />
-                        <Label
+                        <label
                             htmlFor="featured-image"
                             className="cursor-pointer flex flex-col items-center space-y-2"
                         >
@@ -116,7 +117,7 @@ export default function BlogImageUpload({
                             <p className="text-sm text-muted-foreground">
                                 {imageUploading ? 'Đang tải lên...' : 'Chọn ảnh đại diện'}
                             </p>
-                        </Label>
+                        </label>
                     </div>
                 )}
             </CardContent>

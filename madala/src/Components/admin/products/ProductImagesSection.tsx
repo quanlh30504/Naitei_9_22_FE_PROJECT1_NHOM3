@@ -11,7 +11,6 @@ interface ProductImagesSectionProps {
     uploadingImage: boolean;
     handleImageUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
     removeImage: (index: number) => void;
-    getImageUrl: (imagePath: string) => string;
 }
 
 const ProductImagesSection: React.FC<ProductImagesSectionProps> = ({
@@ -19,7 +18,6 @@ const ProductImagesSection: React.FC<ProductImagesSectionProps> = ({
     uploadingImage,
     handleImageUpload,
     removeImage,
-    getImageUrl,
 }) => (
     <Card>
         <CardHeader>
@@ -49,7 +47,7 @@ const ProductImagesSection: React.FC<ProductImagesSectionProps> = ({
                         <div key={index} className="relative group">
                             <div className="aspect-square rounded-lg overflow-hidden border">
                                 <Image
-                                    src={getImageUrl(image)}
+                                    src={image}
                                     alt={`Product image ${index + 1}`}
                                     width={200}
                                     height={200}

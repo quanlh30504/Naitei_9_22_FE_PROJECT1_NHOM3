@@ -27,8 +27,10 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
 
   return (
     <div className={cn(
-      "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 h-screen overflow-y-auto",
-      isOpen ? "translate-x-0" : "-translate-x-full"
+      "fixed top-0 left-0 z-50 w-64 h-screen bg-white shadow-lg transition-transform duration-300 ease-in-out overflow-y-auto flex flex-col",
+      isOpen ? "translate-x-0" : "-translate-x-full",
+      // Always visible on large screens
+      "lg:translate-x-0"
     )}>
       <div className="flex flex-col h-full">
         {/* Header */}  

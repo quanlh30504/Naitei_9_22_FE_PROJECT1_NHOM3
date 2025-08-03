@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/Components/ui/card";
-import { Badge } from "@/Components/ui/badge";
+import OrderStatusBadge from "@/Components/order/OrderStatusBadge";
 import { Separator } from "@/Components/ui/separator";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import CancelOrderButton from "@/Components/order/CancelOrderButton";
@@ -24,8 +24,6 @@ import SafeImage from "@/Components/SafeImage";
 import { formatCurrency } from "@/lib/utils";
 import AdminLayout from "@/Components/admin/AdminLayout";
 
-
-import OrderStatusBadge from "@/Components/admin/orders/OrderStatusBadge";
 
 export default function AdminOrderDetailPage() {
   const params = useParams();
@@ -84,20 +82,25 @@ export default function AdminOrderDetailPage() {
     <AdminLayout>
       <div>
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="outline" size="icon" asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            asChild
+            className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-black dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700 dark:hover:text-yellow-300"
+          >
             <Link href="/admin/orders">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
           <div className="flex justify-start gap-5">
-            <h1 className="text-2xl font-bold text-gray-800">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white drop-shadow-sm">
               Chi tiết đơn hàng #{order.orderId}
             </h1>
             <div className="flex justify-center content-center"><OrderStatusBadge status={order.status} /></div>
           </div>
         </div>
         <p className="text-sm text-muted-foreground mb-8">
-          Ngày đặt hàng: {order.createdAt ? new Date(order.createdAt as string).toLocaleString("vi-VN") : ''}
+          Ngày đặt hàng: {order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "N/A"}
         </p>
 
         {/* Các Card thông tin */}
@@ -201,11 +204,11 @@ export default function AdminOrderDetailPage() {
               </div>
             </div>
           </CardContent>
-          {order.status === "processing" && (
+          {order.status === "processing" && order._id ? (
             <CardFooter className="justify-end">
-              <CancelOrderButton orderId={String(order._id)} />
+              <CancelOrderButton orderId={String((order._id as any)?.toString ? (order._id as any).toString() : order._id)} />
             </CardFooter>
-          )}
+          ) : null}
         </Card>
       </div>
     </AdminLayout>

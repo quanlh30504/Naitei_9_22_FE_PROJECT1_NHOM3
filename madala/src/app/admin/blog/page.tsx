@@ -7,12 +7,11 @@ import { Input } from "@/Components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Badge } from "@/Components/ui/badge";
-import { Search, Plus, FileText } from "lucide-react";
-import BlogActionButtons from "@/Components/admin/blog/BlogActionButtons";
+import { Search, Plus, Edit, Trash2, Eye, FileText } from "lucide-react";
+import BlogActionButtons from '@/Components/admin/blog/BlogActionButtons';
 import toast from "react-hot-toast";
 import Image from "next/image";
 import { BlogPost, BlogStats } from "@/types/blog";
-import { BlogService } from "@/services/blogService";
 import BlogStatsCards from "@/Components/admin/blog/BlogStatsCards";
 
 export default function BlogManagement() {
@@ -27,24 +26,31 @@ export default function BlogManagement() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  const apiCall = async (url: string, options?: RequestInit) => {
+    const response = await fetch(url, options);
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'API call failed');
+    }
+    return result;
+  };
 
   const fetchBlogPosts = async () => {
     try {
       setLoading(true);
-      const result = await BlogService.getBlogPosts(1, 100, true); // limit=100, includeUnpublished=true
-      if (result.success) {
-        setBlogPosts(result.data.posts);
-        const posts = result.data.posts;
-        const totalViews = posts.reduce((sum: number, post: BlogPost) => sum + post.viewCount, 0);
-        setStats({
-          total: posts.length,
-          published: posts.filter((p: BlogPost) => p.isPublished).length,
-          draft: posts.filter((p: BlogPost) => !p.isPublished).length,
-          totalViews
-        });
-      } else {
-        toast.error('Lỗi khi tải danh sách bài viết');
-      }
+      const result = await apiCall('/api/blog?limit=100&includeUnpublished=true');
+
+      setBlogPosts(result.data.posts);
+
+      const posts = result.data.posts;
+      const totalViews = posts.reduce((sum: number, post: BlogPost) => sum + post.viewCount, 0);
+
+      setStats({
+        total: posts.length,
+        published: posts.filter((p: BlogPost) => p.isPublished).length,
+        draft: posts.filter((p: BlogPost) => !p.isPublished).length,
+        totalViews
+      });
     } catch (error) {
       toast.error('Lỗi khi tải danh sách bài viết');
     } finally {
@@ -54,9 +60,10 @@ export default function BlogManagement() {
 
   const handleDelete = async (slug: string, title: string) => {
     if (!confirm(`Bạn có chắc chắn muốn xóa bài viết "${title}"?`)) return;
+
     try {
       setDeleting(slug);
-      await BlogService.deleteBlogPost(slug);
+      await apiCall(`/api/blog/${slug}`, { method: 'DELETE' });
       toast.success('Xóa bài viết thành công');
       fetchBlogPosts();
     } catch (error) {
@@ -68,9 +75,15 @@ export default function BlogManagement() {
 
   const togglePublishStatus = async (slug: string, currentStatus: boolean) => {
     try {
-      await BlogService.updateBlogPost(slug, {
-        isPublished: !currentStatus
+      await apiCall(`/api/blog/${slug}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isPublished: !currentStatus,
+          publishedAt: !currentStatus ? new Date().toISOString() : undefined
+        }),
       });
+
       toast.success(`${!currentStatus ? 'Xuất bản' : 'Hủy xuất bản'} bài viết thành công`);
       fetchBlogPosts();
     } catch (error) {
@@ -126,8 +139,8 @@ export default function BlogManagement() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Quản lý Blog</h1>
-            <p className="text-muted-foreground">Quản lý bài viết và tin tức website</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Quản lý Blog</h1>
+            <p className="text-muted-foreground dark:text-gray-500">Quản lý bài viết và tin tức website</p>
           </div>
           <Button onClick={() => window.location.href = '/admin/blog/create'}>
             <Plus className="mr-2 h-4 w-4" />
@@ -211,8 +224,8 @@ export default function BlogManagement() {
                       <BlogActionButtons
                         post={post}
                         deleting={deleting}
-                        onDelete={handleDelete}
-                        onTogglePublish={togglePublishStatus}
+                        togglePublishStatus={togglePublishStatus}
+                        handleDelete={handleDelete}
                       />
                     </TableCell>
                   </TableRow>

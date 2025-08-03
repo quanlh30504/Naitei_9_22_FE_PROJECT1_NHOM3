@@ -1,12 +1,15 @@
 'use client'
 
 import { useState, useEffect, use } from "react"
-import productService from "@/services/productService";
 import { AdminLayout } from "@/Components/admin/AdminLayout"
 import { Button } from "@/Components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card"
-import { ProductImageCard } from "@/Components/products/ProductImageCard"
 import { Badge } from "@/Components/ui/badge"
+import ProductImagesDisplaySection from '@/Components/admin/products/ProductImagesDisplaySection';
+import ProductBasicInfoDisplaySection from '@/Components/admin/products/ProductBasicInfoDisplaySection';
+import ProductPriceStockDisplaySection from '@/Components/admin/products/ProductPriceStockDisplaySection';
+import ProductCategoriesTagsDisplaySection from '@/Components/admin/products/ProductCategoriesTagsDisplaySection';
+import ProductAttributesDisplaySection from '@/Components/admin/products/ProductAttributesDisplaySection';
 import { ArrowLeft, Edit, Trash2, Eye } from "lucide-react"
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
@@ -25,57 +28,48 @@ export default function ViewProduct({ params }: { params: Promise<{ id: string }
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const product = await productService.getProductById(resolvedParams.id);
-        if (product) {
-          setProduct({
-            ...product,
-            _id: String((product as any)._id),
-            attributes: {
-              ...product.attributes,
-              color: Array.isArray(product.attributes?.color)
-                ? (product.attributes.color as string[]).join(', ')
-                : product.attributes?.color || '',
-              size: Array.isArray(product.attributes?.size)
-                ? (product.attributes.size as string[]).join(', ')
-                : product.attributes?.size || '',
-            },
-            rating: {
-              ...product.rating,
-              details: product.rating.details instanceof Map
-                ? Object.fromEntries(product.rating.details)
-                : product.rating.details,
-            },
-          });
+        const response = await fetch(`/api/admin/products/${resolvedParams.id}`)
+        const data = await response.json()
+        
+        if (data.success) {
+          setProduct(data.data)
         } else {
-          toast.error('Không tìm thấy sản phẩm');
-          router.push('/admin/products');
+          toast.error('Không tìm thấy sản phẩm')
+          router.push('/admin/products')
         }
       } catch (error) {
-        console.error('Error fetching product:', error);
-        toast.error('Lỗi khi tải thông tin sản phẩm');
-        router.push('/admin/products');
+        console.error('Error fetching product:', error)
+        toast.error('Lỗi khi tải thông tin sản phẩm')
+        router.push('/admin/products')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    fetchProduct();
-  }, [resolvedParams.id, router]);
+    }
+
+    fetchProduct()
+  }, [resolvedParams.id, router])
 
   const handleDelete = async () => {
-    if (!product || !confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) return;
+    if (!product || !confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) return
+
     try {
-      const data = await productService.deleteProductById(product._id);
+      const response = await fetch(`/api/admin/products/${product._id}`, {
+        method: 'DELETE'
+      })
+      
+      const data = await response.json()
+      
       if (data.success) {
-        toast.success("Xóa sản phẩm thành công");
-        router.push('/admin/products');
+        toast.success("Xóa sản phẩm thành công")
+        router.push('/admin/products')
       } else {
-        toast.error(data.error || "Lỗi khi xóa sản phẩm");
+        toast.error(data.error || "Lỗi khi xóa sản phẩm")
       }
     } catch (error) {
-      console.error('Error deleting product:', error);
-      toast.error("Lỗi khi xóa sản phẩm");
+      console.error('Error deleting product:', error)
+      toast.error("Lỗi khi xóa sản phẩm")
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -134,127 +128,30 @@ export default function ViewProduct({ params }: { params: Promise<{ id: string }
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <ProductImageCard product={product} getImageUrl={getImageUrl} />
-
+          <ProductImagesDisplaySection images={product.images} name={product.name} getImageUrl={getImageUrl} />
           <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Thông tin cơ bản</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="font-semibold text-lg">{product.name}</h3>
-                    <p className="text-muted-foreground">{product.shortDescription}</p>
-                  </div>
-                  <div className="flex flex-col space-y-2">
-                    <StatusBadge product={product} />
-                    {product.isFeatured && <Badge variant="outline">Nổi bật</Badge>}
-                    {product.isHotTrend && <Badge variant="outline">Xu hướng</Badge>}
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Mã SKU</p>
-                    <code className="text-sm bg-muted px-2 py-1 rounded">{product.sku}</code>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Slug</p>
-                    <code className="text-sm bg-muted px-2 py-1 rounded">{product.slug}</code>
-                  </div>
-                </div>
-
-                {product.description && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Mô tả</p>
-                    <p className="text-sm">{product.description}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Giá và kho hàng</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Giá gốc</p>
-                    <p className="text-lg font-semibold">{formatPrice(product.price)}</p>
-                  </div>
-                  {product.salePrice && product.salePrice < product.price && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Giá khuyến mãi</p>
-                      <p className="text-lg font-semibold text-red-600">{formatPrice(product.salePrice)}</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Tồn kho</p>
-                    <p className={`text-lg font-semibold ${product.stock === 0 ? 'text-red-500' : product.stock < 10 ? 'text-orange-500' : 'text-green-600'}`}>
-                      {product.stock}
-                    </p>
-                  </div>
-                </div>
-                {product.discountPercentage > 0 && (
-                  <div className="mt-4">
-                    <p className="text-sm font-medium text-muted-foreground">Phần trăm giảm giá</p>
-                    <p className="text-lg font-semibold text-green-600">{product.discountPercentage}%</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Danh mục và Tags</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Danh mục</p>
-                  <div className="flex flex-wrap gap-2">
-                    {(product.categoryIds || []).map((category, index) => (
-                      <Badge key={index} variant="secondary">
-                        {category}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                {product.tags && product.tags.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Tags</p>
-                    <div className="flex flex-wrap gap-2">
-                      {(product.tags || []).map((tag, index) => (
-                        <Badge key={index} variant="outline">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {product.attributes && Object.keys(product.attributes).length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Thuộc tính sản phẩm</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(product.attributes).map(([key, value]) => (
-                      <div key={key}>
-                        <p className="text-sm font-medium text-muted-foreground capitalize">{key}</p>
-                        <p className="text-sm">
-                          {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <ProductBasicInfoDisplaySection
+              name={product.name}
+              shortDescription={product.shortDescription}
+              sku={product.sku}
+              slug={product.slug}
+              description={product.description}
+              isFeatured={product.isFeatured}
+              isHotTrend={product.isHotTrend}
+              product={product}
+            />
+            <ProductPriceStockDisplaySection
+              price={product.price}
+              salePrice={product.salePrice}
+              stock={product.stock}
+              discountPercentage={product.discountPercentage}
+              formatPrice={formatPrice}
+            />
+            <ProductCategoriesTagsDisplaySection
+              categoryIds={product.categoryIds}
+              tags={product.tags}
+            />
+            <ProductAttributesDisplaySection attributes={product.attributes} />
 
             <Card>
               <CardHeader>

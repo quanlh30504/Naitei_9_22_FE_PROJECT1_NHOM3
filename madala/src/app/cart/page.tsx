@@ -13,9 +13,9 @@ export default async function CartPage() {
   const initialAddresses = addressResponse.success ? addressResponse.data : [];
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen bg-background text-foreground transition-colors">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">GIỎ HÀNG</h1>
+        <h1 className="text-2xl font-bold mb-6 text-primary">GIỎ HÀNG</h1>
         <div className="flex flex-col lg:flex-row gap-8">
           <CartView
             initialAddresses={JSON.parse(JSON.stringify(initialAddresses))}

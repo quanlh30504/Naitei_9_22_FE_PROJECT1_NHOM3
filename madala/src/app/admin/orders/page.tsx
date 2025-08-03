@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect, Suspense, useMemo } from "react";
-import debounce from "lodash.debounce";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { getAllOrdersPaginated } from "@/lib/actions/order";
 import { IOrder, OrderStatus } from "@/models/Order";
 
 import OrderTabs from "@/Components/order/OrderTabs";
 import AdminOrderTable from "@/Components/admin/AdminOrderTable";
-import { PaginationWrapper } from "@/Components/PaginationWrapper";
+import PaginationControls from "@/Components/admin/PaginationControls";
 import { Input } from "@/Components/ui/input";
 import { Search, Loader2 } from "lucide-react";
 import { AdminLayout } from "@/Components/admin/AdminLayout";
@@ -58,29 +57,28 @@ function AdminOrdersPageContent() {
   }, [status, page, searchQuery]);
 
   // useEffect cập nhật URL sau một khoảng trễ 
-  const debouncedPush = useMemo(
-    () => debounce((nextSearchTerm: string) => {
-      if (nextSearchTerm !== searchQuery) {
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      // Chỉ cập nhật URL nếu giá trị nhập khác với giá trị trên URL
+      if (searchTerm !== searchQuery) {
         const params = new URLSearchParams(searchParams);
-        params.set('search', nextSearchTerm);
-        params.set('page', '1');
+        params.set('search', searchTerm);
+        params.set('page', '1'); // Luôn reset về trang 1 khi tìm kiếm
         router.push(`${pathname}?${params.toString()}`);
       }
-    }, 300), [searchQuery, pathname, router, searchParams]);
+    }, 200); 
 
-  useEffect(() => {
-    debouncedPush(searchTerm);
     return () => {
-      debouncedPush.cancel();
+      clearTimeout(handler);
     };
-  }, [searchTerm, debouncedPush]);
+  }, [searchTerm, searchQuery, pathname, router, searchParams]);
 
   return (
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý đơn hàng</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-sm">Quản lý đơn hàng</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">
             Xem và cập nhật trạng thái các đơn hàng trong hệ thống.
           </p>
         </div>
@@ -104,15 +102,7 @@ function AdminOrdersPageContent() {
         ) : (
           <>
             <AdminOrderTable orders={orders} setOrders={setOrders} />
-            <PaginationWrapper
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={(newPage) => {
-                const params = new URLSearchParams(searchParams);
-                params.set('page', newPage.toString());
-                router.push(`${pathname}?${params.toString()}`);
-              }}
-            />
+            <PaginationControls currentPage={page} totalPages={totalPages} />
           </>
         )}
       </div>

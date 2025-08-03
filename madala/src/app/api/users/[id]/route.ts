@@ -78,7 +78,7 @@ export async function PUT(
     }
 
     // Ngăn không cho thay đổi role của admin khác
-    if (currentUser.role === 'admin' && updateData.role && updateData.role !== 'admin') {
+  if (currentUser.role === 'admin' && updateData.role && updateData.role !== 'admin') {
       return NextResponse.json(
         {
           success: false,
@@ -144,7 +144,7 @@ export async function DELETE(
     }
 
     // Ngăn không cho xóa tài khoản admin
-    if (currentUser.roles === 'admin') {
+  if (currentUser.role === 'admin') {
       return NextResponse.json(
         {
           success: false,

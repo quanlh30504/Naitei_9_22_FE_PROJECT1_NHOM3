@@ -95,19 +95,29 @@ export const authConfig = {
     async jwt({ token, user, account }: any) {
       if (user && account) {
         await connectToDB();
-
-        // 2. PHÂN LOẠI LOGIC
+        let userInDb = null;
         if (account.provider === PROVIDER_IDS.CREDENTIALS) {
-          // --- LUỒNG CREDENTIALS ---
           token.id = user.id;
           token.role = (user as any).role;
+          userInDb = await User.findOne({ email: user.email });
         } else {
-          // --- LUỒNG OAUTH (ÁP DỤNG CHO TẤT CẢ CÁC NHÀ CUNG CẤP CÒN LẠI) ---
           const existingUser = await User.findOne({ email: user.email });
           if (existingUser) {
             token.id = existingUser._id.toString();
             token.role = existingUser.role || "user";
+            userInDb = existingUser;
           }
+        }
+        // Gán trạng thái isActive vào token
+        if (userInDb) {
+          token.isActive = userInDb.isActive !== false;
+        }
+      } else if (token && token.email) {
+        // Luôn cập nhật trạng thái mới nhất khi có token
+        await connectToDB();
+        const userInDb = await User.findOne({ email: token.email });
+        if (userInDb) {
+          token.isActive = userInDb.isActive !== false;
         }
       }
       return token;
@@ -115,8 +125,26 @@ export const authConfig = {
 
     async session({ session, token }: any) {
       if (token && session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
+        await connectToDB();
+        let userInDb = null;
+        if (token.id) {
+          userInDb = await User.findById(token.id).lean();
+        } else if (token.email) {
+          userInDb = await User.findOne({ email: token.email }).lean();
+        }
+        // Nếu userInDb là mảng (trường hợp bất thường), lấy phần tử đầu tiên
+        if (Array.isArray(userInDb)) {
+          userInDb = userInDb[0];
+        }
+        if (userInDb && userInDb._id) {
+          session.user.id = userInDb._id.toString();
+          session.user.role = userInDb.role || 'user';
+          session.user.isActive = userInDb.isActive !== false;
+        } else {
+          session.user.id = token.id;
+          session.user.role = token.role;
+          session.user.isActive = token.isActive;
+        }
       }
       return session;
     },

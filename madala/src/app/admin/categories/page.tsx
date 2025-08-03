@@ -5,23 +5,22 @@ import { AdminGuard } from '@/Components/admin/AdminGuard';
 import { AdminLayout } from '@/Components/admin/AdminLayout';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
+import { Textarea } from '@/Components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
+import { Switch } from '@/Components/ui/switch';
 import { Badge } from '@/Components/ui/badge';
-import CategoryForm from '@/Components/admin/categories/CategoryForm';
-import { CategoryTable } from '@/Components/admin/categories/CategoryTable';
-import { Category } from '@/types/category';
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
     DialogTrigger,
 } from '@/Components/ui/dialog';
+import CategoryForm from '@/Components/admin/categories/CategoryForm';
+import { CategoryTable } from '@/Components/admin/categories/CategoryTable';
 import { Label } from '@/Components/ui/label';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { ICategory } from '@/models/Category';
+import { Category } from '@/types/category';
 import { categoryService } from '@/services/categoryService';
 
 interface CategoryFormData {
@@ -81,27 +80,29 @@ export default function CategoriesPage() {
         }
     };
 
-    // Convert ICategory[] to Category[] for UI components
-    const convertToCategory = (cat: ICategory): Category => ({
-        id: cat.categoryId || cat.id || '',
-        name: cat.name,
-        slug: cat.slug,
-        description: cat.description || '',
-        parentId: cat.parentId ?? null,
-        level: cat.level,
-        sortOrder: cat.sortOrder,
-        isActive: cat.isActive,
-    });
-
-    const categoriesForUI: Category[] = categories.map(convertToCategory);
-    const parentCategoriesForUI: Category[] = parentCategories.map(convertToCategory);
-    const filteredCategories: Category[] = categoriesForUI.filter((category) =>
+    // Filter categories
+    const filteredCategories = categories.filter((category) =>
         category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         category.slug.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Map ICategory[] to Category[] for UI components
+    const mapICategoryToCategory = (cat: ICategory): Category => ({
+        id: typeof cat._id === 'string' ? cat._id : (typeof cat.categoryId === 'string' ? cat.categoryId : ''),
+        name: cat.name,
+        slug: cat.slug,
+        description: cat.description || '',
+        parentId: cat.parentId || null,
+        level: cat.level,
+        sortOrder: cat.sortOrder,
+        isActive: cat.isActive,
+    });
+    const filteredCategoriesForTable: Category[] = filteredCategories.map(mapICategoryToCategory);
+    const parentCategoriesForForm: Category[] = parentCategories.map(mapICategoryToCategory);
+    const editingCategoryForForm: Category | null = editingCategory ? mapICategoryToCategory(editingCategory) : null;
+
     // Form handlers
-    const handleInputChange = (field: string, value: any) => {
+    const handleInputChange = (field: keyof CategoryFormData, value: any) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
@@ -155,28 +156,33 @@ export default function CategoriesPage() {
         }
     };
 
-    const handleEdit = (category: ICategory) => {
-        setEditingCategory(category);
-        setFormData({
-            name: category.name,
-            slug: category.slug,
-            description: category.description || '',
-            parentId: category.parentId || '',
-            level: category.level,
-            sortOrder: category.sortOrder,
-            isActive: category.isActive,
-        });
-        setIsDialogOpen(true);
+    const handleEdit = (category: Category) => {
+        // Find the original ICategory by id
+        const found = categories.find(cat => (cat._id || cat.categoryId) === category.id);
+        if (found) {
+            setEditingCategory(found);
+            setFormData({
+                name: found.name,
+                slug: found.slug,
+                description: found.description || '',
+                parentId: found.parentId || '',
+                level: found.level,
+                sortOrder: found.sortOrder,
+                isActive: found.isActive,
+            });
+            setIsDialogOpen(true);
+        }
     };
 
-    const handleDelete = async (category: ICategory) => {
+    const handleDelete = async (category: Category) => {
         if (!confirm(`Bạn có chắc chắn muốn xóa danh mục "${category.name}"?`)) {
             return;
         }
-
+        // Find the original ICategory by id
+        const found = categories.find(cat => (cat._id || cat.categoryId) === category.id);
+        if (!found) return;
         try {
-            const result = await categoryService.deleteCategory(String(category._id));
-
+            const result = await categoryService.deleteCategory(String(found._id || found.categoryId));
             if (result.success) {
                 toast.success(result.message || 'Xóa danh mục thành công');
                 fetchCategories();
@@ -197,7 +203,7 @@ export default function CategoriesPage() {
 
     const getParentCategoryName = (parentId: string | null | undefined) => {
         if (!parentId) return '-';
-        const parent = categoriesForUI.find(cat => String(cat.id) === parentId);
+        const parent = parentCategoriesForForm.find(cat => String(cat.id) === parentId);
         return parent ? parent.name : parentId;
     };
 
@@ -208,15 +214,19 @@ export default function CategoriesPage() {
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Quản lý danh mục</h1>
-                            <p className="text-gray-600 mt-1">
+                            <h1
+                                className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-green-600 via-lime-500 to-yellow-400 bg-clip-text text-transparent dark:from-green-300 dark:via-lime-400 dark:to-yellow-200 drop-shadow-lg"
+                            >
+                                Quản lý danh mục
+                            </h1>
+                            <p className="mt-1 text-base font-medium text-gray-700 dark:text-gray-300">
                                 Quản lý danh mục sản phẩm của cửa hàng
                             </p>
                         </div>
 
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                             <DialogTrigger asChild>
-                                <Button onClick={resetForm} className="bg-[#8ba63a] hover:bg-[#7a942c]">
+                                <Button onClick={resetForm} className="bg-[#8ba63a] hover:bg-[#7a942c] text-white dark:bg-green-700 dark:hover:bg-green-800 dark:text-gray-100">
                                     <Plus className="w-4 h-4 mr-2" />
                                     Thêm danh mục
                                 </Button>
@@ -225,8 +235,8 @@ export default function CategoriesPage() {
                                 <CategoryForm
                                     formData={formData}
                                     handleInputChange={handleInputChange}
-                                    parentCategories={parentCategoriesForUI}
-                                    editingCategory={editingCategory ? convertToCategory(editingCategory) : null}
+                                    parentCategories={parentCategoriesForForm}
+                                    editingCategory={editingCategoryForForm}
                                     setIsDialogOpen={setIsDialogOpen}
                                     onSubmit={handleSubmit}
                                 />
@@ -252,12 +262,12 @@ export default function CategoriesPage() {
 
                     {/* Categories Table */}
                     <CategoryTable
-                        categories={categoriesForUI}
+                        categories={categories.map(mapICategoryToCategory)}
                         loading={loading}
-                        filteredCategories={filteredCategories}
+                        filteredCategories={filteredCategoriesForTable}
                         getParentCategoryName={getParentCategoryName}
-                        handleEdit={(cat) => handleEdit(categories.find(c => (c.categoryId || c.id) === cat.id) as ICategory)}
-                        handleDelete={(cat) => handleDelete(categories.find(c => (c.categoryId || c.id) === cat.id) as ICategory)}
+                        handleEdit={handleEdit}
+                        handleDelete={handleDelete}
                     />
                 </div>
             </AdminLayout>

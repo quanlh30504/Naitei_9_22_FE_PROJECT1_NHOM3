@@ -13,8 +13,8 @@ export default function AdminPage() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-sm">Dashboard</h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-1">
               Chào mừng bạn đến với trang quản trị
             </p>
           </div>
@@ -36,9 +36,9 @@ export default function AdminPage() {
 
         {/* Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">Hoạt động gần đây</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Hoạt động gần đây</h3>
             </div>
             <div className="p-6">
               <div className="space-y-4">
@@ -55,9 +55,9 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">Thống kê nhanh</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Thống kê nhanh</h3>
             </div>
             <div className="p-6">
               <div className="space-y-6">

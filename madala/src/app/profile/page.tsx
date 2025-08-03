@@ -27,31 +27,31 @@ export default async function ProfilePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-8">
+      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-8">
         Thông tin tài khoản
       </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <h2 className="text-lg font-semibold mb-6">Thông tin cá nhân</h2>
+          <h2 className="text-lg font-semibold dark:text-gray-200 mb-6">Thông tin cá nhân</h2>
           <UserInfoForm user={safeUserData} />
         </div>
 
         <div className="lg:col-span-1">
-          <h2 className="text-lg font-semibold mb-6">Số điện thoại và Email</h2>
+          <h2 className="text-lg font-semibold dark:text-gray-200 mb-6">Số điện thoại và Email</h2>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <div>
-                <p className="font-medium">Số điện thoại</p>
-                <p className="text-gray-500">
+                <p className="font-medium dark:text-gray-200">Số điện thoại</p>
+                <p className="text-gray-500 dark:text-gray-400">
                   {fullUserData.phone || "Chưa có số điện thoại"}
                 </p>
               </div>
             </div>
             <div className="flex justify-between items-center">
               <div>
-                <p className="font-medium">Địa chỉ email</p>
-                <p className="text-gray-500">{fullUserData.email}</p>
+                <p className="font-medium dark:text-gray-200">Địa chỉ email</p>
+                <p className="text-gray-500 dark:text-gray-400">{fullUserData.email}</p>
               </div>
             </div>
           </div>

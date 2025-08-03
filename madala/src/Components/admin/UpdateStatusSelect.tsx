@@ -9,12 +9,36 @@ import { cn } from '@/lib/utils';
 
 // --- Cấu hình màu sắc và nhãn cho từng trạng thái ---
 const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> = {
-    pending: { label: "Chờ thanh toán", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-    processing: { label: "Đang xử lý", className: "bg-blue-100 text-blue-800 border-blue-200" },
-    shipped: { label: "Đang vận chuyển", className: "bg-indigo-100 text-indigo-800 border-indigo-200" },
-    delivered: { label: "Đã giao", className: "bg-green-100 text-green-800 border-green-200" },
-    cancelled: { label: "Đã hủy", className: "bg-red-100 text-red-800 border-red-200" },
-    returned: { label: "Đã trả hàng", className: "bg-gray-100 text-gray-800 border-gray-200" },
+    pending: {
+        label: "Chờ thanh toán",
+        className:
+            "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-700 dark:text-yellow-100 dark:border-yellow-600"
+    },
+    processing: {
+        label: "Đang xử lý",
+        className:
+            "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-700 dark:text-blue-100 dark:border-blue-600"
+    },
+    shipped: {
+        label: "Đang vận chuyển",
+        className:
+            "bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-700 dark:text-indigo-100 dark:border-indigo-600"
+    },
+    delivered: {
+        label: "Đã giao",
+        className:
+            "bg-green-100 text-green-800 border-green-200 dark:bg-green-700 dark:text-green-100 dark:border-green-600"
+    },
+    cancelled: {
+        label: "Đã hủy",
+        className:
+            "bg-red-100 text-red-800 border-red-200 dark:bg-red-700 dark:text-red-100 dark:border-red-600"
+    },
+    returned: {
+        label: "Đã trả hàng",
+        className:
+            "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-500"
+    },
 };
 
 // Lấy danh sách options từ config để tránh lặp lại code

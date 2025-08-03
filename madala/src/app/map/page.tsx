@@ -13,10 +13,10 @@ export default function MapPage() {
 
   return (
     <main>
-      <div className="px-4 md:px-8 lg:px-12 py-6 bg-white min-h-screen">
+      <div className="px-4 md:px-8 lg:px-12 py-6 bg-white dark:bg-gray-900 min-h-screen">
         <Breadcrumb items={[{ label: "Bản đồ" }]} />
 
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
           VỊ TRÍ CỬA HÀNG
         </h1>
 
@@ -25,40 +25,40 @@ export default function MapPage() {
           {/* Left stuff */}
           <div className="w-full lg:w-1/4 space-y-6">
             {/* Contact Information */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-lg">
-              <h2 className="text-xl font-semibold text-green-800 mb-4 flex items-center">
+            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-6 rounded-xl shadow-lg">
+              <h2 className="text-xl font-semibold text-green-800 dark:text-green-400 mb-4 flex items-center">
                 <LocationIcon className="w-5 h-5 mr-2" />
                 Thông tin liên hệ
               </h2>
               <div className="space-y-3 text-sm">
                 <div>
-                  <h3 className="font-semibold text-gray-800 mb-1">Địa chỉ:</h3>
-                  <p className="text-gray-700">
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Địa chỉ:</h3>
+                  <p className="text-gray-700 dark:text-gray-300">
                     Tòa nhà Landmark 72
                     <br />
                     Phạm Hùng, Nam Từ Liêm, Hà Nội
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-800 mb-1">
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">
                     Điện thoại:
                   </h3>
-                  <p className="text-gray-700">(024) 1234 5678</p>
+                  <p className="text-gray-700 dark:text-gray-300">(024) 1234 5678</p>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-800 mb-1">Email:</h3>
-                  <p className="text-gray-700">info@mandalastore.com</p>
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Email:</h3>
+                  <p className="text-gray-700 dark:text-gray-300">info@mandalastore.com</p>
                 </div>
               </div>
             </div>
 
             {/* Opening Hours */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-lg">
-              <h3 className="text-xl font-semibold text-blue-800 mb-4 flex items-center">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-xl shadow-lg">
+              <h3 className="text-xl font-semibold text-blue-800 dark:text-blue-400 mb-4 flex items-center">
                 <ClockIcon className="w-5 h-5 mr-2" />
                 Giờ mở cửa
               </h3>
-              <div className="space-y-2 text-sm text-gray-700">
+              <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                 <div className="flex justify-between">
                   <span className="font-medium">Thứ 2 - Thứ 6:</span>
                   <span>08:00 - 20:00</span>
@@ -79,12 +79,12 @@ export default function MapPage() {
             </div>
 
             {/* Transportation Info */}
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-lg">
-              <h3 className="text-xl font-semibold text-purple-800 mb-4 flex items-center">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-6 rounded-xl shadow-lg">
+              <h3 className="text-xl font-semibold text-purple-800 dark:text-purple-400 mb-4 flex items-center">
                 <CalendarIcon className="w-5 h-5 mr-2" />
                 Hướng dẫn
               </h3>
-              <div className="space-y-2 text-sm text-gray-700">
+              <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                 <div>
                   <span className="font-medium">🚗 Xe ô tô:</span>
                   <br />
@@ -108,7 +108,7 @@ export default function MapPage() {
           <div className="w-full lg:w-3/4">
             <div className="h-full">
               <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-4">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-2 lg:mb-0">
+                <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-2 lg:mb-0">
                   Bản đồ vị trí cửa hàng
                 </h2>
                 <div className="relative">

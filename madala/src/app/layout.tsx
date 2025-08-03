@@ -1,8 +1,10 @@
 import { SessionProvider } from "next-auth/react";
 import AuthProvider from "@/Components/Auth/AuthProvider";
+import BanWatcher from "@/Components/Auth/BanWatcher";
 import ToastProvider from "@/Components/ToastProvider";
 import { ConditionalLayout } from "@/Components/ConditionalLayout";
 import CompareProvider from "@/contexts/CompareContext";
+import { ThemeProvider } from "@/Components/providers/ThemeProvider";
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -41,23 +43,34 @@ export default async function RootLayout({
   const initialCart = cartResult.success ? cartResult.data : null;
 
   return (
-    <html lang="vi">
+    <html lang="vi" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <ToastProvider />
-          <CartProvider initialCart={JSON.parse(JSON.stringify(initialCart))}>
-            <ConditionalLayout
-              header={<Header initialUserData={userData} />}
-              footer={<Footer />}
-            >
-              <CompareProvider>
-                <main className="min-h-screen">{children}</main>
-              </CompareProvider>
-            </ConditionalLayout>
-          </CartProvider>
-        </AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+          themes={["light", "dark"]}
+          disableTransitionOnChange={true}
+          storageKey="madala-theme"
+          forcedTheme={undefined}
+        >
+          <AuthProvider>
+            <BanWatcher />
+            <ToastProvider />
+            <CartProvider initialCart={JSON.parse(JSON.stringify(initialCart))}>
+              <ConditionalLayout
+                header={<Header initialUserData={userData} />}
+                footer={<Footer />}
+              >
+                <CompareProvider>
+                  <main className="min-h-screen">{children}</main>
+                </CompareProvider>
+              </ConditionalLayout>
+            </CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

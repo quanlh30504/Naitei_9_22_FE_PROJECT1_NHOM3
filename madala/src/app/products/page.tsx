@@ -200,7 +200,7 @@ const ProductPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <SaleBanner />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -222,7 +222,7 @@ const ProductPage = () => {
                         <div className="flex justify-between items-center mb-6">
                             <div className="flex items-center gap-4">
                                 <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
                                     {filteredProducts.length} sản phẩm
                                 </span>
                             </div>

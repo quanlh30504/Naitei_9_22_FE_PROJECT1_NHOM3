@@ -5,11 +5,14 @@ import { useParams } from "next/navigation";
 import { AdminLayout } from "@/Components/admin/AdminLayout";
 import { Button } from "@/Components/ui/button";
 import { ArrowLeft, Save, Eye } from "lucide-react";
+import BlogFormHeader from "@/Components/admin/blog/BlogFormHeader";
 import toast from "react-hot-toast";
-import { BlogService } from "@/services/blogService";
 import { useBlogForm } from "@/hooks/useBlogForm";
-import BlogMainContent from "@/Components/admin/blog/BlogMainContent";
-import BlogSidebar from "@/Components/admin/blog/BlogSidebar";
+import BlogBasicInfo from "@/Components/admin/blog/BlogBasicInfo";
+import BlogContentEditor from "@/Components/admin/blog/BlogContentEditor";
+import BlogImageUpload from "@/Components/admin/blog/BlogImageUpload";
+import BlogTagsManager from "@/Components/admin/blog/BlogTagsManager";
+import BlogSettings from "@/Components/admin/blog/BlogSettings";
 
 export default function EditBlog() {
   const params = useParams();
@@ -38,7 +41,9 @@ export default function EditBlog() {
     const fetchBlogPost = async () => {
       try {
         setLoading(true);
-        const result = await BlogService.getBlogPost(slug + '?admin=true');
+        const response = await fetch(`/api/blog/${slug}?admin=true`);
+        const result = await response.json();
+
         if (result.success) {
           const post = result.data.post;
           updateFormData({
@@ -51,7 +56,7 @@ export default function EditBlog() {
             isPublished: post.isPublished,
             isFeatured: post.isFeatured
           });
-          setDataLoaded(true);
+          setDataLoaded(true); // ← Đánh dấu đã load xong
         } else {
           toast.error('Không tìm thấy bài viết');
           window.location.href = '/admin/blog';
@@ -64,6 +69,7 @@ export default function EditBlog() {
         setLoading(false);
       }
     };
+
     fetchBlogPost();
   }, [slug]); // ← Chỉ dependency slug
 
@@ -81,13 +87,24 @@ export default function EditBlog() {
     try {
       setSaving(true);
       const updateData: any = { ...formData };
+
       if (publish !== undefined) {
         updateData.isPublished = publish;
         if (publish) {
           updateData.publishedAt = new Date().toISOString();
         }
       }
-      const result = await BlogService.updateBlogPost(slug, updateData);
+
+      const response = await fetch(`/api/blog/${slug}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      const result = await response.json();
+
       if (result.success) {
         toast.success('Cập nhật bài viết thành công');
         if (result.data.slug !== slug) {
@@ -96,9 +113,9 @@ export default function EditBlog() {
       } else {
         toast.error(result.error || 'Lỗi khi cập nhật bài viết');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating blog post:', error);
-      toast.error(error.message || 'Lỗi khi cập nhật bài viết');
+      toast.error('Lỗi khi cập nhật bài viết');
     } finally {
       setSaving(false);
     }
@@ -121,65 +138,77 @@ export default function EditBlog() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={() => window.location.href = '/admin/blog'}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Quay lại
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Chỉnh sửa bài viết</h1>
-              <p className="text-muted-foreground">Cập nhật nội dung bài viết</p>
-            </div>
-          </div>
-          <div className="flex space-x-2">
+        <BlogFormHeader
+          title="Chỉnh sửa bài viết"
+          subtitle="Cập nhật nội dung bài viết"
+          onBack={() => { window.location.href = '/admin/blog'; }}
+        >
+          <Button
+            variant="secondary"
+            className="text-gray-700 dark:text-gray-100 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700"
+            onClick={() => handleSave()}
+            disabled={saving}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Lưu thay đổi
+          </Button>
+          {!formData.isPublished && (
             <Button
-              variant="outline"
-              onClick={() => handleSave()}
+              onClick={() => handleSave(true)}
               disabled={saving}
             >
-              <Save className="h-4 w-4 mr-2" />
-              Lưu thay đổi
+              <Eye className="h-4 w-4 mr-2" />
+              Xuất bản
             </Button>
-            {!formData.isPublished && (
-              <Button
-                onClick={() => handleSave(true)}
-                disabled={saving}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Xuất bản
-              </Button>
-            )}
-            {formData.isPublished && (
-              <Button
-                variant="secondary"
-                onClick={() => handleSave(false)}
-                disabled={saving}
-              >
-                Hủy xuất bản
-              </Button>
-            )}
-          </div>
-        </div>
+          )}
+          {formData.isPublished && (
+            <Button
+              variant="secondary"
+              onClick={() => handleSave(false)}
+              disabled={saving}
+            >
+              Hủy xuất bản
+            </Button>
+          )}
+        </BlogFormHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
-          <BlogMainContent
-            formData={formData}
-            handleTitleChange={handleTitleChange}
-            handleSlugChange={handleSlugChange}
-            handleExcerptChange={handleExcerptChange}
-            handleContentChange={handleContentChange}
-          />
+          <div className="lg:col-span-2 space-y-6">
+            <BlogBasicInfo
+              formData={formData}
+              onTitleChange={handleTitleChange}
+              onSlugChange={handleSlugChange}
+              onExcerptChange={handleExcerptChange}
+            />
+
+            <BlogContentEditor
+              content={formData.content}
+              onChange={handleContentChange}
+            />
+          </div>
 
           {/* Sidebar */}
-          <BlogSidebar
-            formData={formData}
-            handleImageChange={handleImageChange}
-            handleTagsChange={handleTagsChange}
-            handleFeaturedChange={handleFeaturedChange}
-            handlePublishedChange={handlePublishedChange}
-          />
+          <div className="space-y-6">
+            <BlogImageUpload
+              featuredImage={formData.featuredImage}
+              onImageChange={handleImageChange}
+              showChangeButton={true}
+            />
+
+            <BlogTagsManager
+              tags={formData.tags}
+              onTagsChange={handleTagsChange}
+            />
+
+            <BlogSettings
+              isFeatured={formData.isFeatured}
+              isPublished={formData.isPublished}
+              onFeaturedChange={handleFeaturedChange}
+              onPublishedChange={handlePublishedChange}
+              showPublishedToggle={true}
+            />
+          </div>
         </div>
       </div>
     </AdminLayout>

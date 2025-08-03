@@ -9,6 +9,18 @@ interface CategorySidebarProps {
   onSelectCategory: (categoryId: string) => void;
 }
 
+
+// Class constants for DRY
+const MAIN_BTN_BASE = "flex-1 justify-start px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-200";
+const MAIN_BTN_SELECTED = "text-green-600 dark:text-green-400 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/40 dark:to-green-800/30 shadow-md border border-green-200 dark:border-green-700";
+const MAIN_BTN_UNSELECTED = "text-gray-700 dark:text-gray-100 hover:text-green-600 dark:hover:text-green-400 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 dark:hover:from-green-900/20 dark:hover:to-green-800/20 hover:shadow-sm";
+const ALL_BTN_BASE = "w-full justify-start px-3 py-2 text-sm font-semibold border-b border-gray-200 dark:border-gray-600 pb-3 mb-3 rounded-none transition-all duration-200";
+const ALL_BTN_SELECTED = "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 shadow-sm";
+const ALL_BTN_UNSELECTED = "text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20";
+const SUB_BTN_BASE = "w-full justify-start px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200";
+const SUB_BTN_SELECTED = "text-green-600 dark:text-green-400 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/20 shadow-sm border border-green-200 dark:border-green-600";
+const SUB_BTN_UNSELECTED = "text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 dark:hover:from-green-900/20 dark:hover:to-green-800/10";
+
 const CategorySidebar: React.FC<CategorySidebarProps> = ({
   categories,
   selectedCategory,
@@ -40,9 +52,9 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-        <h3 className="font-semibold text-gray-800 text-sm uppercase tracking-wide">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600">
+        <h3 className="font-bold text-gray-800 dark:text-white text-sm uppercase tracking-wide drop-shadow-sm">
           ☰ DANH MỤC SẢN PHẨM
         </h3>
       </div>
@@ -52,11 +64,9 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
         <Button
           variant="ghost"
           onClick={() => onSelectCategory('')}
-          className={`w-full justify-start px-3 py-2 text-sm font-medium border-b border-gray-200 pb-3 mb-3 rounded-none ${
-            selectedCategory === ''
-              ? 'text-green-600 bg-green-50'
-              : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
-          }`}
+          className={
+            `${ALL_BTN_BASE} ${selectedCategory === '' ? ALL_BTN_SELECTED : ALL_BTN_UNSELECTED}`
+          }
         >
           Tất cả sản phẩm
         </Button>
@@ -72,15 +82,13 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
           return (
             <div key={categoryId}>
               {/* Main Category */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between group">
                 <Button
                   variant="ghost"
                   onClick={() => onSelectCategory(categoryId)}
-                  className={`flex-1 justify-start px-3 py-2 text-sm font-medium rounded-none ${
-                    isSelected
-                      ? 'text-green-600 bg-green-50'
-                      : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
-                  }`}
+                  className={
+                    `${MAIN_BTN_BASE} ${isSelected ? MAIN_BTN_SELECTED : MAIN_BTN_UNSELECTED}`
+                  }
                 >
                   {category.name}
                 </Button>
@@ -91,7 +99,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleCategory(categoryId)}
-                    className="p-1 h-auto text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                    className="p-2 h-auto text-gray-400 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-full transition-all duration-200"
                   >
                     {isExpanded ? (
                       <FaChevronDown className="text-xs" />
@@ -104,7 +112,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
 
               {/* Subcategories - shown when expanded */}
               {hasSubcategories && isExpanded && (
-                <div className="ml-6 mt-2 space-y-1">
+                <div className="ml-6 mt-2 space-y-1 border-l-2 border-green-200 dark:border-green-700 pl-4">
                   {subcategories.map((subcategory) => {
                     const subcategoryId = getCategoryId(subcategory);
                     const isSubcategorySelected = selectedCategory === subcategoryId;
@@ -114,13 +122,11 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
                         key={subcategoryId}
                         variant="ghost"
                         onClick={() => onSelectCategory(subcategoryId)}
-                        className={`w-full justify-start px-3 py-1.5 text-sm rounded ${
-                          isSubcategorySelected
-                            ? 'text-green-600 bg-green-50'
-                            : 'text-gray-600 hover:text-green-600 hover:bg-green-50'
-                        }`}
+                        className={
+                          `${SUB_BTN_BASE} ${isSubcategorySelected ? SUB_BTN_SELECTED : SUB_BTN_UNSELECTED}`
+                        }
                       >
-                        • {subcategory.name}
+                        {subcategory.name}
                       </Button>
                     );
                   })}

@@ -484,14 +484,15 @@ export async function updateShippingAddress({
 // Check role admin
 async function isAdmin() {
     const session = await auth();
-    // Thay 'admin' bằng vai trò thực tế của bạn trong database
-  return session?.user?.role === 'admin'; 
+  // Thay 'admin' bằng vai trò thực tế của bạn trong database
+  return session?.user?.role === 'admin';
 }
 
 type PaginatedOrdersResponse = {
-    orders: IOrder[];
-    totalPages: number;
-    currentPage: number;
+  orders: IOrder[];
+  totalPages: number;
+  currentPage: number;
+  totalOrders: number;
 };
 
 export async function getAllOrdersPaginated({ 
@@ -515,10 +516,12 @@ export async function getAllOrdersPaginated({
         const query: mongoose.FilterQuery<IOrder> = {};
 
         // Thêm bộ lọc trạng thái
-  const validStatuses = Order.schema.path('status').options.enum;
-        if (status && validStatuses.includes(status)) {
-            query.status = status;
-        }
+    // Lấy enum status đúng cách
+    const statusPath = Order.schema.path('status') as any;
+    const validStatuses: string[] = statusPath?.options?.enum || [];
+    if (status && validStatuses.includes(status)) {
+      query.status = status;
+    }
 
         // **LOGIC TÌM KIẾM MỚI**
         if (search) {
@@ -540,22 +543,28 @@ export async function getAllOrdersPaginated({
             .limit(limit)
             .lean();
 
-        // Map lại từng order về đúng shape
-        const mapOrder = (orderObj: any): IOrder => ({
-          ...orderObj,
-          _id: orderObj._id?.toString(),
-          userId: orderObj.userId?.toString(),
-          items: orderObj.items?.map((item: any) => ({
-            ...item,
-            productId: item.productId?.toString(),
-          })) || [],
-          createdAt: orderObj.createdAt?.toString(),
-          updatedAt: orderObj.updatedAt?.toString(),
-        });
+    // Chuyển đổi từng order sang đúng type IOrder (nếu cần)
+    // Convert all ObjectId fields to string recursively for each order
+    function toPlain(obj: any): any {
+      if (Array.isArray(obj)) return obj.map(toPlain);
+      if (obj && typeof obj === 'object') {
+        const result: any = {};
+        for (const key in obj) {
+          if (obj[key] && typeof obj[key] === 'object' && typeof obj[key].toHexString === 'function') {
+            result[key] = obj[key].toHexString();
+          } else {
+            result[key] = toPlain(obj[key]);
+          }
+        }
+        return result;
+      }
+      return obj;
+    }
+    const plainOrders: IOrder[] = orders.map((o: any) => toPlain(o));
     return { 
       success: true, 
       message: "Lấy danh sách đơn hàng thành công.", 
-      data: { orders: orders.map(mapOrder), totalPages, currentPage: page }
+      data: { orders: plainOrders, totalPages, currentPage: page, totalOrders }
     };
     } catch (error) {
         console.error("[GET_ALL_ORDERS_PAGINATED_ERROR]", error);
@@ -608,33 +617,44 @@ export async function getAdminOrderDetails(orderId: string): Promise<ActionRespo
         return { success: false, message: "ID đơn hàng không hợp lệ." };
     }
 
-  try {
-    await connectToDB();
-    const order = await Order.findOne({ _id: orderId }).lean();
-    if (!order) {
-      return { success: false, message: "Không tìm thấy đơn hàng." };
+    try {
+        await connectToDB();
+        
+        const order = await Order.findOne({ _id: orderId }).lean();
+
+        if (!order) {
+            return { success: false, message: "Không tìm thấy đơn hàng." };
+        }
+
+    // Đảm bảo order là object, không phải mảng
+        if (order && !Array.isArray(order)) {
+            // Convert all ObjectId fields to string recursively for the order
+            function toPlain(obj: any): any {
+              if (Array.isArray(obj)) return obj.map(toPlain);
+              if (obj && typeof obj === 'object') {
+                const result: any = {};
+                for (const key in obj) {
+                  if (obj[key] && typeof obj[key] === 'object' && typeof obj[key].toHexString === 'function') {
+                    result[key] = obj[key].toHexString();
+                  } else {
+                    result[key] = toPlain(obj[key]);
+                  }
+                }
+                return result;
+              }
+              return obj;
+            }
+            return {
+                success: true,
+                message: "Lấy chi tiết đơn hàng thành công.",
+                data: toPlain(order) as IOrder,
+            };
+        } else {
+            return { success: false, message: "Không tìm thấy đơn hàng." };
+        }
+    } catch (error) {
+        console.error("[GET_ADMIN_ORDER_DETAILS_ERROR]", error);
+        return { success: false, message: "Lỗi khi lấy chi tiết đơn hàng." };
     }
-    // Convert all ObjectId fields to string for client safety
-    // Map lại object trả về từ MongoDB thành đúng shape IOrder
-    const mapOrder = (orderObj: any): IOrder => ({
-      ...orderObj,
-      _id: orderObj._id?.toString(),
-      userId: orderObj.userId?.toString(),
-      items: orderObj.items?.map((item: any) => ({
-        ...item,
-        productId: item.productId?.toString(),
-      })) || [],
-      createdAt: orderObj.createdAt?.toString(),
-      updatedAt: orderObj.updatedAt?.toString(),
-    });
-    return {
-      success: true,
-      message: "Lấy chi tiết đơn hàng thành công.",
-      data: mapOrder(Array.isArray(order) ? order[0] : order),
-    };
-  } catch (error) {
-    console.error("[GET_ADMIN_ORDER_DETAILS_ERROR]", error);
-    return { success: false, message: "Lỗi khi lấy chi tiết đơn hàng." };
-  }
 }
 
