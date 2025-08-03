@@ -18,18 +18,3 @@ export async function GET() {
         return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
     }
 }
-// Tạo category mới trong database, phục vụ cho admin 
-export async function POST(request: Request) {
-    try {
-        await connectToDB();
-        
-        const body = await request.json();
-        const category = new Category(body);
-        const savedCategory = await category.save();
-        
-        return NextResponse.json(savedCategory, { status: 201 });
-    } catch (err) {
-        console.error('Failed to create category:', err);
-        return NextResponse.json({ error: 'Failed to create category' }, { status: 500 });
-    }
-}

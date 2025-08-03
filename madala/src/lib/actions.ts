@@ -1,3 +1,26 @@
+/**
+ * ACTIONS.TS - Server Actions cho Authentication
+ * 
+ * CHỨC NĂNG CHÍNH:
+ * - Server Actions xử lý đăng nhập và đăng ký users
+ * - Chạy hoàn toàn ở server-side, bảo mật cao
+ * - Tích hợp với NextAuth.js authentication system
+ * - Validation và error handling cho form submissions
+ * 
+ * ACTIONS BAO GỒM:
+ * - authenticate(): Xử lý đăng nhập user
+ * - register(): Xử lý đăng ký user mới
+ * 
+ * FEATURES:
+ * - Hash password bằng bcryptjs
+ * - Validation email format và password strength  
+ * - Check duplicate email khi đăng ký
+ * - Integration với MongoDB User model
+ * - Proper error messages cho UI
+ * 
+ * SỬ DỤNG: Gọi từ React components với useFormState/useFormStatus
+ */
+
 "use server";
 
 import { AuthError } from "next-auth";
@@ -10,6 +33,14 @@ import { signIn } from "@/auth";
 type ActionState = {
       success?: boolean;
       message: string;
+      errors?: {
+        email?: string[];
+        password?: string[];
+        firstName?: string[];
+        lastName?: string[];
+        confirmPassword?: string[];
+        phone?: string[];
+      };
 } | undefined;
 
 // --- Action cho Đăng nhập ---
@@ -25,10 +56,41 @@ export async function authenticateCredentials(
   formData: FormData
 ): Promise<ActionState> {
   try {
+    // Kiểm tra user có tồn tại và có bị ban không trước khi gọi signIn
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (!email || !password) {
+      return { message: "Email và mật khẩu là bắt buộc." };
+    }
+
+    await connectToDB();
+    const user = await User.findOne({ email }).lean();
+    
+    if (!user) {
+      return { message: "Email hoặc mật khẩu không chính xác." };
+    }
+
+    // Kiểm tra user có bị ban không
+    if (user.isActive === false) {
+      return { 
+        message: "⚠️ Tài khoản của bạn đã bị vô hiệu hóa bởi quản trị viên. Vui lòng liên hệ admin để được hỗ trợ." 
+      };
+    }
+
+    // Kiểm tra password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return { message: "Email hoặc mật khẩu không chính xác." };
+    }
+
+    // Nếu tất cả ok, thực hiện signIn
     await signIn("credentials", {
-      ...Object.fromEntries(formData),
+      email,
+      password,
       redirect: false,
     });
+    
     return { success: true, message: "Đăng nhập thành công! " };
 
   } catch (error) {
@@ -58,7 +120,7 @@ export async function authenticateCredentials(
 
 /**
  * Xử lý logic đăng ký người dùng.
- * @param prevState - Trạng thái trước đó từ useFormState.
+ * @param prevState - Trạng thái trước đó từ useActionState.
  * @param formData - Dữ liệu được gửi từ form.
  * @returns Một object chứa trạng thái thành công/thất bại và thông báo.
  */
