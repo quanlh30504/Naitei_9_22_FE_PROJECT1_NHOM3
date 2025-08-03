@@ -1,6 +1,7 @@
 import { 
   LayoutDashboard, 
   Package, 
+  FolderTree,
   FileText, 
   Users, 
   Settings
@@ -16,6 +17,11 @@ export const adminNavItems = [
     title: 'Sản phẩm',
     href: '/admin/products',
     icon: Package,
+  },
+  {
+    title: 'Danh mục',
+    href: '/admin/categories',
+    icon: FolderTree,
   },
   {
     title: 'Blog',

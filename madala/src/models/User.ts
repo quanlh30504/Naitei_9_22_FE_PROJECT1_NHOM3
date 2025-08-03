@@ -11,6 +11,7 @@ export interface IUser extends Document {
   gender?: string;
   country?: string;
   birthDate?: Date; 
+  isActive?: boolean;
 }
 
 const UserSchema: Schema = new Schema(
@@ -50,6 +51,10 @@ const UserSchema: Schema = new Schema(
     },
     birthDate: {
       type: Date, 
+    },
+    isActive: {
+      type: Boolean,
+      default: true, 
     },
   },
   { timestamps: true }
