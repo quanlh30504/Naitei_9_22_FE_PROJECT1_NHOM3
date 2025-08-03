@@ -6,7 +6,8 @@ import { statsData, activityData, progressData } from '@/constants/dashboardData
 
 export default function AdminPage() {
   return (
-    <AdminLayout>
+    <AdminGuard>
+      <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex items-center justify-between">
@@ -73,5 +74,6 @@ export default function AdminPage() {
         </div>
       </div>
     </AdminLayout>
+    </AdminGuard>
   );
 }
