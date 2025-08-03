@@ -13,15 +13,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '6');
-    const featured = searchParams.get('featured') === 'true';
+    const includeUnpublished = searchParams.get('includeUnpublished') === 'true';
 
     const skip = (page - 1) * limit;
 
     // Build query
-    const query: any = { isPublished: true };
-    if (featured) {
-      query.isFeatured = true;
-    }
+    const query: any = includeUnpublished ? {} : { isPublished: true };
 
     // Get total count and blog posts in parallel
     const [total, blogPosts] = await Promise.all([
@@ -30,7 +27,7 @@ export async function GET(request: NextRequest) {
         .sort({ publishedAt: -1 })
         .skip(skip)
         .limit(limit)
-        .select('title slug excerpt featuredImage tags viewCount likesCount commentsCount publishedAt')
+        .select('title slug excerpt featuredImage tags isPublished viewCount likesCount commentsCount createdAt updatedAt publishedAt')
         .lean()
     ]);
 
