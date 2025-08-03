@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { registerUser } from "@/lib/actions";
@@ -15,7 +15,7 @@ import { FormLabel } from "@/Components/FormLabel";
 export default function RegisterPage() {
   const router = useRouter();
 
-  const [state, dispatch] = useFormState(registerUser, undefined);
+  const [state, dispatch] = useActionState(registerUser, undefined);
 
   useEffect(() => {
     if (state?.success) {

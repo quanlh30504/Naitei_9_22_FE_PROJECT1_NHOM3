@@ -8,6 +8,7 @@ export interface IUser extends Document {
   phone?: string;
   image?: string;
   roles?: string; 
+  isActive?: boolean;
 }
 
 const UserSchema: Schema = new Schema(
@@ -35,6 +36,10 @@ const UserSchema: Schema = new Schema(
     roles: {
       type: String, 
       default: 'user',
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     }
   },
   { timestamps: true }

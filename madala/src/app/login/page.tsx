@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
@@ -16,7 +16,7 @@ import ActionButton from "@/Components/Buttons/ActionButton";
 export default function LoginPage() {
   const router = useRouter();
 
-  const [state, dispatch] = useFormState(authenticateCredentials, undefined);
+  const [state, dispatch] = useActionState(authenticateCredentials, undefined);
 
   useEffect(() => {
     if (state?.success) {
@@ -28,7 +28,22 @@ export default function LoginPage() {
     }
     
     if (state && !state.success && !state.errors) {
-      toast.error(state.message);
+      // Kiểm tra nếu là thông báo tài khoản bị ban
+      if (state.message.includes("vô hiệu hóa") || state.message.includes("⚠️")) {
+        toast.error(state.message, {
+          duration: 8000, // Hiển thị lâu hơn cho thông báo quan trọng
+          style: {
+            background: '#fee2e2',
+            color: '#991b1b',
+            border: '2px solid #fca5a5',
+            fontSize: '14px',
+            fontWeight: '600'
+          },
+          icon: '🚫'
+        });
+      } else {
+        toast.error(state.message);
+      }
     }
   }, [state, router]);
 
@@ -45,6 +60,30 @@ export default function LoginPage() {
         </header>
 
         <div className="bg-gray-50 p-8 md:p-12">
+          {/* Alert cho tài khoản bị ban */}
+          {state && !state.success && state.message.includes("vô hiệu hóa") && (
+            <div className="mb-6 p-4 border-l-4 border-red-500 bg-red-50 rounded-md">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <span className="text-2xl">🚫</span>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Tài khoản đã bị vô hiệu hóa
+                  </h3>
+                  <div className="mt-1 text-sm text-red-700">
+                    <p>{state.message.replace("⚠️ ", "")}</p>
+                  </div>
+                  <div className="mt-2">
+                    <div className="text-xs text-red-600">
+                      📧 Liên hệ admin qua email: admin@madala.com để được hỗ trợ
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <h2 className="text-lg font-semibold mb-2">KHÁCH HÀNG ĐĂNG NHẬP</h2>
           <p className="text-gray-600 text-sm mb-8">
             Nếu bạn có một tài khoản, xin vui lòng đăng nhập.
