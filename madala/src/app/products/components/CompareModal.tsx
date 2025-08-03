@@ -3,9 +3,12 @@
 import React from 'react';
 import { IProduct } from '@/models/Product';
 import { ICategory } from '@/models/Category';
-import { FaTimes, FaShoppingCart } from 'react-icons/fa';
+import { X, ShoppingCart } from 'lucide-react';
+import { Button } from '@/Components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { Badge } from '@/Components/ui/badge';
 import SafeImage from '@/Components/SafeImage';
-import StarRating from '@/app/products/components/StarRating';
+import StarRating from '@/Components/products/StarRating';
 import { formatPrice } from '@/utils/formatPrice';
 
 interface CompareModalProps {
@@ -93,15 +96,17 @@ const CompareModal: React.FC<CompareModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-bold text-gray-800">So sánh sản phẩm</h2>
-          <button
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">So sánh sản phẩm</h2>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <FaTimes className="text-gray-500" />
-          </button>
+            <X className="text-gray-500 dark:text-gray-400" />
+          </Button>
         </div>
 
         {/* Content */}
@@ -120,15 +125,17 @@ const CompareModal: React.FC<CompareModalProps> = ({
               {products.map((product) => (
                 <div
                   key={String(product._id)}
-                  className="border rounded-lg p-4 relative"
+                  className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 relative bg-white dark:bg-gray-700 shadow-sm hover:shadow-md transition-all duration-300"
                 >
                   {/* Remove Button */}
-                  <button
+                  <Button
+                    variant="destructive"
+                    size="icon"
                     onClick={() => onRemoveProduct(String(product._id))}
-                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full"
                   >
-                    <FaTimes className="text-xs" />
-                  </button>
+                    <X className="w-3 h-3" />
+                  </Button>
 
                   <div className="mb-3">
                     <SafeImage
@@ -141,7 +148,7 @@ const CompareModal: React.FC<CompareModalProps> = ({
                     />
                   </div>
 
-                  <h3 className="font-semibold text-sm text-gray-800 mb-2 line-clamp-2">
+                  <h3 className="font-semibold text-sm text-gray-800 dark:text-gray-200 mb-2 line-clamp-2">
                     {String(product.name || "Unnamed Product")}
                   </h3>
 
@@ -156,24 +163,24 @@ const CompareModal: React.FC<CompareModalProps> = ({
 
                   <div className="mb-3">
                     <div className="flex items-center gap-1 flex-col">
-                      <span className="text-lg font-bold text-green-600">
+                      <span className="text-lg font-bold text-green-600 dark:text-green-400">
                         {formatPrice(product.salePrice)}
                       </span>
                       {product.salePrice < product.price && (
-                        <span className="text-xs text-gray-500 line-through">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 line-through">
                           {formatPrice(product.price)}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <button
+                  <Button
                     onClick={() => onAddToCart?.(product)}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-md text-xs font-medium transition-colors"
                   >
-                    <FaShoppingCart className="text-xs" />
+                    <ShoppingCart className="w-3 h-3 mr-1" />
                     MUA HÀNG
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -181,16 +188,16 @@ const CompareModal: React.FC<CompareModalProps> = ({
             {/* Bảng so sánh */}
             {allAttributes.size > 0 && (
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300">
+                <table className="w-full border-collapse border border-gray-300 dark:border-gray-600">
                   <thead>
-                    <tr className="bg-gray-50">
-                      <th className="border border-gray-300 p-3 text-left font-semibold">
+                    <tr className="bg-gray-50 dark:bg-gray-700">
+                      <th className="border border-gray-300 dark:border-gray-600 p-3 text-left font-semibold dark:text-gray-200">                                                                 
                         Thuộc tính
                       </th>
                       {products.map((product) => (
                         <th
                           key={String(product._id)}
-                          className="border border-gray-300 p-3 text-center font-semibold text-sm"
+                          className="border border-gray-300 dark:border-gray-600 p-3 text-center font-semibold text-sm dark:text-gray-200"
                         >
                           {String(product.name || "Unnamed Product")}
                         </th>
@@ -200,39 +207,39 @@ const CompareModal: React.FC<CompareModalProps> = ({
                   <tbody>
                     {/* Thông tin cơ bản: tên, brand, category, short description */}
                     <tr>
-                      <td className="border border-gray-300 p-3 font-medium bg-gray-50">
+                      <td className="border border-gray-300 dark:border-gray-600 p-3 font-medium bg-gray-50 dark:bg-gray-700 dark:text-gray-200">
                         Thương hiệu
                       </td>
                       {products.map((product) => (
                         <td
                           key={String(product._id)}
-                          className="border border-gray-300 p-3 text-center text-sm"
+                          className="border border-gray-300 dark:border-gray-600 p-3 text-center text-sm dark:text-gray-300"
                         >
                           {getAttributeValue(product, "brand")}
                         </td>
                       ))}
                     </tr>
                     <tr>
-                      <td className="border border-gray-300 p-3 font-medium bg-gray-50">
+                      <td className="border border-gray-300 dark:border-gray-600 p-3 font-medium bg-gray-50 dark:bg-gray-700 dark:text-gray-200">
                         Danh mục
                       </td>
                       {products.map((product) => (
                         <td
                           key={String(product._id)}
-                          className="border border-gray-300 p-3 text-center text-sm"
+                          className="border border-gray-300 dark:border-gray-600 p-3 text-center text-sm dark:text-gray-300"
                         >
                           {formatCategoryDisplay(product.categoryIds)}
                         </td>
                       ))}
                     </tr>
                     <tr>
-                      <td className="border border-gray-300 p-3 font-medium bg-gray-50">
+                      <td className="border border-gray-300 dark:border-gray-600 p-3 font-medium bg-gray-50 dark:bg-gray-700 dark:text-gray-200">
                         Mô tả ngắn
                       </td>
                       {products.map((product) => (
                         <td
                           key={String(product._id)}
-                          className="border border-gray-300 p-3 text-center text-sm"
+                          className="border border-gray-300 dark:border-gray-600 p-3 text-center text-sm dark:text-gray-300"
                         >
                           {String(product.shortDescription || "N/A")}
                         </td>
@@ -242,13 +249,13 @@ const CompareModal: React.FC<CompareModalProps> = ({
                     {/* Thông tin động ( xử lý thông tin tùy chọn ( có ở sản phẩm này nhưng không có ở sản phẩm khác)) */}
                     {Array.from(allAttributes).map((attribute) => (
                       <tr key={attribute}>
-                        <td className="border border-gray-300 p-3 font-medium bg-gray-50 capitalize">
+                        <td className="border border-gray-300 dark:border-gray-600 p-3 font-medium bg-gray-50 dark:bg-gray-700 dark:text-gray-200 capitalize">
                           {attribute.replace(/([A-Z])/g, " $1").trim()}
                         </td>
                         {products.map((product) => (
                           <td
                             key={String(product._id)}
-                            className="border border-gray-300 p-3 text-center text-sm"
+                            className="border border-gray-300 dark:border-gray-600 p-3 text-center text-sm dark:text-gray-300"
                           >
                             {getAttributeValue(product, attribute)}
                           </td>

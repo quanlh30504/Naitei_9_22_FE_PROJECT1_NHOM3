@@ -4,7 +4,8 @@ import mongoose from "mongoose";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import connectToDB from "@/lib/db";
-import Address, { IAddress } from "@/models/Address";
+import Address from "@/models/Address";
+import type { AddressType } from "@/types/address";
 
 type ActionResponse<T = any> = {
     success: boolean;
@@ -24,9 +25,9 @@ interface AddressInput {
 
 /**
  * Lấy tất cả địa chỉ của người dùng đang đăng nhập.
- * @returns {Promise<ActionResponse<IAddress[]>>} Danh sách địa chỉ hoặc thông báo lỗi.
+ * @returns {Promise<ActionResponse<AddressType[]>>} Danh sách địa chỉ hoặc thông báo lỗi.
  */
-export async function getAddresses(): Promise<ActionResponse<IAddress[]>> {
+export async function getAddresses(): Promise<ActionResponse<AddressType[]>> {
     const session = await auth();
     if (!session?.user?.id) {
         return { success: false, message: "Vui lòng đăng nhập." };
@@ -34,8 +35,19 @@ export async function getAddresses(): Promise<ActionResponse<IAddress[]>> {
 
     try {
         await connectToDB();
-        const addresses = await Address.find({ userId: session.user.id }).sort({ createdAt: -1 }).lean();
-        return { success: true, message: "Lấy danh sách địa chỉ thành công.", data: addresses };
+        const addresses = await Address.find({ userId: session.user.id }).sort({ createdAt: -1 }).lean() as any[];
+        // Convert to AddressType[]
+        const plainAddresses: AddressType[] = addresses.map((addr) => ({
+            _id: addr._id?.toString?.() ?? '',
+            fullName: addr.fullName,
+            phoneNumber: addr.phoneNumber,
+            street: addr.street,
+            city: addr.city,
+            district: addr.district,
+            ward: addr.ward,
+            isDefault: !!addr.isDefault,
+        }));
+        return { success: true, message: "Lấy danh sách địa chỉ thành công.", data: plainAddresses };
     } catch (error) {
         console.error("[GET_ADDRESSES_ERROR]", error);
         return { success: false, message: "Lỗi khi lấy danh sách địa chỉ." };
@@ -243,9 +255,9 @@ export async function setDefaultAddress(addressId: string): Promise<ActionRespon
  * Lấy thông tin một địa chỉ cụ thể bằng ID.
  * Đảm bảo địa chỉ thuộc về người dùng đang đăng nhập.
  * @param {string} addressId - ID của địa chỉ cần lấy.
- * @returns {Promise<ActionResponse<IAddress>>} Địa chỉ hoặc thông báo lỗi.
+ * @returns {Promise<ActionResponse<AddressType>>} Địa chỉ hoặc thông báo lỗi.
  */
-export async function getAddressById(addressId: string): Promise<ActionResponse<IAddress>> {
+export async function getAddressById(addressId: string): Promise<ActionResponse<AddressType>> {
     const session = await auth();
     if (!session?.user?.id) {
         return { success: false, message: "Vui lòng đăng nhập." };
@@ -258,13 +270,22 @@ export async function getAddressById(addressId: string): Promise<ActionResponse<
     try {
         await connectToDB();
         // Tìm địa chỉ theo ID và đảm bảo nó thuộc về user đang đăng nhập
-        const address = await Address.findOne({ _id: addressId, userId: session.user.id }).lean();
-        
+        const address = await Address.findOne({ _id: addressId, userId: session.user.id }).lean() as any;
         if (!address) {
             return { success: false, message: "Không tìm thấy địa chỉ." };
         }
-
-        return { success: true, message: "Lấy thông tin địa chỉ thành công.", data: address };
+        // Convert to AddressType
+        const plainAddress: AddressType = {
+            _id: address._id?.toString?.() ?? '',
+            fullName: address.fullName,
+            phoneNumber: address.phoneNumber,
+            street: address.street,
+            city: address.city,
+            district: address.district,
+            ward: address.ward,
+            isDefault: !!address.isDefault,
+        };
+        return { success: true, message: "Lấy thông tin địa chỉ thành công.", data: plainAddress };
     } catch (error) {
         console.error("[GET_ADDRESS_BY_ID_ERROR]", error);
         return { success: false, message: "Lỗi khi lấy thông tin địa chỉ." };

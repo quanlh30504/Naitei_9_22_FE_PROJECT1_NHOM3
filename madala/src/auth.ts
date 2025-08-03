@@ -24,23 +24,51 @@ import Credentials from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "./lib/mongodb";
 import User from "@/models/User";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import connectToDB from "@/lib/db";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { PROVIDER_IDS } from "@/constants/auth";
+import type { User as NextAuthUser, Session } from "next-auth";
+import type { JWT } from "next-auth/jwt";
+
+interface DBUser {
+  _id: string;
+  email: string;
+  name?: string;
+  password?: string;
+  role?: "user" | "admin" | undefined;
+  isActive?: boolean;
+}
+
+interface User extends NextAuthUser {
+  id: string;
+  email: string;
+  name?: string;
+  role?: "user" | "admin";
+  isActive?: boolean;
+}
+
+interface AuthToken extends JWT {
+  id: string;
+  email?: string;
+  name?: string;
+  role?: "user" | "admin";
+  isActive?: boolean;
+  lastCheckedAt?: number;
+}
 
 export const authConfig = {
   providers: [
+    // Google Provider
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-
-    // --- Provider 2: GitHub ---
+    // GitHub Provider
     GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
     }),
     Credentials({
       name: "credentials",
@@ -48,40 +76,42 @@ export const authConfig = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials: any) {
+      async authorize(
+        credentials: Partial<Record<"email" | "password", unknown>>
+      ): Promise<User & { error?: string } | null> {
         try {
-          if (!credentials?.email || !credentials?.password) {
-            return null;
+          const email = typeof credentials?.email === 'string' ? credentials.email.toLowerCase().trim() : undefined;
+          const password = credentials?.password as string | undefined;
+          if (!email || !password) {
+            return { id: "", email: email || "", error: "missing_credentials" } as any;
           }
           await connectToDB();
-          const user = await User.findOne({ email: credentials.email }).lean();
-          if (!user || !(user as any).password) {
-            return null;
+          const user = await User.findOne({ email }).lean<DBUser>();
+          if (!user) {
+            return { id: "", email, error: "user_not_found" } as any;
           }
-
+          if (!user.password) {
+            return { id: user._id.toString(), email: user.email, error: "no_password" } as any;
+          }
           // Kiểm tra password
-          const isValid = await bcrypt.compare(
-            credentials.password,
-            (user as any).password
-          );
+          const isValid = await bcrypt.compare(password, user.password);
           if (!isValid) {
-            return null;
+            return { id: user._id.toString(), email: user.email, error: "invalid_password" } as any;
           }
-
           // Kiểm tra user có bị ban không (double check)
-          if ((user as any).isActive === false) {
-            return null;
+          if (user.isActive === false) {
+            return { id: user._id.toString(), email: user.email, error: "banned" } as any;
           }
-
           return {
-            id: (user as any)._id.toString(),
-            email: (user as any).email,
-            name: (user as any).name,
-            role: (user as any).role || "user",
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            role: user.role === "admin" ? "admin" : "user",
+            isActive: user.isActive,
           };
         } catch (error) {
           console.error("Auth error:", error);
-          return null;
+          return { id: "", email: "", error: "server_error" } as any;
         }
       },
     }),
@@ -92,34 +122,45 @@ export const authConfig = {
   },
 
   callbacks: {
-    async jwt({ token, user, account }: any) {
-      if (user && account) {
-        await connectToDB();
+  async jwt(params: any) {
+    const { token, user, account } = params;
+    // Lần đầu sau login
+    if (user && account) {
+      token.id = (user as any).id;
+      token.email = typeof user.email === 'string' && user.email !== null ? user.email : undefined;
+      token.role = (user as any).role ?? 'user';
+      token.isActive = (user as any).isActive ?? true;
+      token.provider = account.provider;
+      token.lastCheckedAt = Date.now();
+      return token;
+    }
 
-        // 2. PHÂN LOẠI LOGIC
-        if (account.provider === PROVIDER_IDS.CREDENTIALS) {
-          // --- LUỒNG CREDENTIALS ---
-          token.id = user.id;
-          token.role = (user as any).role;
-        } else {
-          // --- LUỒNG OAUTH (ÁP DỤNG CHO TẤT CẢ CÁC NHÀ CUNG CẤP CÒN LẠI) ---
-          const existingUser = await User.findOne({ email: user.email });
-          if (existingUser) {
-            token.id = existingUser._id.toString();
-            token.role = existingUser.role || "user";
-          }
+    // Tuỳ chọn: refresh isActive tối đa mỗi 10 phút
+    const TEN_MIN = 10 * 60 * 1000;
+    if (!token.lastCheckedAt || Date.now() - (token.lastCheckedAt as number) > TEN_MIN) {
+      await connectToDB();
+      const email = typeof token.email === 'string' ? token.email : undefined;
+      if (email) {
+        const u = await User.findOne({ email }).select('isActive').lean();
+        // Nếu u là mảng (trường hợp bất thường), lấy phần tử đầu tiên
+        const userObj = Array.isArray(u) ? u[0] : u;
+        if (userObj && typeof userObj.isActive !== 'undefined') {
+          token.isActive = userObj.isActive !== false;
         }
       }
-      return token;
-    },
-
-    async session({ session, token }: any) {
-      if (token && session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-      }
-      return session;
-    },
+      token.lastCheckedAt = Date.now();
+    }
+    return token;
+  },
+  async session(params: any) {
+    const { session, token } = params;
+    if (session.user) {
+      (session.user as any).id = token.id as string;
+      (session.user as any).role = (token.role as string) ?? 'user';
+      (session.user as any).isActive = (token.isActive as boolean) ?? true;
+    }
+    return session;
+  },
   },
   pages: {
     signIn: "/login",

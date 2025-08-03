@@ -199,7 +199,7 @@ const ProductPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Sale Banner at top - chỉ hiển thị ảnh */}
             <div className="mb-8">
                 <SimpleBanner type="sale" />
@@ -224,7 +224,7 @@ const ProductPage = () => {
                         <div className="flex justify-between items-center mb-6">
                             <div className="flex items-center gap-4">
                                 <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
                                     {filteredProducts.length} sản phẩm
                                 </span>
                             </div>
@@ -287,7 +287,7 @@ const ProductPage = () => {
                         <div className="flex justify-between items-center mb-6">
                             <div className="flex items-center gap-4">
                                 <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
                                     {filteredProducts.length} sản phẩm
                                 </span>
                             </div>

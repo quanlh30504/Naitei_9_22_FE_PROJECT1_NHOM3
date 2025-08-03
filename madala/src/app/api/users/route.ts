@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         }
         
         if (role) {
-            filter.roles = role;
+            filter.role = role;
         }
         
         if (isActive !== null && isActive !== undefined) {

@@ -23,15 +23,15 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
 
   return (
     <>
-      <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="font-semibold text-gray-800 text-sm uppercase tracking-wide">
+          <h4 className="font-semibold text-gray-800 dark:text-gray-200 text-sm uppercase tracking-wide">
             SO SÁNH SẢN PHẨM ({compareProducts.length}/3)
           </h4>
           {compareProducts.length > 0 && (
             <button
               onClick={clearCompare}
-              className="text-xs text-red-500 hover:text-red-700 transition-colors"
+              className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
             >
               Xóa tất cả
             </button>
@@ -40,11 +40,11 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
 
         {compareProducts.length === 0 ? (
           <div className="text-center py-8">
-            <FaBalanceScale className="mx-auto text-gray-300 text-2xl mb-2" />
-            <p className="text-gray-500 text-sm">
+            <FaBalanceScale className="mx-auto text-gray-300 dark:text-gray-600 text-2xl mb-2" />
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
               Bạn chưa có sản phẩm để so sánh
             </p>
-            <p className="text-gray-400 text-xs mt-1">
+            <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
               Nhấp vào sản phẩm để thêm vào so sánh
             </p>
           </div>
@@ -54,7 +54,7 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
               {compareProducts.map((product) => (
                 <div
                   key={String(product._id)}
-                  className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
+                  className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
                   <div className="flex-shrink-0">
                     <SafeImage
@@ -68,17 +68,17 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-800 truncate">
+                    <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
                       {product.name}
                     </p>
-                    <p className="text-xs text-green-600 font-semibold">
+                    <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
                       {formatPrice(product.salePrice)}
                     </p>
                   </div>
 
                   <button
                     onClick={() => removeFromCompare(String(product._id))}
-                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                    className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                   >
                     <FaTimes className="text-xs" />
                   </button>
@@ -86,17 +86,17 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
               ))}
             </div>
 
-            <div className="space-y-2 pt-2 border-t border-gray-200">
+            <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-600">
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white py-2 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <FaBalanceScale className="text-xs" />
                 So sánh chi tiết
               </button>
 
               {compareProducts.length >= 2 && (
-                <p className="text-xs text-center text-gray-500">
+                <p className="text-xs text-center text-gray-500 dark:text-gray-400">
                   Tối đa 3 sản phẩm
                 </p>
               )}

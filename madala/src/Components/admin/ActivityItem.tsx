@@ -18,8 +18,8 @@ export function ActivityItem({ title, time, icon: Icon, iconColor }: ActivityIte
         <Icon className={`w-4 h-4 ${iconColor.text}`} />
       </div>
       <div className="flex-1">
-        <p className="text-sm font-medium text-gray-900">{title}</p>
-        <p className="text-xs text-gray-500">{time}</p>
+        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{title}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{time}</p>
       </div>
     </div>
   );

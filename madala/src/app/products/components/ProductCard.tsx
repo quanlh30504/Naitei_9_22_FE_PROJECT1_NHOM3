@@ -1,10 +1,15 @@
 "use client";
-import React from "react";
+import React, { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { buyNowAndRedirect } from "@/lib/actions/cart";
+import toast from "react-hot-toast";
 import { IProduct } from "@/models/Product";
-import { FaHeart, FaShoppingCart, FaBalanceScale } from "react-icons/fa";
+import { Heart, ShoppingCart, Scale } from "lucide-react";
+import { Button } from "@/Components/ui/button";
+import { Card, CardContent } from "@/Components/ui/card";
+import { Badge } from "@/Components/ui/badge";
 import SafeImage from "@/Components/SafeImage";
-import StarRating from "@/app/products/components/StarRating";
+import StarRating from "@/Components/products/StarRating";
 import { useCompareStore } from "@/store/useCompareStore";
 import { getProductDiscount } from "@/lib/utils";
 
@@ -44,15 +49,35 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
+  const [isPending, startTransition] = useTransition();
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    startTransition(async () => {
+      try {
+        const result = await buyNowAndRedirect(String(product._id), 1);
+        if (result?.error) {
+          toast.error(result.error);
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.");
+        } else {
+          toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
+        }
+      }
+    });
+  };
+
   return (
     <div
-      className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.035] hover:border-2 hover:border-green-700 dark:hover:border-green-600 border border-transparent transition-all duration-300 overflow-hidden flex flex-col h-full min-h-[400px] cursor-pointer ${
         isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
       }`}
       onClick={handleProductClick}
     >
       <div
-        className="relative group/image cursor-pointer"
+        className="relative group/image cursor-pointer h-48 flex-shrink-0"
         onClick={handleProductClick}
       >
         <SafeImage
@@ -60,8 +85,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
           alt={product.name}
           width={300}
           height={300}
-          className="w-full h-48 object-cover transition-transform duration-300 group-hover/image:scale-105"
-          fallbackClassName="w-full h-48"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover/image:scale-105"
+          fallbackClassName="w-full h-full"
         />
 
         {/* Phần discount */}
@@ -72,12 +97,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         {/* Button So sánh ở góc trên bên phải */}
-        <button
+
+        <Button
+          size="icon"
+          variant={isProductInCompare ? "default" : "secondary"}
           onClick={handleCompareClick}
-          className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-300 ${
+          className={`absolute top-2 right-2 w-10 h-10 rounded-full transition-all duration-300 ${
             isProductInCompare
               ? "bg-[#8ba63a] text-white hover:bg-red-500"
-              : "bg-white bg-opacity-90 text-gray-600 hover:bg-[#8ba63a] hover:text-white"
+              : "bg-white dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-90 text-gray-600 dark:text-gray-300 hover:bg-[#8ba63a] hover:text-white"
           }`}
           title={
             isProductInCompare
@@ -85,24 +113,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
               : "Thêm vào so sánh"
           }
         >
-          <FaBalanceScale className="text-sm" />
-        </button>
-      </div>
-
-      {/* Product Information */}
-      <div className="p-4">
-        <p className="text-sm text-gray-500 uppercase tracking-wide mb-1">
-          {product.attributes?.brand || "Brand"}
-        </p>
+          <Scale className="w-4 h-4" />
+        </Button>
 
         <h3
-          className="font-semibold text-gray-800 mb-2 line-clamp-2 h-12 cursor-pointer hover:text-[#8ba63a] transition-colors"
+          className="font-semibold text-gray-800 dark:text-gray-200 mb-2 line-clamp-2 cursor-pointer hover:text-[#8ba63a] dark:hover:text-[#9CCC65] transition-colors h-12 overflow-hidden leading-5"
           onClick={handleProductClick}
         >
           {product.name}
         </h3>
 
-        <div className="mb-2">
+        <div className="mb-2 h-5">
           <StarRating
             rating={product.rating?.average || 0}
             size="xs"
@@ -111,13 +132,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
         </div>
 
-        <div className="mb-3">
+        <div className="mb-3 flex-1 flex items-start">
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-[#8ba63a]">
+            <span className="text-lg font-bold text-[#8ba63a] dark:text-[#9CCC65]">
               {product.salePrice.toLocaleString("vi-VN")}₫
             </span>
             {hasDiscount && (
-              <span className="text-sm text-gray-500 line-through">
+              <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
                 {product.price.toLocaleString("vi-VN")}₫
               </span>
             )}
@@ -125,27 +146,28 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 mt-auto">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart?.(product);
-            }}
-            className="flex-1 bg-[#8ba63a] hover:bg-[#7a942c] text-white py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1"
+        <div className="flex gap-2 mt-auto pt-2">
+          <Button
+            onClick={handleBuyNow}
+            className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 h-9 shadow-sm hover:shadow-lg hover:scale-105 active:scale-95 focus:ring-2 focus:ring-gray-400"
+            disabled={isPending}
+            style={{ willChange: 'transform, box-shadow' }}
           >
-            <FaShoppingCart className="text-xs" />
+            <ShoppingCart className="w-3 h-3 mr-1" />
             MUA HÀNG
-          </button>
+          </Button>
 
-          <button
+          <Button
+            size="icon"
+            variant="outline"
             onClick={(e) => {
               e.stopPropagation();
               onToggleFavorite?.(product);
             }}
-            className="p-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors flex items-center justify-center"
+            className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors w-9 h-9"
           >
-            <FaHeart className="text-gray-400 hover:text-red-500 transition-colors" />
-          </button>
+            <Heart className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors" />
+          </Button>
         </div>
       </div>
     </div>

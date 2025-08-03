@@ -33,8 +33,8 @@ export default function CartItem({ item }: CartItemProps) {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg border">
-      <div className="grid grid-cols-12 items-center gap-4 pt-4">
+  <div className="bg-card p-4 rounded-lg border border-border transition-colors">
+  <div className="grid grid-cols-12 items-center gap-4 pt-4">
         <div className="col-span-1 flex justify-center">
           <Checkbox
             id={`item-${item._id}`} 
@@ -52,14 +52,14 @@ export default function CartItem({ item }: CartItemProps) {
           />
         </div>
         <div className="col-span-3">
-          <p className="font-medium text-sm line-clamp-2">{item.product.name}</p>
+          <p className="font-medium text-sm line-clamp-2 text-foreground">{item.product.name}</p>
         </div>
         <div className="col-span-2 text-center">
-          <p className="font-semibold text-sm text-red-600">
+          <p className="font-semibold text-sm text-red-600 dark:text-red-400">
             {formatCurrency(item.product.salePrice || item.product.price)}
           </p>
           {item.product.salePrice && (
-            <p className="text-xs text-gray-400 line-through">
+            <p className="text-xs text-muted-foreground line-through">
               {formatCurrency(item.product.price)}
             </p>
           )}
@@ -72,7 +72,7 @@ export default function CartItem({ item }: CartItemProps) {
             onQuantityChange={(newQuantity) => updateQuantity(item._id, newQuantity)}
           />
         </div>
-        <div className="col-span-1 text-center font-semibold text-red-600 text-sm">
+        <div className="col-span-1 text-center font-semibold text-red-600 dark:text-red-400 text-sm">
           {formatCurrency((item.product.salePrice ?? item.product.price) * item.quantity)}
         </div>
         <div className="col-span-1 flex justify-center">
@@ -80,9 +80,10 @@ export default function CartItem({ item }: CartItemProps) {
             variant="ghost"
             size="icon"
             onClick={handleRemove}
-            disabled={isPending} 
+            disabled={isPending}
+            className="hover:bg-destructive/10"
           >
-            <Trash2 className="h-5 w-5 text-gray-500" />
+            <Trash2 className="h-5 w-5 text-muted-foreground dark:text-gray-400" />
           </Button>
         </div>
       </div>

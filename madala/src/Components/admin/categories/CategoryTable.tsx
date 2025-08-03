@@ -20,10 +20,10 @@ export const CategoryTable: React.FC<CategoryTableProps> = ({
     handleEdit,
     handleDelete,
 }) => (
-    <div className="bg-white rounded-lg border overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
             <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                     <tr>
                         {[
                             { label: 'Tên danh mục', align: 'left' },
@@ -36,36 +36,36 @@ export const CategoryTable: React.FC<CategoryTableProps> = ({
                         ].map((col) => (
                             <th
                                 key={col.label}
-                                className={`px-6 py-3 text-${col.align} text-xs font-medium text-gray-500 uppercase tracking-wider`}
+                                className={`px-6 py-3 text-${col.align} text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider`}
                             >
                                 {col.label}
                             </th>
                         ))}
                     </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
                     {loading ? (
                         <tr>
-                            <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                            <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-300">
                                 Đang tải...
                             </td>
                         </tr>
                     ) : filteredCategories.length === 0 ? (
                         <tr>
-                            <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                            <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-300">
                                 Không tìm thấy danh mục nào
                             </td>
                         </tr>
                     ) : (
                         filteredCategories.map((category) => (
-                            <tr key={String(category.id)} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <tr key={String(category.id)} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                     {category.name}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                     {category.slug}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                     {getParentCategoryName(category.parentId ?? '')}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -73,7 +73,7 @@ export const CategoryTable: React.FC<CategoryTableProps> = ({
                                         Cấp {category.level}
                                     </Badge>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                     {category.sortOrder}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -86,6 +86,7 @@ export const CategoryTable: React.FC<CategoryTableProps> = ({
                                         <Button
                                             variant="outline"
                                             size="sm"
+                                            className="text-gray-700 dark:text-gray-100 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800"
                                             onClick={() => handleEdit(category)}
                                         >
                                             <Edit className="w-4 h-4" />
@@ -93,8 +94,8 @@ export const CategoryTable: React.FC<CategoryTableProps> = ({
                                         <Button
                                             variant="outline"
                                             size="sm"
+                                            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                                             onClick={() => handleDelete(category)}
-                                            className="text-red-600 hover:text-red-800"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>

@@ -65,7 +65,7 @@ export default function LoginPage() {
 
 
   return (
-    <main className="bg-white text-gray-800 min-h-screen">
+    <main className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen">
       <div className="container mx-auto px-4 py-10 md:py-16 max-w-4xl">
         <header className="flex justify-between items-center mb-10">
           <h1 className="text-xl md:text-2xl font-semibold tracking-widest uppercase">
@@ -76,19 +76,19 @@ export default function LoginPage() {
           </ActionButton>
         </header>
 
-        <div className="bg-gray-50 p-8 md:p-12">
+        <div className="bg-gray-50 dark:bg-gray-800 p-8 md:p-12">
           {/* Alert cho tài khoản bị ban */}
           {state && !state.success && state.message.includes("vô hiệu hóa") && (
-            <div className="mb-6 p-4 border-l-4 border-red-500 bg-red-50 rounded-md">
+            <div className="mb-6 p-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-700 rounded-md">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <span className="text-2xl">🚫</span>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">
+                  <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
                     Tài khoản đã bị vô hiệu hóa
                   </h3>
-                  <div className="mt-1 text-sm text-red-700">
+                  <div className="mt-1 text-sm text-red-700 dark:text-red-300">
                     <p>{state.message.replace("⚠️ ", "")}</p>
                   </div>
                   <div className="mt-2">
@@ -103,7 +103,7 @@ export default function LoginPage() {
           )}
 
           <h2 className="text-lg font-semibold mb-2">KHÁCH HÀNG ĐĂNG NHẬP</h2>
-          <p className="text-gray-600 text-sm mb-8">
+          <p className="text-gray-600 dark:text-gray-300 text-sm mb-8">
             Nếu bạn có một tài khoản, xin vui lòng đăng nhập.
           </p>
 
@@ -118,7 +118,7 @@ export default function LoginPage() {
                 required
               />
               {state?.errors?.email && (
-                <p className="text-sm text-red-500">{state.errors.email[0]}</p>
+                <p className="text-sm text-red-500 dark:text-red-400">{state.errors.email[0]}</p>
               )}
             </div>
 
@@ -126,7 +126,7 @@ export default function LoginPage() {
               <Label htmlFor="password">Password *</Label>
               <Input id="password" name="password" type="password" required />
               {state?.errors?.password && (
-                <p className="text-sm text-red-500">
+                <p className="text-sm text-red-500 dark:text-red-400">
                   {state.errors.password[0]}
                 </p>
               )}

@@ -58,7 +58,7 @@ export default async function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary/10 to-primary/5 py-20">
+      <section className="bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 text-[#8BC34A]">
             Mandala Store
@@ -81,7 +81,7 @@ export default async function Home() {
       </section>
 
       {/* Features */}
-      <section className="py-16 bg-secondary/20">
+      <section className="py-16 bg-secondary/20 dark:bg-secondary/10">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
@@ -151,10 +151,10 @@ export default async function Home() {
       </section>
 
       {/* Aboutus */}
-      <section className="px-4 md:px-20 py-10 bg-white">
+      <section className="px-4 md:px-20 py-10 bg-gray-50 dark:bg-gray-900 transition-colors">
         <SocialLinks />
 
-        <section className="grid md:grid-cols-3 gap-8 mt-4">
+        <section className="grid md:grid-cols-3 gap-8 mt-8">
           <AboutSection />
           <BlogSection />
           <SubscribeForm />
@@ -174,11 +174,11 @@ export default async function Home() {
             <input
               type="email"
               placeholder="Nhập email của bạn"
-              className="flex-1 px-4 py-2 rounded-md bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent h-10"
+              className="flex-1 px-4 py-2 rounded-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent h-10"
             />
             <Button
               variant="default"
-              className="bg-white text-green-500 hover:bg-gray-50 h-10 px-6"
+              className="bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-600 h-10 px-6"
             >
               Đăng ký
             </Button>

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { useCartStore } from "@/store/useCartStore";
 import { Loader2, MapPin } from "lucide-react";
 import type { AddressType } from "@/types/address";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 
 interface OrderSummaryProps {
@@ -57,8 +57,8 @@ export default function OrderSummary({ selectedAddress, onOpenAddressModal }: Or
             <Card>
                 <CardHeader>
                     <div className="flex justify-between items-center">
-                        <CardTitle className="text-base">Giao tới</CardTitle>
-                        <Button variant="link" className="p-0 h-auto" onClick={onOpenAddressModal}>
+                        <CardTitle className="text-base text-foreground">Giao tới</CardTitle>
+                        <Button variant="link" className="p-0 h-auto text-primary underline underline-offset-2" onClick={onOpenAddressModal}>
                             Thay đổi
                         </Button>
                     </div>
@@ -66,7 +66,7 @@ export default function OrderSummary({ selectedAddress, onOpenAddressModal }: Or
                 <CardContent>
                     {selectedAddress ? (
                         <>
-                            <div className="font-semibold text-sm">
+                            <div className="font-semibold text-sm text-foreground">
                                 <p>{selectedAddress.fullName} | {selectedAddress.phoneNumber}</p>
                             </div>
                             <p className="text-sm text-muted-foreground mt-1">
@@ -74,7 +74,7 @@ export default function OrderSummary({ selectedAddress, onOpenAddressModal }: Or
                             </p>
                         </>
                     ) : (
-                         <div className="flex items-center text-muted-foreground text-sm py-2">
+                        <div className="flex items-center text-muted-foreground text-sm py-2">
                             <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
                             <p>Chưa có địa chỉ giao hàng.</p>
                         </div>
@@ -85,14 +85,23 @@ export default function OrderSummary({ selectedAddress, onOpenAddressModal }: Or
             <Card>
                 <CardContent className="p-6">
                     <div className="space-y-4">
-                        <div className="flex justify-between text-sm"><p>Tạm tính</p><p>{formatCurrency(totalOriginal)}</p></div>
-                        <div className="flex justify-between text-sm"><p>Giảm giá</p><p className="text-red-500">-{formatCurrency(totalDiscount)}</p></div>
+                        <div className="flex justify-between text-sm">
+                            <p className="text-foreground">Tạm tính</p>
+                            <p className="text-foreground">{formatCurrency(totalOriginal)}</p>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <p className="text-muted-foreground">Giảm giá</p>
+                            <p className="text-red-500 dark:text-red-400">-{formatCurrency(totalDiscount)}</p>
+                        </div>
                     </div>
-                    <div className="border-t my-4"></div>
-                    <div className="flex justify-between font-semibold"><p>Tổng tiền</p><p className="text-red-600 text-lg">{formatCurrency(totalFinal)}</p></div>
-                    <p className="text-xs text-gray-500 text-right mt-1">(Đã bao gồm VAT nếu có)</p>
+                    <div className="border-t my-4 border-border"></div>
+                    <div className="flex justify-between font-semibold">
+                        <p className="text-foreground">Tổng tiền</p>
+                        <p className="text-red-600 dark:text-red-400 text-lg">{formatCurrency(totalFinal)}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground text-right mt-1">(Đã bao gồm VAT nếu có)</p>
                     <Button
-                        className="w-full mt-6 bg-red-600 hover:bg-red-700 text-lg h-12"
+                        className="w-full mt-6 bg-primary hover:bg-primary/90 text-lg h-12"
                         disabled={selectedCount === 0 || !selectedAddress || isPending}
                         onClick={handleProceedToCheckout}
                     >

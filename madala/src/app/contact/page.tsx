@@ -109,16 +109,16 @@ export default function ContactUsPage() {
 
   return (
     <main>
-      <div className="px-4 md:px-8 lg:px-20 py-10 bg-gray-50 min-h-screen">
+      <div className="px-4 md:px-8 lg:px-20 py-10 bg-gray-50 dark:bg-gray-900 min-h-screen">
         <Breadcrumb items={[{ label: "Liên hệ" }]} />
 
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">
               LIÊN HỆ VỚI CHÚNG TÔI
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               Chọn phương thức liên lạc phù hợp với bạn
             </p>
           </div>
@@ -137,13 +137,13 @@ export default function ContactUsPage() {
               >
                 <div className="text-center">
                   <div className="mb-3 flex justify-center">
-                    <method.icon className="w-10 h-10 text-gray-600" />
+                    <method.icon className="w-10 h-10 text-gray-600 dark:text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
                     {method.title}
                   </h3>
-                  <p className="text-sm text-gray-600">{method.description}</p>
-                  <div className="mt-2 text-xs font-medium text-gray-700">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{method.description}</p>
+                  <div className="mt-2 text-xs font-medium text-gray-700 dark:text-gray-300">
                     {method.contactInfo}
                   </div>
                   {selectedMethod === method.id && (
@@ -158,7 +158,7 @@ export default function ContactUsPage() {
 
           {/* Dynamic Form */}
           <div
-            className={`bg-white rounded-lg shadow-md p-8 ${currentMethod?.formBg
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 ${currentMethod?.formBg
               } border-l-4 ${selectedMethod === "phone"
                 ? "border-green-400"
                 : selectedMethod === "email"
@@ -168,7 +168,7 @@ export default function ContactUsPage() {
           >
             {/* Form Header */}
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center justify-center gap-2">
                 {currentMethod?.icon && <currentMethod.icon className="w-6 h-6" />}
                 {formContent?.title}
               </h2>
@@ -187,7 +187,7 @@ export default function ContactUsPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Name Field */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-gray-700">
+                <Label htmlFor="name" className="text-gray-700 dark:text-gray-300">
                   Tên <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -204,7 +204,7 @@ export default function ContactUsPage() {
 
               {/* Email/Phone */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-700">
+                <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
                   {selectedMethod === "phone"
                     ? "Số điện thoại"
                     : selectedMethod === "zalo"
@@ -234,7 +234,7 @@ export default function ContactUsPage() {
 
               {/* Message Field */}
               <div className="space-y-2">
-                <Label htmlFor="message" className="text-gray-700">
+                <Label htmlFor="message" className="text-gray-700 dark:text-gray-300">
                   {selectedMethod === "zalo" ? "Tin nhắn Zalo" : "Tin nhắn"}{" "}
                   <span className="text-red-500">*</span>
                 </Label>

@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/Components/ui/card";
 import React, { useState, useTransition } from "react";
 import { formatCurrency } from "@/lib/utils";
 import { buyNowAndRedirect } from "@/lib/actions/cart";
-import { Toast } from "react-hot-toast";
+import toast from "react-hot-toast";
 interface ProductCardProps {
   id: string;
   name: string;
@@ -59,10 +59,10 @@ const ProductCard = ({
     : 0;
 
   return (
-    <Card className="group hover:shadow-medium transition-all duration-300 overflow-hidden">
-      <div className="relative">
+    <Card className="group hover:shadow-medium transition-all duration-300 overflow-hidden h-full flex flex-col bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+      <div className="relative flex-shrink-0">
         <Link href={`/products/${slug}`}>
-          <div className="aspect-square overflow-hidden">
+          <div className="aspect-square overflow-hidden bg-gray-50 dark:bg-gray-700">
             <Image
               src={image}
               alt={name}
@@ -91,7 +91,7 @@ const ProductCard = ({
         <Button
           variant="ghost"
           size="sm"
-          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/80 hover:bg-white"
+          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800"
         >
           <Heart className="h-4 w-4" />
         </Button>
@@ -109,9 +109,9 @@ const ProductCard = ({
         </div>
       </div>
 
-      <CardContent className="p-4">
-        <Link href={`/products/${slug}`}>
-          <h3 className="font-medium text-sm mb-2 line-clamp-2 hover:text-[#8BC34A] transition-colors">
+      <CardContent className="p-4 flex-1 flex flex-col bg-white dark:bg-gray-800">
+        <Link href={`/products/${slug}`} className="flex-1">
+          <h3 className="font-medium text-sm mb-2 line-clamp-2 hover:text-[#8BC34A] dark:hover:text-[#8BC34A] transition-colors min-h-[2.5rem] text-gray-900 dark:text-gray-100">
             {name}
           </h3>
         </Link>
@@ -124,7 +124,7 @@ const ProductCard = ({
               className={`h-3 w-3 ${
                 i < Math.floor(rating.average)
                   ? "fill-yellow-400 text-yellow-400"
-                  : "text-gray-300"
+                  : "text-gray-300 dark:text-gray-600"
               }`}
             />
           ))}
@@ -134,7 +134,7 @@ const ProductCard = ({
         </div>
 
         {/* Price */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-auto">
           {salePrice ? (
             <>
               <span className="font-bold text-[#8BC34A]">

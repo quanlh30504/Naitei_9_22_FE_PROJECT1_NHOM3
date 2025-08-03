@@ -105,14 +105,19 @@ export default async function ProductDetailPage({
           {/* Product Info */}
           <div>
             <ProductInfo 
-              productId={product._id}  
+              productId={product._id as string}
               name={product.name}
               price={product.price}
               salePrice={product.salePrice}
               description={product.description}
               shortDescription={product.shortDescription}
               attributes={product.attributes}
-              rating={product.rating}
+              rating={{
+                ...product.rating,
+                details: product.rating.details instanceof Map
+                  ? Object.fromEntries(product.rating.details)
+                  : product.rating.details
+              }}
               stock={product.stock}
               tags={product.tags}
               discountPercentage={discountPercentage}
@@ -133,7 +138,12 @@ export default async function ProductDetailPage({
             productId={product.slug}
             description={product.description}
             attributes={product.attributes}
-            rating={product.rating}
+            rating={{
+              ...product.rating,
+              details: product.rating.details instanceof Map
+                ? Object.fromEntries(product.rating.details)
+                : product.rating.details
+            }}
           />
         </div>
       </div>
