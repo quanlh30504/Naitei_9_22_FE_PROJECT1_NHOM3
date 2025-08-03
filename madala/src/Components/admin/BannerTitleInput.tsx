@@ -2,23 +2,22 @@ import React from 'react';
 import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 
-interface BannerTitleInputProps {
-    value: string;
-    onChange: (value: string) => void;
+interface BannerTitleInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    error?: string;
 }
 
-const BannerTitleInput: React.FC<BannerTitleInputProps> = ({ value, onChange }) => (
+const BannerTitleInput: React.FC<BannerTitleInputProps> = ({ error, ...rest }) => (
     <div className="space-y-2">
         <Label htmlFor="title">Tiêu đề *</Label>
         <Input
             id="title"
-            value={value}
-            onChange={e => onChange(e.target.value)}
-            placeholder="Nhập tiêu đề banner"
             maxLength={200}
-            required
+            {...rest}
         />
-        <p className="text-xs text-gray-500">{value.length}/200 ký tự</p>
+        {rest.value && typeof rest.value === 'string' && (
+            <p className="text-xs text-gray-500">{rest.value.length}/200 ký tự</p>
+        )}
+        {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
 );
 

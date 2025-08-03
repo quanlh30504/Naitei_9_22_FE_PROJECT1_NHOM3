@@ -1,6 +1,8 @@
+
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getAddresses } from "@/lib/actions/address";
+import { getCart } from "@/lib/actions/cart";
 import CartView from "@/app/cart/components/CartView";
 
 export default async function CartPage() {
@@ -11,6 +13,9 @@ export default async function CartPage() {
 
   const addressResponse = await getAddresses();
   const initialAddresses = addressResponse.success ? addressResponse.data : [];
+
+  // Fetch cart mới nhất từ server
+  // Đã chuyển CartStateSyncer lên layout, không cần fetch cart ở đây nữa
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors">

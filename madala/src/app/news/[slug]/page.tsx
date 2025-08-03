@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/Components/ui/button";
@@ -29,11 +29,6 @@ export default function NewsDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [commentForm, setCommentForm] = useState({
-    name: "",
-    email: "",
-    comment: "",
-  });
 
   useEffect(() => {
     if (slug) {
@@ -56,21 +51,12 @@ export default function NewsDetailPage() {
     }
   };
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Hiển thị toast thành công
+  const handleCommentSubmit = (data: { name: string; email: string; comment: string }) => {
     toast.success("Gửi ý kiến thành công!", {
       duration: 3000,
       position: "top-right",
     });
-
-    // Reset form
-    setCommentForm({ name: "", email: "", comment: "" });
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setCommentForm((prev) => ({ ...prev, [field]: value }));
+    // Xử lý gửi comment lên server tại đây nếu cần
   };
 
   if (loading) {
@@ -146,11 +132,7 @@ export default function NewsDetailPage() {
       </div>
 
       {/* Comment Form */}
-      <CommentForm
-        formData={commentForm}
-        onFormChange={handleInputChange}
-        onSubmit={handleCommentSubmit}
-      />
+  <CommentForm onSubmit={handleCommentSubmit} />
     </div>
   );
 }

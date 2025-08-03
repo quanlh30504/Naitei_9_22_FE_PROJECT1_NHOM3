@@ -5,16 +5,15 @@ import OrderDetailsClient from "@/Components/order/OrderDetailsClient";
 // render động để thấy dữ liệu mới nhất
 export const dynamic = 'force-dynamic';
 
-export default async function OrderDetailPage({
-  params,
-}: {
-  params: { orderId: string };
+export default async function OrderDetailPage(props: {
+  params: { orderId: string } | Promise<{ orderId: string }>;
 }) {
-  const { orderId } = params;
+  const resolvedParams = await props.params;
+  const orderId = resolvedParams.orderId;
   const response = await getOrderDetails(orderId);
 
   if (!response.success || !response.data) {
-    notFound(); 
+    notFound();
   }
   const order = response.data;
 

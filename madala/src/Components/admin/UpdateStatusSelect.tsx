@@ -8,37 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils'; 
 
 // --- Cấu hình màu sắc và nhãn cho từng trạng thái ---
-const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> = {
-    pending: {
-        label: "Chờ thanh toán",
-        className:
-            "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-700 dark:text-yellow-100 dark:border-yellow-600"
-    },
-    processing: {
-        label: "Đang xử lý",
-        className:
-            "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-700 dark:text-blue-100 dark:border-blue-600"
-    },
-    shipped: {
-        label: "Đang vận chuyển",
-        className:
-            "bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-700 dark:text-indigo-100 dark:border-indigo-600"
-    },
-    delivered: {
-        label: "Đã giao",
-        className:
-            "bg-green-100 text-green-800 border-green-200 dark:bg-green-700 dark:text-green-100 dark:border-green-600"
-    },
-    cancelled: {
-        label: "Đã hủy",
-        className:
-            "bg-red-100 text-red-800 border-red-200 dark:bg-red-700 dark:text-red-100 dark:border-red-600"
-    },
-    returned: {
-        label: "Đã trả hàng",
-        className:
-            "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-500"
-    },
+const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string; dotClass: string }> = {
+    pending:    { label: "Chờ thanh toán", className: "bg-yellow-100 text-yellow-800 border-yellow-400 dark:bg-yellow-400/20 dark:text-yellow-200 dark:border-yellow-400 shadow-md", dotClass: "bg-yellow-400" },
+    processing: { label: "Đang xử lý", className: "bg-blue-100 text-blue-800 border-blue-400 dark:bg-blue-400/20 dark:text-blue-200 dark:border-blue-400 shadow-md", dotClass: "bg-blue-400" },
+    shipped:    { label: "Đang vận chuyển", className: "bg-indigo-100 text-indigo-800 border-indigo-400 dark:bg-indigo-400/20 dark:text-indigo-200 dark:border-indigo-400 shadow-md", dotClass: "bg-indigo-400" },
+    delivered:  { label: "Đã giao", className: "bg-green-100 text-green-800 border-green-400 dark:bg-green-400/20 dark:text-green-200 dark:border-green-400 shadow-md", dotClass: "bg-green-400" },
+    cancelled:  { label: "Đã hủy", className: "bg-red-100 text-red-800 border-red-400 dark:bg-red-400/20 dark:text-red-200 dark:border-red-400 shadow-md", dotClass: "bg-red-400" },
+    returned:   { label: "Đã trả hàng", className: "bg-gray-100 text-gray-800 border-gray-400 dark:bg-gray-400/20 dark:text-gray-200 dark:border-gray-400 shadow-md", dotClass: "bg-gray-400" },
 };
 
 // Lấy danh sách options từ config để tránh lặp lại code
@@ -75,8 +51,9 @@ export default function UpdateStatusSelect({ orderId, currentStatus, onStatusUpd
         <Select onValueChange={handleValueChange} defaultValue={currentStatus} disabled={isPending}>
             <SelectTrigger
                 className={cn(
-                    "w-[160px] h-8 text-xs font-semibold focus:ring-0 focus:ring-offset-0",
-                    currentStatusStyle.className
+                    "w-[160px] h-8 text-xs font-semibold focus:ring-0 focus:ring-offset-0 border-2 transition-all duration-200",
+                    currentStatusStyle.className,
+                    "dark:shadow-lg dark:shadow-yellow-900/10"
                 )}
             >
                 <SelectValue placeholder="Cập nhật trạng thái" />
@@ -85,8 +62,7 @@ export default function UpdateStatusSelect({ orderId, currentStatus, onStatusUpd
                 {STATUS_OPTIONS.map(option => (
                     <SelectItem key={option.value} value={option.value}>
                         <div className="flex items-center gap-2">
-                            {/* Thêm chấm màu để trực quan hơn */}
-                            <span className={cn('w-2 h-2 rounded-full', STATUS_CONFIG[option.value].className)} />
+                            <span className={cn('w-2 h-2 rounded-full border border-white shadow', STATUS_CONFIG[option.value].dotClass)} />
                             <span>{option.label}</span>
                         </div>
                     </SelectItem>

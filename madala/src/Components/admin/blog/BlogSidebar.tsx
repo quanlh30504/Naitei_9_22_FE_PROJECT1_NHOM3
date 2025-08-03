@@ -1,42 +1,19 @@
 import BlogImageUpload from "@/Components/admin/blog/BlogImageUpload";
 import BlogTagsManager from "@/Components/admin/blog/BlogTagsManager";
 import BlogSettings from "@/Components/admin/blog/BlogSettings";
+import { Control } from "react-hook-form";
+import { BlogFormData } from "@/lib/validations/forms";
 
 interface BlogSidebarProps {
-    formData: any;
-    handleImageChange: (url: string) => void;
-    handleTagsChange: (tags: string[]) => void;
-    handleFeaturedChange: (checked: boolean) => void;
-    handlePublishedChange: (checked: boolean) => void;
+    control: Control<BlogFormData>;
 }
 
-export default function BlogSidebar({
-    formData,
-    handleImageChange,
-    handleTagsChange,
-    handleFeaturedChange,
-    handlePublishedChange,
-}: BlogSidebarProps) {
+export default function BlogSidebar({ control }: BlogSidebarProps) {
     return (
         <div className="space-y-6">
-            <BlogImageUpload
-                featuredImage={formData.featuredImage}
-                onImageChange={handleImageChange}
-                showChangeButton={true}
-            />
-
-            <BlogTagsManager
-                tags={formData.tags}
-                onTagsChange={handleTagsChange}
-            />
-
-            <BlogSettings
-                isFeatured={formData.isFeatured}
-                isPublished={formData.isPublished}
-                onFeaturedChange={handleFeaturedChange}
-                onPublishedChange={handlePublishedChange}
-                showPublishedToggle={true}
-            />
+            <BlogImageUpload control={control} />
+            <BlogTagsManager control={control} />
+            <BlogSettings control={control} showPublishedToggle={true} />
         </div>
     );
 }

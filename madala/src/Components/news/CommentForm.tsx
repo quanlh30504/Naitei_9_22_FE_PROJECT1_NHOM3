@@ -1,66 +1,79 @@
 'use client';
 
 import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { commentFormSchema, type CommentFormData } from '@/lib/validations/forms';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Textarea } from '@/Components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 
-interface CommentFormData {
-  name: string;
-  email: string;
-  comment: string;
-}
+export const CommentForm = ({ onSubmit: onSubmitProp, isSubmitting = false }: { onSubmit?: (data: CommentFormData) => void; isSubmitting?: boolean }) => {
+  const form = useForm<CommentFormData>({
+    resolver: zodResolver(commentFormSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      comment: '',
+    },
+  });
 
-interface CommentFormProps {
-  formData: CommentFormData;
-  onFormChange: (field: keyof CommentFormData, value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  isSubmitting?: boolean; 
-}
+  //Hàm onSubmitProp chỉ nhận data, không truyền event
+  const onSubmit = (data: CommentFormData) => {
+    if (typeof onSubmitProp === 'function') {
+      onSubmitProp(data);
+    }
+    form.reset();
+  };
 
-export const CommentForm = ({ formData, onFormChange, onSubmit, isSubmitting = false }: CommentFormProps) => {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Đóng góp ý kiến của bạn</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium">Tên của bạn *</label>
               <Input
                 id="name"
+                {...form.register('name')}
                 type="text"
-                value={formData.name}
-                onChange={(e) => onFormChange('name', e.target.value)}
-                required
                 placeholder="Nguyễn Văn A"
+                disabled={isSubmitting}
               />
+              {form.formState.errors.name && (
+                <span className="text-red-500 text-xs">{form.formState.errors.name.message}</span>
+              )}
             </div>
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">Email *</label>
               <Input
                 id="email"
+                {...form.register('email')}
                 type="email"
-                value={formData.email}
-                onChange={(e) => onFormChange('email', e.target.value)}
-                required
                 placeholder="email@example.com"
+                disabled={isSubmitting}
               />
+              {form.formState.errors.email && (
+                <span className="text-red-500 text-xs">{form.formState.errors.email.message}</span>
+              )}
             </div>
           </div>
           <div className="space-y-2">
             <label htmlFor="comment" className="text-sm font-medium">Ý kiến *</label>
             <Textarea
               id="comment"
-              value={formData.comment}
-              onChange={(e) => onFormChange('comment', e.target.value)}
-              required
+              {...form.register('comment')}
               rows={5}
               placeholder="Để lại bình luận của bạn tại đây..."
+              disabled={isSubmitting}
             />
+            {form.formState.errors.comment && (
+              <span className="text-red-500 text-xs">{form.formState.errors.comment.message}</span>
+            )}
           </div>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Đang gửi...' : 'Gửi ý kiến'}

@@ -33,9 +33,10 @@ import DeleteBannerDialog from './DeleteBannerDialog';
 
 interface BannerListProps {
     banners: IBanner[];
+    onStatusChange?: () => void;
 }
 
-export default function BannerList({ banners }: BannerListProps) {
+export default function BannerList({ banners, onStatusChange }: BannerListProps) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -118,7 +119,11 @@ export default function BannerList({ banners }: BannerListProps) {
                 const result = await toggleBannerActive(bannerId);
                 if (result.success) {
                     toast.success(result.message);
-                    router.refresh();
+                    if (onStatusChange) {
+                        onStatusChange();
+                    } else {
+                        router.refresh();
+                    }
                 } else {
                     toast.error(result.message);
                 }
@@ -162,7 +167,7 @@ export default function BannerList({ banners }: BannerListProps) {
                                 {banners.map((banner, index) => (
                                     <TableRow key={String(banner._id)}>
                                         <TableCell>
-                                            <div className="relative w-16 h-10 rounded overflow-hidden border">
+                                            <div className="relative w-16 h-10 rounded overflow-hidden border border-gray-200 dark:border-gray-700">
                                                 <Image
                                                     src={banner.imageUrl}
                                                     alt={banner.title}
@@ -179,7 +184,7 @@ export default function BannerList({ banners }: BannerListProps) {
                                                     {banner.title}
                                                 </div>
                                                 {banner.description && (
-                                                    <div className="text-xs text-gray-500 line-clamp-1">
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
                                                         {banner.description}
                                                     </div>
                                                 )}
@@ -230,7 +235,7 @@ export default function BannerList({ banners }: BannerListProps) {
                                                     size="sm"
                                                     className={`h-6 px-2 text-xs ${banner.isActive
                                                         ? 'bg-green-600 hover:bg-green-700 text-white'
-                                                        : 'border-gray-300 hover:bg-gray-50'
+                                                        : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
                                                         }`}
                                                     disabled={isPending}
                                                     onClick={() => handleToggleActive(String(banner._id))}

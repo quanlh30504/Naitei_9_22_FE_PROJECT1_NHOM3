@@ -60,12 +60,13 @@ export default async function RootLayout({
             <BanWatcher />
             <ToastProvider />
             <CartProvider initialCart={JSON.parse(JSON.stringify(initialCart))}>
+              <CartStateSyncer serverCart={plainInitialCart} />
               <ConditionalLayout
                 header={<SiteHeader />}
                 footer={<Footer />}
               >
                 <CompareProvider>
-                  <main className="min-h-screen">{children}</main>
+                  {children}
                 </CompareProvider>
               </ConditionalLayout>
             </CartProvider>
