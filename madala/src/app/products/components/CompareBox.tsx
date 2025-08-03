@@ -4,7 +4,7 @@ import { IProduct } from "@/models/Product";
 import { ICategory } from "@/models/Category";
 import { useCompare } from "@/contexts/CompareContext";
 import { FaTimes, FaBalanceScale, FaShoppingCart } from "react-icons/fa";
-import SafeImage from "./SafeImage";
+import SafeImage from "../../../Components/SafeImage";
 import CompareModal from "./CompareModal";
 
 interface CompareBoxProps {
@@ -17,7 +17,7 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
 
   // Chức năng thêm vào giỏ hàng
   const handleAddToCart = (product: IProduct) => {
-    console.log('Added to cart:', product);
+    console.log("Added to cart:", product);
   };
 
   return (
@@ -51,10 +51,13 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
           <div className="space-y-3">
             <div className="space-y-2">
               {compareProducts.map((product) => (
-                <div key={String(product._id)} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                <div
+                  key={String(product._id)}
+                  className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
+                >
                   <div className="flex-shrink-0">
                     <SafeImage
-                      src={product.images?.[0] || ''}
+                      src={product.images?.[0] || ""}
                       alt={product.name}
                       width={40}
                       height={40}
@@ -62,16 +65,16 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
                       fallbackClassName="w-10 h-10 rounded"
                     />
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-gray-800 truncate">
                       {product.name}
                     </p>
                     <p className="text-xs text-[#8ba63a] font-semibold">
-                      {product.salePrice.toLocaleString('vi-VN')}₫
+                      {product.salePrice.toLocaleString("vi-VN")}₫
                     </p>
                   </div>
-                  
+
                   <button
                     onClick={() => removeFromCompare(String(product._id))}
                     className="p-1 text-gray-400 hover:text-red-500 transition-colors"
@@ -81,7 +84,7 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
                 </div>
               ))}
             </div>
-            
+
             <div className="space-y-2 pt-2 border-t border-gray-200">
               <button
                 onClick={() => setIsModalOpen(true)}
@@ -90,7 +93,7 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
                 <FaBalanceScale className="text-xs" />
                 So sánh chi tiết
               </button>
-              
+
               {compareProducts.length >= 2 && (
                 <p className="text-xs text-center text-gray-500">
                   Tối đa 3 sản phẩm
@@ -115,4 +118,3 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
 };
 
 export default CompareBox;
-
