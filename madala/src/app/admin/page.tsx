@@ -1,4 +1,3 @@
-import { AdminGuard } from '@/Components/admin/AdminGuard';
 import { AdminLayout } from '@/Components/admin/AdminLayout';
 import { StatsCard } from '@/Components/admin/StatsCard';
 import { ActivityItem } from '@/Components/admin/ActivityItem';

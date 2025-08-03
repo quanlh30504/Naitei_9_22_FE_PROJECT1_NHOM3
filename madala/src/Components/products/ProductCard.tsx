@@ -6,7 +6,10 @@ import { Star, ShoppingCart, Heart } from "lucide-react";
 import { Button } from "@/Components/ui/button";
 import { Badge } from "@/Components/ui/badge";
 import { Card, CardContent } from "@/Components/ui/card";
-
+import React, { useState, useTransition } from "react";
+import { formatCurrency } from "@/lib/utils";
+import { buyNowAndRedirect } from "@/lib/actions/cart";
+import { Toast } from "react-hot-toast";
 interface ProductCardProps {
   id: string;
   name: string;
@@ -31,16 +34,27 @@ const ProductCard = ({
   image,
   rating,
   isHotTrend,
-  isFeatured
+  isFeatured,
 }: ProductCardProps) => {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price);
+
+  const [isPending, startTransition] = useTransition();
+
+  console
+
+  const handleBuyNow = () => {
+    startTransition(async () => {
+      try {
+        const result = await buyNowAndRedirect(id, 1);
+        if (result?.error) {
+          toast.error(result.error);
+        }
+      } catch (error) {
+        // toast.error(error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.");
+      }
+    });
   };
 
-  const discountPercentage = salePrice 
+  const discountPercentage = salePrice
     ? Math.round(((price - salePrice) / price) * 100)
     : 0;
 
@@ -84,7 +98,11 @@ const ProductCard = ({
 
         {/* Quick Actions */}
         <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button className="w-full bg-[#8BC34A] hover:bg-[#7AB23C] text-white" size="sm">
+          <Button
+            className="w-full bg-[#8BC34A] hover:bg-[#7AB23C] text-white"
+            size="sm"
+            onClick={handleBuyNow}
+          >
             <ShoppingCart className="h-4 w-4 mr-2" />
             MUA HÀNG
           </Button>
@@ -111,7 +129,7 @@ const ProductCard = ({
             />
           ))}
           <span className="text-xs text-muted-foreground ml-1">
-            ({rating.count})
+            ({rating.count || 0})
           </span>
         </div>
 
@@ -120,15 +138,15 @@ const ProductCard = ({
           {salePrice ? (
             <>
               <span className="font-bold text-[#8BC34A]">
-                {formatPrice(salePrice)}
+                {formatCurrency(salePrice)}
               </span>
               <span className="text-sm text-muted-foreground line-through">
-                {formatPrice(price)}
+                {formatCurrency(price)}
               </span>
             </>
           ) : (
             <span className="font-bold text-foreground">
-              {formatPrice(price)}
+              {formatCurrency(price)}
             </span>
           )}
         </div>

@@ -6,10 +6,13 @@ import { usePathname } from "next/navigation";
 import type { User as UserType } from "next-auth";
 import { User, MapPin, CreditCard, Star, Eye, Heart } from "lucide-react";
 import userImage from "@/assets/images/Users/user-image.jpg";
+import { Package } from 'lucide-react'; 
+import {IUser} from "@/models/User";
 
 const menuItems = [
   { name: "Thông tin tài khoản", href: "/profile", icon: User },
-  { name: "Số địa chỉ", href: "/profile/addresses", icon: MapPin },
+    { name: "Quản lý đơn hàng", href: "/profile/orders", icon: Package }, 
+  { name: "Danh sách địa chỉ", href: "/profile/addresses", icon: MapPin },
   { name: "Thông tin thanh toán", href: "/profile/payment", icon: CreditCard },
   { name: "Đánh giá sản phẩm", href: "/profile/reviews", icon: Star },
   { name: "Sản phẩm bạn đã xem", href: "/profile/viewed", icon: Eye },
@@ -17,7 +20,7 @@ const menuItems = [
 ];
 
 interface ProfileSidebarProps {
-  user: UserType;
+  user: IUser;
 }
 
 export default function ProfileSidebar({ user }: ProfileSidebarProps) {

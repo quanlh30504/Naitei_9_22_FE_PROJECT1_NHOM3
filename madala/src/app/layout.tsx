@@ -10,6 +10,8 @@ import "./globals.css";
 import { getUserForHeader } from "@/lib/actions/user";
 import Header from "@/Components/header";
 import Footer from "@/Components/footer";
+import { getCart } from "@/lib/actions/cart";
+import { CartProvider } from "@/app/cart/context/CartContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +36,10 @@ export default async function RootLayout({
 }) {
   const userData = await getUserForHeader();
 
+  // lấy dữ liệu giỏ hàng của người dùng
+  const cartResult = await getCart();
+  const initialCart = cartResult.success ? cartResult.data : null;
+
   return (
     <html lang="vi">
       <body
@@ -41,14 +47,16 @@ export default async function RootLayout({
       >
         <AuthProvider>
           <ToastProvider />
-          <ConditionalLayout
-            header={<Header initialUserData={userData} />}
-            footer={<Footer />}
-          >
-            <CompareProvider>
-              <main className="min-h-screen">{children}</main>
-            </CompareProvider>
-          </ConditionalLayout>
+          <CartProvider initialCart={JSON.parse(JSON.stringify(initialCart))}>
+            <ConditionalLayout
+              header={<Header initialUserData={userData} />}
+              footer={<Footer />}
+            >
+              <CompareProvider>
+                <main className="min-h-screen">{children}</main>
+              </CompareProvider>
+            </ConditionalLayout>
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

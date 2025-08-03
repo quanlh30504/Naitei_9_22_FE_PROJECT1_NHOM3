@@ -1,11 +1,11 @@
-export function getImageUrl(src: string): string {
-  if (!src) return "/api/images/placeholder.jpg"; 
+export function getImageUrl(imageUrl: string): string {
+  if (!imageUrl) return "";
 
-  let cleaned = src.replace(/^\/public\/|^public\//, "");
-  
-  if (cleaned.startsWith("/")) {
-    cleaned = cleaned.substring(1);
+  let cleanUrl = imageUrl.replace(/^\/public\//, "/").replace(/^public\//, "/");
+
+  if (!cleanUrl.startsWith("/")) {
+    cleanUrl = "/" + cleanUrl;
   }
-  
-  return `/api/images/${cleaned}`;
+
+  return cleanUrl;
 }
