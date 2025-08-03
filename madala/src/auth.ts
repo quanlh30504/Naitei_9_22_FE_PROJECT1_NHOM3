@@ -1,18 +1,30 @@
 /**
  * AUTH.TS - NextAuth.js Authentication Configuration
+<<<<<<< HEAD
  *
+=======
+ * 
+>>>>>>> 7e6b1d5 ([Task] Rebase tk-28,29,53,57,59 : Feature dashboard for admin)
  * CHỨC NĂNG CHÍNH:
  * - Cấu hình NextAuth.js cho toàn bộ ứng dụng
  * - Xác thực người dùng qua email/password (Credentials Provider)
  * - Kết nối với MongoDB để lưu trữ sessions và accounts
  * - Quản lý JWT tokens và session callbacks
  * - Xử lý đăng nhập/đăng xuất users
+<<<<<<< HEAD
  *
+=======
+ * 
+>>>>>>> 7e6b1d5 ([Task] Rebase tk-28,29,53,57,59 : Feature dashboard for admin)
  * SỬ DỤNG:
  * - Import { auth } từ file này để check authentication trong API routes
  * - Tự động tạo các API endpoints: /api/auth/signin, /api/auth/signout, etc.
  * - Providers: useSession(), signIn(), signOut() trong React components
+<<<<<<< HEAD
  *
+=======
+ * 
+>>>>>>> 7e6b1d5 ([Task] Rebase tk-28,29,53,57,59 : Feature dashboard for admin)
  * CẤU HÌNH:
  * - MongoDB Adapter để lưu session data
  * - JWT strategy với custom callbacks
@@ -164,7 +176,11 @@ export const authConfig = {
   },
   pages: {
     signIn: "/login",
+<<<<<<< HEAD
     error: "/login",
+=======
+    error: '/login',
+>>>>>>> 7e6b1d5 ([Task] Rebase tk-28,29,53,57,59 : Feature dashboard for admin)
   },
   secret: process.env.AUTH_SECRET,
   trustHost: true,
