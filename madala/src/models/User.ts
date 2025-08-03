@@ -6,11 +6,12 @@ export interface IUser extends Document {
   password?: string;
   phone?: string;
   image?: string;
-  roles?: string;
+  role?: string;
   nickname?: string;
   gender?: string;
   country?: string;
   birthDate?: Date;
+  isActive?: boolean;
   mandalaPayBalance: number; 
 }
 
@@ -36,7 +37,7 @@ const UserSchema: Schema = new Schema(
     image: {
       type: String,
     },
-    roles: {
+    role: {
       type: String,
       default: "user",
     },
@@ -51,6 +52,10 @@ const UserSchema: Schema = new Schema(
     },
     birthDate: {
       type: Date,
+    },
+    isActive: {
+      type: Boolean,
+      default: true, 
     },
     mandalaPayBalance: {
       type: Number,

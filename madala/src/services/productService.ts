@@ -1,8 +1,6 @@
+
 import { IProduct } from '@/models/Product';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
-// Response interfaces phù hợp với API thực tế
 export interface ProductsResponse {
   products: IProduct[];
   total?: number;
@@ -15,11 +13,10 @@ export interface ProductResponse {
 
 export interface ProductQueryParams {
   category?: string;
-  tags?: string; // Tags as comma-separated string như API route
+  tags?: string;
   search?: string;
   featured?: boolean;
   hotTrend?: boolean;
-  // Thêm pagination support (tương thích với MongoDB client code cũ)
   page?: number;
   limit?: number;
 }
@@ -27,13 +24,27 @@ export interface ProductQueryParams {
 class ProductService {
   // Helper method để tạo absolute URL
   private getAbsoluteUrl(path: string): string {
-    // Nếu đang chạy trên server (SSR)
     if (typeof window === 'undefined') {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
       return `${baseUrl}${path}`;
     }
-    // Nếu đang chạy trên client
     return path;
+  }
+
+  // Xóa sản phẩm theo ID (API admin)
+  async deleteProductById(id: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const relativePath = `/api/admin/products/${id}`;
+      const url = this.getAbsoluteUrl(relativePath);
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return { success: false, error: (error instanceof Error ? error.message : 'Unknown error') };
+    }
   }
 
   // Lấy tất cả sản phẩm với các tùy chọn filter - Match với API route thực tế

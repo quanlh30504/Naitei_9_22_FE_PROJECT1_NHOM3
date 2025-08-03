@@ -13,13 +13,19 @@ export async function GET(
   try {
     await connectToDB();
     const { slug } = await params;
+    const { searchParams } = new URL(request.url);
+    const isAdmin = searchParams.get('admin') === 'true';
 
-    // Get current blog post and increment view count
-    const blogPost = await BlogPost.findOneAndUpdate(
-      { slug, isPublished: true },
-      { $inc: { viewCount: 1 } },
-      { new: true }
-    ).lean();
+    let blogPost;
+    if (isAdmin) {
+      blogPost = await BlogPost.findOne({ slug }).lean();
+    } else {
+      blogPost = await BlogPost.findOneAndUpdate(
+        { slug, isPublished: true },
+        { $inc: { viewCount: 1 } },
+        { new: true }
+      ).lean();
+    }
 
     if (!blogPost) {
       return NextResponse.json(
@@ -30,7 +36,17 @@ export async function GET(
 
     const singleBlogPost = Array.isArray(blogPost) ? blogPost[0] : blogPost;
 
-    // Get previous and next posts for navigation
+    // For admin access, return just the post data
+    if (isAdmin) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          post: blogPost
+        }
+      });
+    }
+
+    // Get previous and next posts for navigation (public access only)
     const [previousPost, nextPost] = await Promise.all([
       BlogPost.findOne({
         isPublished: true,
