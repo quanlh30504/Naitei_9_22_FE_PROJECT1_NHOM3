@@ -1,19 +1,13 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/Components/ui/card";
 import { Label } from "@/Components/ui/label";
 import { Input } from "@/Components/ui/input";
-import React from "react";
 
 interface PriceStockSectionProps {
-    formData: {
-        price: string;
-        salePrice: string;
-        stock: string;
-        discountPercentage: string;
-    };
-    handleInputChange: (field: string, value: any) => void;
+    register: any;
+    errors: any;
 }
 
-const PriceStockSection: React.FC<PriceStockSectionProps> = ({ formData, handleInputChange }) => (
+const PriceStockSection: React.FC<PriceStockSectionProps> = ({ register, errors }) => (
     <Card>
         <CardHeader>
             <CardTitle>Giá và kho hàng</CardTitle>
@@ -25,34 +19,32 @@ const PriceStockSection: React.FC<PriceStockSectionProps> = ({ formData, handleI
                     <Input
                         id="price"
                         type="number"
-                        value={formData.price}
-                        onChange={(e) => handleInputChange('price', e.target.value)}
+                        {...register('price', { valueAsNumber: true })}
                         placeholder="0"
                         min="0"
-                        required
                     />
+                    {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="salePrice">Giá khuyến mãi (VND)</Label>
                     <Input
                         id="salePrice"
                         type="number"
-                        value={formData.salePrice}
-                        onChange={(e) => handleInputChange('salePrice', e.target.value)}
+                        {...register('salePrice', { valueAsNumber: true })}
                         placeholder="0"
                         min="0"
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="stock">Tồn kho</Label>
+                    <Label htmlFor="stock">Tồn kho *</Label>
                     <Input
                         id="stock"
                         type="number"
-                        value={formData.stock}
-                        onChange={(e) => handleInputChange('stock', e.target.value)}
+                        {...register('stock', { valueAsNumber: true })}
                         placeholder="0"
                         min="0"
                     />
+                    {errors.stock && <p className="text-red-500 text-xs mt-1">{errors.stock.message}</p>}
                 </div>
             </div>
             <div className="space-y-2">
@@ -60,8 +52,7 @@ const PriceStockSection: React.FC<PriceStockSectionProps> = ({ formData, handleI
                 <Input
                     id="discountPercentage"
                     type="number"
-                    value={formData.discountPercentage}
-                    onChange={(e) => handleInputChange('discountPercentage', e.target.value)}
+                    {...register('discountPercentage', { valueAsNumber: true })}
                     placeholder="0"
                     min="0"
                     max="100"

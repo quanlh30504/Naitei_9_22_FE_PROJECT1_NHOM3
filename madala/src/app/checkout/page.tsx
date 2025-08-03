@@ -9,13 +9,15 @@ import connectToDB from "@/lib/db";
 import { Loader2 } from 'lucide-react';
 
 // component con bất đồng bộ chứa logic lấy dữ liệu
-async function CheckoutContent({ searchParams }: { searchParams: { items?: string } }) {
+async function CheckoutContent(props: { searchParams: { items?: string } | Promise<{ items?: string }> }) {
+    const { searchParams } = props;
+    const resolvedSearchParams = await searchParams;
     const session = await auth();
     if (!session?.user) {
         redirect("/login?error=CheckoutAuthRequired");
     }
 
-    const selectedItemIds = searchParams.items?.split(',') || [];
+    const selectedItemIds = resolvedSearchParams.items?.split(',') || [];
     if (selectedItemIds.length === 0) {
         redirect("/cart");
     }
@@ -47,7 +49,6 @@ async function CheckoutContent({ searchParams }: { searchParams: { items?: strin
 
 // component trang chính được bọc logic trong Suspense
 export default async function CheckoutPage(props: any) {
-    const { searchParams } = await props;
     return (
         <div className="bg-gray-50 min-h-screen">
             <div className="container mx-auto px-4 py-8">
@@ -57,7 +58,7 @@ export default async function CheckoutPage(props: any) {
                         <Loader2 className="h-12 w-12 animate-spin text-blue-600"/>
                     </div>
                 }>
-                    <CheckoutContent searchParams={searchParams} />
+                    <CheckoutContent {...props} />
                 </Suspense>
             </div>
         </div>

@@ -88,23 +88,23 @@ export default function BannerManager() {
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
                     <div className="space-y-2">
-                        <div className="h-8 bg-gray-200 rounded w-48 animate-pulse" />
-                        <div className="h-4 bg-gray-200 rounded w-64 animate-pulse" />
+                        <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-48 animate-pulse" />
+                        <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-64 animate-pulse" />
                     </div>
-                    <div className="h-10 bg-gray-200 rounded w-32 animate-pulse" />
+                    <div className="h-10 bg-gray-200 dark:bg-gray-800 rounded w-32 animate-pulse" />
                 </div>
-                <div className="h-64 bg-gray-200 rounded animate-pulse" />
+                <div className="h-64 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
+    <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Quản lý Banner</h1>
-                    <p className="text-gray-600 mt-1">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Quản lý Banner</h1>
+                    <p className="font-bold text-gray-600 dark:text-gray-300 mt-1">
                         Quản lý các banner hiển thị trên website
                     </p>
                 </div>
@@ -132,10 +132,10 @@ export default function BannerManager() {
                 {bannerTypes.map((type) => (
                     <Card key={type.value} className="text-center">
                         <CardContent className="pt-4">
-                            <div className="text-2xl font-bold text-gray-900">
+                            <div className="text-2xl font-bold text-gray-900 dark:text-white">
                                 {type.count}
                             </div>
-                            <div className="text-sm text-gray-600 mt-1">
+                            <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                                 {type.label}
                             </div>
                         </CardContent>
@@ -162,8 +162,8 @@ export default function BannerManager() {
                             >
                                 {type.label}
                                 <span className={`px-1.5 py-0.5 rounded-full text-xs ${activeFilter === type.value
-                                    ? 'bg-white text-gray-800'
-                                    : 'bg-gray-200 text-gray-700'
+                                    ? 'bg-white dark:bg-gray-900 text-gray-800 dark:text-white'
+                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
                                     }`}>
                                     {type.count}
                                 </span>
@@ -174,7 +174,7 @@ export default function BannerManager() {
             </Card>
 
             {/* Banner List */}
-            <BannerList banners={filteredBanners} />
+            <BannerList banners={filteredBanners} onStatusChange={fetchBanners} />
         </div>
     );
 }

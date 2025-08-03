@@ -98,7 +98,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         {/* Button So sánh ở góc trên bên phải */}
-
         <Button
           size="icon"
           variant={isProductInCompare ? "default" : "secondary"}
@@ -116,6 +115,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
         >
           <Scale className="w-4 h-4" />
         </Button>
+      </div>
+
+      {/* Product Information */}
+      <div className="p-4 flex flex-col h-full">
+        <p className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 h-4">
+          {product.attributes?.brand || "Brand"}
+        </p>
 
         <h3
           className="font-semibold text-gray-800 dark:text-gray-200 mb-2 line-clamp-2 cursor-pointer hover:text-[#8ba63a] dark:hover:text-[#9CCC65] transition-colors h-12 overflow-hidden leading-5"

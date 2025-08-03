@@ -5,20 +5,11 @@ import { Input } from '@/Components/ui/input';
 import { Textarea } from '@/Components/ui/textarea';
 
 interface ProductBasicInfoSectionProps {
-    name: string;
-    sku: string;
-    shortDescription: string;
-    description: string;
-    handleInputChange: (field: string, value: any) => void;
+    register: any;
+    errors: any;
 }
 
-const ProductBasicInfoSection: React.FC<ProductBasicInfoSectionProps> = ({
-    name,
-    sku,
-    shortDescription,
-    description,
-    handleInputChange,
-}) => (
+const ProductBasicInfoSection: React.FC<ProductBasicInfoSectionProps> = ({ register, errors }) => (
     <Card>
         <CardHeader>
             <CardTitle>Thông tin cơ bản</CardTitle>
@@ -29,29 +20,26 @@ const ProductBasicInfoSection: React.FC<ProductBasicInfoSectionProps> = ({
                     <Label htmlFor="name">Tên sản phẩm *</Label>
                     <Input
                         id="name"
-                        value={name}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        {...register('name')}
                         placeholder="Nhập tên sản phẩm"
-                        required
                     />
+                    {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="sku">Mã SKU *</Label>
                     <Input
                         id="sku"
-                        value={sku}
-                        onChange={(e) => handleInputChange('sku', e.target.value)}
+                        {...register('sku')}
                         placeholder="Ví dụ: MYPHAM-001"
-                        required
                     />
+                    {errors.sku && <p className="text-red-500 text-xs mt-1">{errors.sku.message}</p>}
                 </div>
             </div>
             <div className="space-y-2">
                 <Label htmlFor="shortDescription">Mô tả ngắn</Label>
                 <Input
                     id="shortDescription"
-                    value={shortDescription}
-                    onChange={(e) => handleInputChange('shortDescription', e.target.value)}
+                    {...register('shortDescription')}
                     placeholder="Mô tả ngắn về sản phẩm"
                 />
             </div>
@@ -59,8 +47,7 @@ const ProductBasicInfoSection: React.FC<ProductBasicInfoSectionProps> = ({
                 <Label htmlFor="description">Mô tả chi tiết</Label>
                 <Textarea
                     id="description"
-                    value={description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    {...register('description')}
                     placeholder="Mô tả chi tiết về sản phẩm"
                     rows={4}
                 />

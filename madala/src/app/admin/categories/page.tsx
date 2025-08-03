@@ -14,7 +14,7 @@ import {
     DialogContent,
     DialogTrigger,
 } from '@/Components/ui/dialog';
-import CategoryForm from '@/Components/admin/categories/CategoryForm';
+import CategoryForm, { CategoryFormValues } from '@/Components/admin/categories/CategoryForm';
 import { CategoryTable } from '@/Components/admin/categories/CategoryTable';
 import { Label } from '@/Components/ui/label';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
@@ -50,7 +50,7 @@ export default function CategoriesPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState<ICategory | null>(null);
-    const [formData, setFormData] = useState<CategoryFormData>(initialFormData);
+    // Không cần formData, sẽ dùng defaultValues cho CategoryForm
 
     // Fetch data
     useEffect(() => {
@@ -102,51 +102,26 @@ export default function CategoriesPage() {
     const editingCategoryForForm: Category | null = editingCategory ? mapICategoryToCategory(editingCategory) : null;
 
     // Form handlers
-    const handleInputChange = (field: keyof CategoryFormData, value: any) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+    // Không cần handleInputChange, logic sẽ chuyển sang onSubmit của CategoryForm
 
-        // Auto-generate slug when name changes
-        if (field === 'name') {
-            setFormData(prev => ({
-                ...prev,
-                slug: categoryService.generateSlug(value)
-            }));
-        }
-
-        // Auto-set level based on parentId
-        if (field === 'parentId') {
-            setFormData(prev => ({
-                ...prev,
-                level: value ? 2 : 1
-            }));
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
+    const handleCategoryFormSubmit = async (values: CategoryFormValues) => {
         try {
             const categoryData = {
-                ...formData,
-                parentId: formData.parentId || null,
+                ...values,
+                parentId: values.parentId || null,
             };
-
             let result;
             if (editingCategory) {
                 result = await categoryService.updateCategory(String(editingCategory._id), categoryData);
             } else {
                 result = await categoryService.createCategory(categoryData);
             }
-
             if (result.success) {
                 toast.success(result.message || (editingCategory ? 'Cập nhật thành công' : 'Tạo danh mục thành công'));
                 setIsDialogOpen(false);
                 resetForm();
                 fetchCategories();
-                if (!editingCategory) fetchParentCategories(); // Refresh parent categories if new category
+                if (!editingCategory) fetchParentCategories();
             } else {
                 toast.error(result.error || 'Có lỗi xảy ra');
             }
@@ -161,15 +136,6 @@ export default function CategoriesPage() {
         const found = categories.find(cat => (cat._id || cat.categoryId) === category.id);
         if (found) {
             setEditingCategory(found);
-            setFormData({
-                name: found.name,
-                slug: found.slug,
-                description: found.description || '',
-                parentId: found.parentId || '',
-                level: found.level,
-                sortOrder: found.sortOrder,
-                isActive: found.isActive,
-            });
             setIsDialogOpen(true);
         }
     };
@@ -197,7 +163,6 @@ export default function CategoriesPage() {
     };
 
     const resetForm = () => {
-        setFormData(initialFormData);
         setEditingCategory(null);
     };
 
@@ -233,12 +198,18 @@ export default function CategoriesPage() {
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-md">
                                 <CategoryForm
-                                    formData={formData}
-                                    handleInputChange={handleInputChange}
                                     parentCategories={parentCategoriesForForm}
                                     editingCategory={editingCategoryForForm}
                                     setIsDialogOpen={setIsDialogOpen}
-                                    onSubmit={handleSubmit}
+                                    onSubmit={handleCategoryFormSubmit}
+                                    defaultValues={editingCategoryForForm ? {
+                                        name: editingCategoryForForm.name,
+                                        slug: editingCategoryForForm.slug,
+                                        description: editingCategoryForForm.description || "",
+                                        parentId: editingCategoryForForm.parentId || "",
+                                        sortOrder: editingCategoryForForm.sortOrder,
+                                        isActive: editingCategoryForForm.isActive,
+                                    } : undefined}
                                 />
                             </DialogContent>
                         </Dialog>

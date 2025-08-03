@@ -265,21 +265,32 @@ const ProductPage = () => {
                     />
 
                     <div>
-                        <div className="flex justify-between items-center mb-6">
-                            <div className="flex items-center gap-4">
-                                <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                    {filteredProducts.length} sản phẩm
-                                </span>
-                            </div>
-
-                            <div className="flex items-center">
-                                <PaginationWrapper
-                                    currentPage={currentPage}
-                                    totalPages={totalPages}
-                                    onPageChange={setCurrentPage}
-                                    isCompact={true}
-                                />
+                        {/* Header Section with improved layout */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6 transition-all duration-300 hover:shadow-md">
+                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                {/* Left side - View controls and product count */}
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                    <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
+                                    <ProductCounter count={filteredProducts.length} />
+                                </div>
+                                
+                                {/* Right side - Sort and pagination */}
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                    <SortFilter
+                                        currentSort={sortOption}
+                                        onSortChange={handleSortChange}
+                                        isLoading={loading}
+                                    />
+                                    <div className="hidden lg:block">
+                                        <PaginationWrapper
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            onPageChange={setCurrentPage}
+                                            isCompact={true}
+                                            className="flex justify-center mt-0"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

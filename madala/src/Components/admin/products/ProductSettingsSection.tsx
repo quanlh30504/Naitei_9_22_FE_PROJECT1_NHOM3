@@ -7,14 +7,14 @@ interface ProductSettingsSectionProps {
     isActive: boolean;
     isFeatured: boolean;
     isHotTrend: boolean;
-    handleInputChange: (field: string, value: any) => void;
+    setValue: (field: string, value: any) => void;
 }
 
 const ProductSettingsSection: React.FC<ProductSettingsSectionProps> = ({
     isActive,
     isFeatured,
     isHotTrend,
-    handleInputChange,
+    setValue,
 }) => (
     <Card>
         <CardHeader>
@@ -30,7 +30,7 @@ const ProductSettingsSection: React.FC<ProductSettingsSectionProps> = ({
                 </div>
                 <Switch
                     checked={isActive}
-                    onCheckedChange={(checked) => handleInputChange('isActive', checked)}
+                    onCheckedChange={(checked) => setValue('isActive', checked)}
                 />
             </div>
             <div className="flex items-center justify-between">
@@ -42,7 +42,7 @@ const ProductSettingsSection: React.FC<ProductSettingsSectionProps> = ({
                 </div>
                 <Switch
                     checked={isFeatured}
-                    onCheckedChange={(checked) => handleInputChange('isFeatured', checked)}
+                    onCheckedChange={(checked) => setValue('isFeatured', checked)}
                 />
             </div>
             <div className="flex items-center justify-between">
@@ -54,7 +54,7 @@ const ProductSettingsSection: React.FC<ProductSettingsSectionProps> = ({
                 </div>
                 <Switch
                     checked={isHotTrend}
-                    onCheckedChange={(checked) => handleInputChange('isHotTrend', checked)}
+                    onCheckedChange={(checked) => setValue('isHotTrend', checked)}
                 />
             </div>
         </CardContent>
