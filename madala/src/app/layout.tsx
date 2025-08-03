@@ -1,17 +1,17 @@
 import { SessionProvider } from "next-auth/react";
 import AuthProvider from "@/Components/Auth/AuthProvider";
 import ToastProvider from "@/Components/ToastProvider";
-import { ConditionalLayout } from "@/Components/ConditionalLayout";
-import CompareProvider from "@/contexts/CompareContext";
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { getUserForHeader } from "@/lib/actions/user";
 import Header from "@/Components/header";
 import Footer from "@/Components/footer";
+import { getUserForHeader } from "@/lib/actions/user";
 import { getCart } from "@/lib/actions/cart";
 import { CartProvider } from "@/app/cart/context/CartContext";
+import { CompareProvider } from "@/contexts/CompareContext";
+import "./globals.css";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,16 +46,15 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <ToastProvider />
-          <CartProvider initialCart={JSON.parse(JSON.stringify(initialCart))}>
-            <ConditionalLayout
-              header={<Header initialUserData={userData} />}
-              footer={<Footer />}
-            >
-              <CompareProvider>
-                <main className="min-h-screen">{children}</main>
-              </CompareProvider>
-            </ConditionalLayout>
+          <CartProvider initialCart={initialCart}>
+            <CompareProvider>
+              <ToastProvider />
+              <Header initialUserData={userData} />
+              <main className="min-h-screen">
+                {children}
+              </main>
+              <Footer />
+            </CompareProvider>
           </CartProvider>
         </AuthProvider>
       </body>

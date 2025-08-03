@@ -43,9 +43,9 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
   };
 
   const handleProductClick = () => {
-    // Navigate to product detail page
-    const productId = String(product._id) || product.productId || product.id;
-    router.push(`/products/${productId}`);
+    // Navigate to product detail page using slug instead of ID
+    const slug = product.slug || String(product._id) || product.productId || product.id;
+    router.push(`/products/${slug}`);
   };
 
   return (

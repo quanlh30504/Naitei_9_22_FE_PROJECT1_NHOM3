@@ -3,7 +3,8 @@ import {
   Package, 
   FileText, 
   Users, 
-  Settings
+  Settings,
+  FolderTree
 } from 'lucide-react';
 
 export const adminNavItems = [
@@ -11,6 +12,11 @@ export const adminNavItems = [
     title: 'Dashboard',
     href: '/admin',
     icon: LayoutDashboard,
+  },
+  {
+    title: 'Danh mục',
+    href: '/admin/categories',
+    icon: FolderTree,
   },
   {
     title: 'Sản phẩm',
