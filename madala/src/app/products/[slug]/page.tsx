@@ -1,32 +1,35 @@
-import { notFound } from 'next/navigation';
-import { Metadata } from 'next';
-import { productService } from '@/services/productService';
-import { getImageUrl } from '@/lib/getImageUrl';
-import { IProduct } from '@/models/Product';
-import ProductImageGallery from '@/Components/products/ProductImageGallery';
-import ProductInfo from '@/Components/products/ProductInfo';
-import ProductTabs from '@/Components/products/ProductTabs';
-import RelatedProducts from '@/Components/products/RelatedProducts';
+import { notFound } from "next/navigation";
+import { Metadata } from "next";
+import { productService } from "@/services/productService";
+import { getImageUrl } from "@/lib/getImageUrl";
+import { IProduct } from "@/models/Product";
+import ProductImageGallery from "@/Components/products/ProductImageGallery";
+import ProductInfo from "@/Components/products/ProductInfo";
+import ProductTabs from "@/Components/products/ProductTabs";
+import RelatedProducts from "@/Components/products/RelatedProducts";
 
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ProductDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  
+
   try {
     const product = await productService.getProductBySlug(slug);
-    
+
     if (!product) {
       return {
-        title: 'Sản phẩm không tìm thấy',
+        title: "Sản phẩm không tìm thấy",
       };
     }
-    
+
     return {
       title: `${product.name} | Mandala Store`,
-      description: product.shortDescription || product.description.substring(0, 160),
+      description:
+        product.shortDescription || product.description.substring(0, 160),
       openGraph: {
         title: product.name,
         description: product.shortDescription || product.description,
@@ -35,46 +38,50 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
     };
   } catch (error) {
     return {
-      title: 'Sản phẩm không tìm thấy',
+      title: "Sản phẩm không tìm thấy",
     };
   }
 }
 
-export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
+export default async function ProductDetailPage({
+  params,
+}: ProductDetailPageProps) {
   const { slug } = await params;
-  
+
   let product: IProduct | null = null;
   let relatedProducts: IProduct[] = [];
-  
+
   try {
     const productResult = await productService.getProductBySlug(slug);
-    
+
     if (!productResult) {
       return notFound();
     }
-    
+
     product = productResult;
-    
+
     // Lấy sản phẩm liên quan (cùng category)
     if (product.categoryIds && product.categoryIds.length > 0) {
-      const allCategoryProducts = await productService.getProductsByCategory(product.categoryIds[0]);
+      const allCategoryProducts = await productService.getProductsByCategory(
+        product.categoryIds[0]
+      );
       relatedProducts = allCategoryProducts
-        .filter(p => p._id !== product?._id)
+        .filter((p) => p._id !== product?._id)
         .slice(0, 4);
     }
   } catch (error) {
-    console.error('Error fetching product:', error);
+    console.error("Error fetching product:", error);
     return notFound();
   }
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(price);
   };
 
-  const discountPercentage = product.salePrice 
+  const discountPercentage = product.salePrice
     ? Math.round(((product.price - product.salePrice) / product.price) * 100)
     : 0;
 
@@ -83,14 +90,15 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <nav className="mb-8 text-sm text-muted-foreground">
-          <span>Trang chủ</span> → <span>Sản phẩm</span> → <span className="text-foreground">{product.name}</span>
+          <span>Trang chủ</span> → <span>Sản phẩm</span> →{" "}
+          <span className="text-foreground">{product.name}</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Product Images */}
           <div>
-            <ProductImageGallery 
-              images={product.images} 
+            <ProductImageGallery
+              images={product.images}
               productName={product.name}
               description={product.description}
               shortDescription={product.shortDescription}
@@ -99,7 +107,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
           {/* Product Info */}
           <div>
-            <ProductInfo 
+            <ProductInfo
               name={product.name}
               price={product.price}
               salePrice={product.salePrice}
@@ -113,22 +121,22 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             />
           </div>
 
-          {/* Tabs and Details */}
-          <div className="lg:col-span-1">
-            <ProductTabs 
-              description={product.description}
-              attributes={product.attributes}
-              rating={product.rating}
-            />
+          {/* Related Products */}
+          <div>
+            {relatedProducts && relatedProducts.length > 0 && (
+              <RelatedProducts products={relatedProducts} />
+            )}
           </div>
         </div>
 
-        {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div className="mt-16">
-            <RelatedProducts products={relatedProducts} />
-          </div>
-        )}
+        {/* Product Details Section */}
+        <div className="mt-12">
+          <ProductTabs
+            description={product.description}
+            attributes={product.attributes}
+            rating={product.rating}
+          />
+        </div>
       </div>
     </div>
   );

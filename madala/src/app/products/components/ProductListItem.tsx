@@ -1,11 +1,11 @@
-'use client';
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { IProduct } from '@/models/Product';
-import { FaHeart, FaShoppingCart, FaBalanceScale } from 'react-icons/fa';
-import SafeImage from '@/app/products/components/SafeImage';
-import StarRating from '@/app/products/components/StarRating';
-import { useCompare } from '@/contexts/CompareContext';
+"use client";
+import React from "react";
+import { useRouter } from "next/navigation";
+import { IProduct } from "@/models/Product";
+import { FaHeart, FaShoppingCart, FaBalanceScale } from "react-icons/fa";
+import SafeImage from "@/Components/SafeImage";
+import StarRating from "@/app/products/components/StarRating";
+import { useCompare } from "@/contexts/CompareContext";
 
 interface ProductListItemProps {
   product: IProduct;
@@ -14,16 +14,16 @@ interface ProductListItemProps {
   onToggleFavorite?: (product: IProduct) => void;
 }
 
-const ProductListItem: React.FC<ProductListItemProps> = ({ 
-  product, 
-  onAddToCompare, 
-  onAddToCart, 
-  onToggleFavorite 
+const ProductListItem: React.FC<ProductListItemProps> = ({
+  product,
+  onAddToCompare,
+  onAddToCart,
+  onToggleFavorite,
 }) => {
   const router = useRouter();
   const { isInCompare, addToCompare, removeFromCompare } = useCompare();
   const hasDiscount = product.salePrice < product.price;
-  const discountPercent = hasDiscount 
+  const discountPercent = hasDiscount
     ? Math.round(((product.price - product.salePrice) / product.price) * 100)
     : 0;
 
@@ -32,7 +32,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
   const handleCompareClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const productId = String(product._id) || product.productId || product.id;
-    
+
     if (isProductInCompare) {
       // Nếu đã có trong danh sách so sánh, loại bỏ
       removeFromCompare(productId);
@@ -49,26 +49,26 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
   };
 
   return (
-    <div 
+    <div
       className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden p-4 mb-4 ${
-        isProductInCompare ? 'ring-2 ring-[#8ba63a] ring-opacity-50' : ''
+        isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
       }`}
     >
       <div className="flex flex-col md:flex-row gap-4">
         {/* Product Image */}
-        <div 
+        <div
           className="relative flex-shrink-0 w-full md:w-48 group/image cursor-pointer"
           onClick={handleProductClick}
         >
           <SafeImage
-            src={product.images?.[0] || ''}
+            src={product.images?.[0] || ""}
             alt={product.name}
             width={200}
             height={200}
             className="w-full h-48 md:h-32 object-cover rounded-lg transition-transform duration-300 group-hover/image:scale-105"
             fallbackClassName="w-full h-48 md:h-32 rounded-lg"
           />
-          
+
           {/* Discount Badge */}
           {hasDiscount && (
             <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-semibold">
@@ -80,11 +80,15 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
           <button
             onClick={handleCompareClick}
             className={`absolute top-2 right-2 p-1 rounded-full transition-all duration-300 ${
-              isProductInCompare 
-                ? 'bg-[#8ba63a] text-white hover:bg-red-500' 
-                : 'bg-white bg-opacity-90 text-gray-600 hover:bg-[#8ba63a] hover:text-white'
+              isProductInCompare
+                ? "bg-[#8ba63a] text-white hover:bg-red-500"
+                : "bg-white bg-opacity-90 text-gray-600 hover:bg-[#8ba63a] hover:text-white"
             }`}
-            title={isProductInCompare ? 'Bỏ khỏi danh sách so sánh' : 'Thêm vào so sánh'}
+            title={
+              isProductInCompare
+                ? "Bỏ khỏi danh sách so sánh"
+                : "Thêm vào so sánh"
+            }
           >
             <FaBalanceScale className="text-xs" />
           </button>
@@ -96,11 +100,11 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
           <div className="flex-1">
             {/* Brand */}
             <p className="text-sm text-gray-500 uppercase tracking-wide mb-1">
-              {product.attributes?.brand || 'Brand'}
+              {product.attributes?.brand || "Brand"}
             </p>
 
             {/* Product Name */}
-            <h3 
+            <h3
               className="font-semibold text-lg text-gray-800 mb-2 cursor-pointer hover:text-[#8ba63a] transition-colors"
               onClick={handleProductClick}
             >
@@ -109,7 +113,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
 
             {/* Rating */}
             <div className="mb-2">
-              <StarRating 
+              <StarRating
                 rating={product.rating?.average || 0}
                 size="sm"
                 showValue={true}
@@ -126,11 +130,11 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
             <div className="mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold text-[#8ba63a]">
-                  {product.salePrice.toLocaleString('vi-VN')}₫
+                  {product.salePrice.toLocaleString("vi-VN")}₫
                 </span>
                 {hasDiscount && (
                   <span className="text-sm text-gray-500 line-through">
-                    {product.price.toLocaleString('vi-VN')}₫
+                    {product.price.toLocaleString("vi-VN")}₫
                   </span>
                 )}
               </div>
@@ -149,7 +153,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
               <FaShoppingCart className="text-xs" />
               MUA HÀNG
             </button>
-            
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
