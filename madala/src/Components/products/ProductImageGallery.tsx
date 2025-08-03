@@ -19,31 +19,45 @@ export default function ProductImageGallery({
   description, 
   shortDescription 
 }: ProductImageGalleryProps) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const safeImages = images && Array.isArray(images) ? images : []
 
   const handleThumbnailClick = (index: number) => {
-    setCurrentImageIndex(index);
-  };
+    setCurrentImageIndex(index)
+  }
 
   const handlePreviousImage = () => {
     setCurrentImageIndex((prev) => 
-      prev === 0 ? images.length - 1 : prev - 1
-    );
-  };
+      prev === 0 ? safeImages.length - 1 : prev - 1
+    )
+  }
 
   const handleNextImage = () => {
     setCurrentImageIndex((prev) => 
-      prev === images.length - 1 ? 0 : prev + 1
-    );
-  };
+      prev === safeImages.length - 1 ? 0 : prev + 1
+    )
+  }
+  
+  if (safeImages.length === 0) {
+    return (
+      <div className="aspect-square bg-secondary rounded-lg overflow-hidden flex items-center justify-center">
+        <Image
+          src="/placeholder.svg"
+          alt="Không có hình ảnh"
+          width={400}
+          height={400}
+          className="w-full h-full object-cover"
+        />
+      </div>
+    )
+  }
 
 
   return (
     <div className="flex gap-4">
-      {/* Thumbnail Images - Vertical Layout */}
-      {images.length > 1 && (
+      {safeImages.length > 1 && (
         <div className="flex flex-col gap-2 w-20">
-          {images.slice(0, 4).map((image, index) => (
+          {safeImages.slice(0, 4).map((image, index) => (
             <div 
               key={index} 
               className={`aspect-square bg-secondary rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-all duration-200 ${
@@ -65,12 +79,10 @@ export default function ProductImageGallery({
         </div>
       )}
 
-      {/* Main Image and Description */}
       <div className="flex-1 space-y-4">
-        {/* Main Image */}
         <div className="relative aspect-square bg-secondary rounded-lg overflow-hidden group">
           <Image
-            src={getImageUrl(images[currentImageIndex])}
+            src={getImageUrl(safeImages[currentImageIndex])}
             alt={`${productName} - Ảnh ${currentImageIndex + 1}`}
             width={600}
             height={600}
@@ -78,8 +90,7 @@ export default function ProductImageGallery({
             priority
           />
           
-          {/* Navigation Arrows*/}
-          {images.length > 1 && (
+          {safeImages.length > 1 && (
             <>
               <Button
                 variant="ghost"
@@ -102,13 +113,12 @@ export default function ProductImageGallery({
           )}
         </div>
 
-        {/* Image Counter */}
-        {images.length > 1 && (
+        {safeImages.length > 1 && (
           <div className="text-center text-sm text-muted-foreground">
-            {currentImageIndex + 1} / {images.length}
+            {currentImageIndex + 1} / {safeImages.length}
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }

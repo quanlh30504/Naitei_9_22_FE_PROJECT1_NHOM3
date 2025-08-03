@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useFormState } from "react-dom";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { registerUser } from "@/lib/actions";
 import Link from "next/link";
@@ -14,19 +14,25 @@ import { FormLabel } from "@/Components/FormLabel";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [state, dispatch] = useFormState(registerUser, undefined);
 
   useEffect(() => {
     if (state?.success) {
       toast.success(state.message);
-      router.push("/login");
+      const callbackUrl = searchParams.get("callbackUrl");
+      if (callbackUrl) {
+        router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+      } else {
+        router.push("/login");
+      }
     }
 
     if (state && !state.success) {
       toast.error(state.message);
     }
-  }, [state, router]);
+  }, [state, router, searchParams]);
 
   return (
     <main className="bg-white text-gray-800 min-h-screen">

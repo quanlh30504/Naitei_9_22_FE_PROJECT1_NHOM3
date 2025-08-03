@@ -62,6 +62,8 @@ export interface IOrder extends Document {
         grandTotal: number;     // TỔNG CỘNG phải trả
     };
     notes?: string; // Ghi chú 
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 const OrderSchema = new Schema<IOrder>(

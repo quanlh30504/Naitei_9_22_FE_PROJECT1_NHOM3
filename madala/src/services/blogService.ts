@@ -1,23 +1,5 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
-export interface BlogPost {
-  _id: string;
-  title: string;
-  slug: string;
-  content?: string;
-  excerpt: string;
-  featuredImage: string;
-  tags: string[];
-  isPublished?: boolean;
-  isFeatured?: boolean;
-  viewCount: number;
-  likesCount: number;
-  commentsCount: number;
-  publishedAt: string;
-  createdAt?: string;
-  updatedAt?: string;
-  formattedDate?: string;
-}
+import { BlogPost } from "@/types/blog";
 
 export interface BlogListResponse {
   success: boolean;
@@ -66,17 +48,14 @@ export class BlogService {
   /**
    * Get paginated list of blog posts
    */
-  static async getBlogPosts(page: number = 1, limit: number = 6): Promise<BlogListResponse> {
-    const url = `${API_BASE_URL}/api/blog?page=${page}&limit=${limit}`;
-    
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error('Lỗi khi tải danh sách bài viết');
+  static async getBlogPosts(page: number = 1, limit: number = 6, includeUnpublished: boolean = false): Promise<BlogListResponse> {
+      const url = `${API_BASE_URL}/api/blog?page=${page}&limit=${limit}${includeUnpublished ? '&includeUnpublished=true' : ''}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Lỗi khi tải danh sách bài viết');
+      }
+      return response.json();
     }
-    
-    return response.json();
-  }
 
   /**
    * Get blog post detail by slug
@@ -233,3 +212,12 @@ export const formatDate = (dateString: string): string => {
     day: '2-digit'
   });
 };
+
+// upload blog image
+export async function uploadBlogImage(formDataImg: FormData) {
+  const response = await fetch('/api/blog/upload-image', {
+    method: 'POST',
+    body: formDataImg,
+  });
+  return response.json();
+}
