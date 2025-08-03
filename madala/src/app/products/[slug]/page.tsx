@@ -34,7 +34,7 @@ export async function generateMetadata({
       openGraph: {
         title: product.name,
         description: product.shortDescription || product.description,
-        images: [getImageUrl(product.images[0])],
+        images: [getImageUrl(product.images?.[0] || '')],
       },
     };
   } catch (error) {
