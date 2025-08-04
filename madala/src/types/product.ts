@@ -16,7 +16,8 @@ export interface Product {
     color?: string;
     material?: string;
     brand?: string;
-    size?: Record<string, string>;
+    type?: string;
+    size?: Record<string, string> | string;
     weight?: string;
   };
   rating: {
@@ -29,4 +30,7 @@ export interface Product {
   isHotTrend: boolean;
   viewCount: number;
   discountPercentage: number;
+  commentCount?: number;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }

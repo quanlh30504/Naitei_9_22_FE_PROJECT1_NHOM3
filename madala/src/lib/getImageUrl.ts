@@ -1,11 +1,11 @@
-export function getImageUrl(imageUrl: string): string {
-  if (!imageUrl) return "";
-
-  let cleanUrl = imageUrl.replace(/^\/public\//, "/").replace(/^public\//, "/");
-
-  if (!cleanUrl.startsWith("/")) {
-    cleanUrl = "/" + cleanUrl;
+export function getImageUrl(src: string): string {
+  if (!src) {
+    return '/placeholder.svg';
   }
-
-  return cleanUrl;
+  
+  if (src.startsWith('https://res.cloudinary.com')) {
+    return src;
+  }
+  
+  return src.replace('/public/', '/');
 }
