@@ -19,6 +19,7 @@ import {
   Menu,
   ChevronDown,
   Heart,
+  Wallet,
 } from "lucide-react";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
@@ -32,6 +33,7 @@ import {
 } from "@/constants/headerLinks";
 import { getUserForHeader, UserHeaderData } from "@/lib/actions/user";
 import { useCart } from "@/app/cart/context/CartContext";
+import { formatCurrency } from "@/lib/utils";
 
 export default function Header({
   initialUserData,
@@ -184,16 +186,17 @@ export default function Header({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Link
-              href="/wishlist"
-              className="flex flex-col items-center text-gray-600 hover:text-primary relative"
-            >
-              <Heart className="h-6 w-6" />
-              <span className="text-xs mt-1">Yêu thích</span>
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                0
-              </span>
-            </Link>
+            {session?.user && userData && (
+              <div className="flex items-center gap-2 text-gray-700 p-2">
+                <Wallet className="h-7 w-7 text-primary" />
+                <div className="flex flex-col text-left">
+                  <span className="text-xs text-gray-500">Ví Mandala</span>
+                  <span className="text-sm font-bold">
+                    {formatCurrency(userData.mandalaPayBalance ?? 0)}
+                  </span>
+                </div>
+              </div>
+            )}
 
             <Link
               href="/cart"

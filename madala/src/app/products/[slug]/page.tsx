@@ -7,7 +7,7 @@ import ProductImageGallery from "@/Components/products/ProductImageGallery";
 import ProductInfo from "@/Components/products/ProductInfo";
 import ProductTabs from "@/Components/products/ProductTabs";
 import RelatedProducts from "@/Components/products/RelatedProducts";
-
+import { formatCurrency } from "@/lib/utils";
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -74,7 +74,7 @@ export default async function ProductDetailPage({
     return notFound();
   }
 
-  const formatPrice = (price: number) => {
+  const formatCurrency = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",

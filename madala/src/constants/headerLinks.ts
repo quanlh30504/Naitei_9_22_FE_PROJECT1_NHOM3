@@ -21,7 +21,7 @@ export const userMenuItems: MenuItem[] = [
     text: "Hồ sơ cá nhân"
   },
   {
-    href: "/orders",
+    href: "/profile/order",
     text: "Đơn hàng của tôi"
   },
   {
