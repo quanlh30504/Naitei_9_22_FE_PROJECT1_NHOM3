@@ -131,7 +131,7 @@ export default async function Home() {
                   slug={product.slug}
                   price={product.price}
                   salePrice={product.salePrice}
-                  image={getImageUrl(product.images[0])}
+                  image={getImageUrl(product.images?.[0] || '')}
                   rating={product.rating}
                   isHotTrend={product.isHotTrend}
                   isFeatured={product.isFeatured}

@@ -47,7 +47,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
                   {/* Product Image */}
                   <div className="w-16 h-16 flex-shrink-0">
                     <Image
-                      src={getImageUrl(product.images[0])}
+                      src={getImageUrl(product.images?.[0] || '')}
                       alt={product.name}
                       width={64}
                       height={64}
