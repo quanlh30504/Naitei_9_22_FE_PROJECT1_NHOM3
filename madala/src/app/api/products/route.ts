@@ -15,8 +15,10 @@ export async function GET(request: NextRequest) {
     const isFeatured = searchParams.get('featured');
     const isHotTrend = searchParams.get('hotTrend');
     
-    // Tạo filter object
-    const filter: any = {};
+    // Tạo filter object - chỉ lấy sản phẩm đang hoạt động
+    const filter: any = {
+      isActive: true
+    };
     
     if (category) {
       filter.categoryIds = { $in: [category] };

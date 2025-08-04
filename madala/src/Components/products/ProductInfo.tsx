@@ -5,6 +5,7 @@ import { Card } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Star, Heart, Share2, ShoppingCart, Minus, Plus } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface ProductAttribute {
   brand?: string;
@@ -72,11 +73,11 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   };
 
   const handleAddToCart = () => {
-    console.log("Added to cart:", { name, quantity });
+    toast.success(`Đã thêm ${quantity} ${name} vào giỏ hàng`)
   };
 
   const handleBuyNow = () => {
-    console.log("Buy now:", { name, quantity });
+    toast.success(`Mua ngay ${quantity} ${name}`)
   };
 
   const increaseQuantity = () => {

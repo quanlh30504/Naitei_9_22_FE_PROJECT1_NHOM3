@@ -12,10 +12,10 @@ export async function GET(
 
     const { slug } = await params;
 
-    // Tìm sản phẩm theo slug
+    // Tìm sản phẩm theo slug - chỉ lấy sản phẩm đang hoạt động
     const product = await db.collection("products").findOne({
       slug: slug,
-      $or: [{ isActive: { $exists: false } }, { isActive: true }],
+      isActive: true,
     });
 
     if (!product) {
