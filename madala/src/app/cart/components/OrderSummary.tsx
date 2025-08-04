@@ -1,109 +1,13 @@
-// "use client";
-// import { Button } from "@/Components/ui/button";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-// import { useCart } from "../context/CartContext";
-// import { useMemo } from "react";
-
-// interface OrderSummaryProps {
-//   address: { name: string; phone: string; location: string };
-// }
-
-// export default function OrderSummary({ address }: OrderSummaryProps) {
-//   const { items, selectedItemIds } = useCart();
-
-//   const { totalOriginal, totalDiscount, totalFinal, selectedCount } = useMemo(() => {
-//     const selectedItems = items.filter((item) =>
-//       selectedItemIds.includes(item._id) 
-//     );
-
-//     const original = selectedItems.reduce(
-//       (acc, item) => acc + item.product.price * item.quantity, 
-//       0
-//     );
-
-//     const final = selectedItems.reduce(
-//       (acc, item) =>
-//         acc + (item.product.salePrice ?? item.product.price) * item.quantity,
-//       0
-//     );
-
-//     return {
-//       totalOriginal: original,
-//       totalFinal: final,
-//       totalDiscount: original - final,
-//       selectedCount: selectedItems.length, //số lượng item đã chọn
-//     };
-//   }, [items, selectedItemIds]);
-
-//   const formatPrice = (price: number) => {
-//     return new Intl.NumberFormat("vi-VN", {
-//       style: "currency",
-//       currency: "VND",
-//     }).format(price);
-//   };
-
-//   return (
-//     <div className="w-full lg:w-1/3">
-//       <Card>
-//         <CardHeader>
-//           <div className="flex justify-between items-center">
-//             <CardTitle className="text-base">Giao tới</CardTitle>
-//             <Button variant="link" className="p-0 h-auto">
-//               Thay đổi
-//             </Button>
-//           </div>
-//         </CardHeader>
-//         <CardContent>
-//           <div className="font-semibold text-sm mb-4">
-//             <p>{address.name}</p>
-//             <p>{address.phone}</p>
-//           </div>
-//           <p className="text-sm text-gray-600">{address.location}</p>
-//         </CardContent>
-//       </Card>
-
-//       <Card className="mt-4">
-//         <CardContent className="p-6">
-//           <div className="space-y-4">
-//             <div className="flex justify-between text-sm">
-//               <p>Tạm tính</p>
-//               <p>{formatPrice(totalOriginal)}</p>
-//             </div>
-//             <div className="flex justify-between text-sm">
-//               <p>Giảm giá</p>
-//               <p className="text-red-500">-{formatPrice(totalDiscount)}</p>
-//             </div>
-//           </div>
-//           <div className="border-t my-4"></div>
-//           <div className="flex justify-between font-semibold">
-//             <p>Tổng tiền</p>
-//             <p className="text-red-600 text-lg">{formatPrice(totalFinal)}</p>
-//           </div>
-//           <p className="text-xs text-gray-500 text-right">
-//             (Đã bao gồm VAT nếu có)
-//           </p>
-//           <Button
-//             className="w-full mt-6 bg-red-600 hover:bg-red-700 text-lg h-12"
-//             disabled={selectedCount === 0} // Vô hiệu hóa nút nếu chưa chọn sản phẩm nào
-//           >
-//             Mua Hàng ({selectedCount})
-//           </Button>
-//         </CardContent>
-//       </Card>
-//     </div>
-//   );
-// }
-"use client";
-
+'use client';
 import { useMemo, useTransition } from "react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/Components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { useCart } from "@/app/cart/context/CartContext";
-import { createOrderFromCart } from "@/lib/actions/order";
 import { Loader2, MapPin } from "lucide-react";
 import type { AddressType } from "@/types/address";
-
+import { useRouter } from "next/navigation"; 
+import { formatCurrency } from "@/lib/utils";
 
 interface OrderSummaryProps {
     selectedAddress: AddressType | undefined;
@@ -111,6 +15,7 @@ interface OrderSummaryProps {
 }
 
 export default function OrderSummary({ selectedAddress, onOpenAddressModal }: OrderSummaryProps) {
+       const router = useRouter(); 
     const { items, selectedItemIds } = useCart();
     const [isPending, startTransition] = useTransition();
 
@@ -118,14 +23,34 @@ export default function OrderSummary({ selectedAddress, onOpenAddressModal }: Or
         const selectedItems = items.filter((item) => selectedItemIds.includes(item._id));
         const original = selectedItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
         const final = selectedItems.reduce((acc, item) => acc + (item.product.salePrice ?? item.product.price) * item.quantity, 0);
-        return { totalOriginal: original, totalFinal: final, totalDiscount: original - final, selectedCount: selectedItems.length };
+        return {
+            totalOriginal: original,
+            totalFinal: final,
+            totalDiscount: original - final,
+            selectedCount: selectedItems.length
+        };
     }, [items, selectedItemIds]);
 
-    const handleCheckout = () => {
-    
-    };
+    const handleProceedToCheckout = () => {
+        if (selectedCount === 0) {
+            toast.error("Vui lòng chọn sản phẩm để thanh toán.");
+            return;
+        }
+        if (!selectedAddress) {
+            toast.error("Vui lòng chọn địa chỉ giao hàng.");
+            onOpenAddressModal(); // Mở modal chọn địa chỉ
+            return;
+        }
 
-    const formatPrice = (price: number) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+        // Sử dụng useTransition để chuyển trang không bị block UI
+        startTransition(() => {
+            const query = new URLSearchParams({
+                items: selectedItemIds.join(','),
+                addressId: selectedAddress._id
+            }).toString();
+            router.push(`/checkout?${query}`);
+        });
+    };
 
     return (
         <div className="w-full lg:w-1/3 sticky top-6 space-y-4">
@@ -160,16 +85,16 @@ export default function OrderSummary({ selectedAddress, onOpenAddressModal }: Or
             <Card>
                 <CardContent className="p-6">
                     <div className="space-y-4">
-                        <div className="flex justify-between text-sm"><p>Tạm tính</p><p>{formatPrice(totalOriginal)}</p></div>
-                        <div className="flex justify-between text-sm"><p>Giảm giá</p><p className="text-red-500">-{formatPrice(totalDiscount)}</p></div>
+                        <div className="flex justify-between text-sm"><p>Tạm tính</p><p>{formatCurrency(totalOriginal)}</p></div>
+                        <div className="flex justify-between text-sm"><p>Giảm giá</p><p className="text-red-500">-{formatCurrency(totalDiscount)}</p></div>
                     </div>
                     <div className="border-t my-4"></div>
-                    <div className="flex justify-between font-semibold"><p>Tổng tiền</p><p className="text-red-600 text-lg">{formatPrice(totalFinal)}</p></div>
+                    <div className="flex justify-between font-semibold"><p>Tổng tiền</p><p className="text-red-600 text-lg">{formatCurrency(totalFinal)}</p></div>
                     <p className="text-xs text-gray-500 text-right mt-1">(Đã bao gồm VAT nếu có)</p>
                     <Button
                         className="w-full mt-6 bg-red-600 hover:bg-red-700 text-lg h-12"
                         disabled={selectedCount === 0 || !selectedAddress || isPending}
-                        onClick={handleCheckout}
+                        onClick={handleProceedToCheckout}
                     >
                         {isPending ? <Loader2 className="h-6 w-6 animate-spin" /> : `Mua Hàng (${selectedCount})`}
                     </Button>

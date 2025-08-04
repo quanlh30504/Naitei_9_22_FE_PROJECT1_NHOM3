@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useTransition } from 'react';
-import { Card } from '@/Components/ui/card';
-import { Button } from '@/Components/ui/button';
-import { Badge } from '@/Components/ui/badge';
-import { Star, Heart, Share2, ShoppingCart, Minus, Plus } from 'lucide-react';
-import { addItemToCart } from '@/lib/actions/cart'; 
-import { toast } from 'react-hot-toast';
+import React, { useState, useTransition } from "react";
+import { Card } from "@/Components/ui/card";
+import { Button } from "@/Components/ui/button";
+import { Badge } from "@/Components/ui/badge";
+import { Star, Heart, Share2, ShoppingCart, Minus, Plus } from "lucide-react";
+import { addItemToCart, buyNowAndRedirect } from "@/lib/actions/cart";
+import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { formatCurrency } from "@/lib/utils";
 
 interface ProductAttribute {
   brand?: string;
@@ -55,30 +57,27 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   rating,
   stock,
   tags,
-  discountPercentage
+  discountPercentage,
 }) => {
   const [quantity, setQuantity] = useState(1);
 
   const [isPending, startTransition] = useTransition();
-
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price);
-  };
+  const router = useRouter();
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-4 h-4 ${i < Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+        className={`w-4 h-4 ${
+          i < Math.floor(rating)
+            ? "fill-yellow-400 text-yellow-400"
+            : "text-gray-300"
+        }`}
       />
     ));
   };
 
-   const handleAddToCart = () => {
+  const handleAddToCart = () => {
     startTransition(async () => {
       const result = await addItemToCart(productId, quantity);
       if (result.success) {
@@ -90,7 +89,16 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   };
 
   const handleBuyNow = () => {
-    console.log("Buy now:", { name, quantity });
+    startTransition(async () => {
+      try {
+        const result = await buyNowAndRedirect(productId, quantity);
+        if (result?.error) {
+          toast.error(result.error);
+        }
+      } catch (error) {
+        // toast.error(error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.");
+      }
+    });
   };
 
   const increaseQuantity = () => {
@@ -110,9 +118,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
       {/* Product Title & Brand */}
       <div>
         <h1 className="text-2xl font-bold text-foreground mb-2">{name}</h1>
-        {description && (
-          <p className="text-muted-foreground">{description}</p>
-        )}
+        {description && <p className="text-muted-foreground">{description}</p>}
         {attributes?.brand && (
           <Badge variant="outline" className="mt-2">
             {attributes.brand}
@@ -122,9 +128,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
 
       {/* Rating */}
       <div className="flex items-center space-x-2">
-        <div className="flex items-center">
-          {renderStars(rating.average)}
-        </div>
+        <div className="flex items-center">{renderStars(rating.average)}</div>
         <span className="text-sm text-muted-foreground">
           {rating.average.toFixed(1)} ({rating.count} đánh giá)
         </span>
@@ -136,20 +140,18 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
           {salePrice && salePrice < price ? (
             <>
               <span className="text-2xl font-bold text-[#8BC34A]">
-                {formatPrice(salePrice)}
+                {formatCurrency(salePrice)}
               </span>
               <span className="text-lg text-muted-foreground line-through">
-                {formatPrice(price)}
+                {formatCurrency(price)}
               </span>
               {discountPercentage && (
-                <Badge variant="destructive">
-                  -{discountPercentage}%
-                </Badge>
+                <Badge variant="destructive">-{discountPercentage}%</Badge>
               )}
             </>
           ) : (
             <span className="text-2xl font-bold text-[#8BC34A]">
-              {formatPrice(price)}
+              {formatCurrency(price)}
             </span>
           )}
         </div>
@@ -175,7 +177,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
               <span className="text-sm">{attributes.volume}</span>
             </div>
           )}
-          
+
           {attributes.spf && (
             <div className="flex justify-between">
               <span className="text-sm font-medium">Chỉ số SPF:</span>
@@ -194,7 +196,9 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             <div className="flex justify-between">
               <span className="text-sm font-medium">Màu sắc:</span>
               <span className="text-sm">
-                {Array.isArray(attributes.color) ? attributes.color.join(', ') : attributes.color}
+                {Array.isArray(attributes.color)
+                  ? attributes.color.join(", ")
+                  : attributes.color}
               </span>
             </div>
           )}
@@ -206,17 +210,17 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         <label className="text-sm font-medium">Số lượng:</label>
         <div className="flex items-center space-x-3">
           <div className="flex items-center border rounded-lg">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-8 w-8 p-0"
               onClick={decreaseQuantity}
               disabled={quantity <= 1}
             >
               <Minus className="h-4 w-4" />
             </Button>
-            <input 
-              type="number" 
+            <input
+              type="number"
               value={quantity}
               onChange={(e) => {
                 const val = parseInt(e.target.value);
@@ -228,9 +232,9 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
               min="1"
               max={stock}
             />
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-8 w-8 p-0"
               onClick={increaseQuantity}
               disabled={quantity >= stock}
@@ -239,25 +243,27 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             </Button>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">Còn lại: {stock} sản phẩm</p>
+        <p className="text-sm text-muted-foreground">
+          Còn lại: {stock} sản phẩm
+        </p>
       </div>
 
       {/* Action Buttons */}
       <div className="space-y-3">
-        <Button 
-          className="w-full bg-[#8BC34A] hover:bg-[#7AB23C] text-white" 
+        <Button
+          className="w-full bg-[#8BC34A] hover:bg-[#7AB23C] text-white"
           size="lg"
           onClick={handleBuyNow}
           disabled={stock === 0}
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
-          MUA HÀNG
+          Mua hàng
         </Button>
-        
+
         <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
-            className="flex-1" 
+          <Button
+            variant="outline"
+            className="flex-1"
             onClick={handleAddToCart}
             disabled={stock === 0}
           >

@@ -24,6 +24,15 @@ interface PlaceOrderInput {
   notes?: string;
 }
 
+type ShippingAddressPayload = {
+  fullName: string;
+  phoneNumber: string;
+  street: string;
+  city: string;
+  district: string;
+  ward: string;
+};
+
 export async function placeOrder(
   input: PlaceOrderInput
 ): Promise<{ success: boolean; message: string; orderId?: string }> {
@@ -219,15 +228,20 @@ export async function placeOrder(
   }
 }
 
+
 /**
  * Lấy danh sách các đơn hàng của người dùng đang đăng nhập.
- * Có thể lọc theo trạng thái đơn hàng.
- * @param {OrderStatus} [status] - Trạng thái đơn hàng tùy chọn để lọc.
+ * Có thể lọc theo trạng thái và tìm kiếm.
+ * @param {object} params - Các tham số bao gồm status và search.
  * @returns {Promise<ActionResponse<IOrder[]>>} Danh sách đơn hàng.
  */
-export async function getMyOrders(
-  status?: OrderStatus
-): Promise<ActionResponse<IOrder[]>> {
+export async function getMyOrders({
+  status,
+  search,
+}: {
+  status?: OrderStatus;
+  search?: string;
+}): Promise<ActionResponse<IOrder[]>> {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, message: "Vui lòng đăng nhập." };
@@ -236,12 +250,22 @@ export async function getMyOrders(
   try {
     await connectToDB();
 
-    const filter: { userId: string; status?: OrderStatus } = {
+    // Sử dụng kiểu mongoose.FilterQuery để có gợi ý code tốt hơn
+    const filter: mongoose.FilterQuery<IOrder> = {
       userId: session.user.id,
     };
 
+    // Lọc theo trạng thái nếu có
     if (status) {
       filter.status = status;
+    }
+
+    if (search) {
+      const searchRegex = new RegExp(search, "i"); // không phân biệt hoa thường
+      filter.$or = [
+        { orderId: { $regex: searchRegex } }, // Tìm theo mã đơn hàng
+        { "items.name": { $regex: searchRegex } }, // Tìm theo tên sản phẩm trong mảng items
+      ];
     }
 
     const orders = await Order.find(filter)
@@ -251,7 +275,7 @@ export async function getMyOrders(
     return {
       success: true,
       message: "Lấy danh sách đơn hàng thành công.",
-      data: orders,
+      data: JSON.parse(JSON.stringify(orders)),
     };
   } catch (error) {
     console.error("[GET_MY_ORDERS_ERROR]", error);
@@ -369,5 +393,74 @@ export async function cancelOrder(orderId: string): Promise<ActionResponse> {
     };
   } finally {
     mongoSession.endSession();
+  }
+}
+
+
+/**
+ * Cập nhật địa chỉ giao hàng cho một đơn hàng cụ thể.
+ * Chỉ áp dụng cho đơn hàng của người dùng đang đăng nhập và có trạng thái 'processing'.
+ * @param {string} orderId - ID của đơn hàng cần cập nhật.
+ * @param {ShippingAddressPayload} newAddress - Đối tượng chứa thông tin địa chỉ mới.
+ * @returns {Promise<ActionResponse<IOrder>>} Kết quả của hành động, bao gồm đơn hàng đã được cập nhật.
+ */
+export async function updateShippingAddress({
+  orderId,
+  newAddress,
+}: {
+  orderId: string;
+  newAddress: ShippingAddressPayload;
+}): Promise<ActionResponse<IOrder>> {
+  // 1. Xác thực người dùng
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, message: "Vui lòng đăng nhập để thực hiện hành động này." };
+  }
+
+  // Kiểm tra xem orderId có phải là một ObjectId hợp lệ không
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return { success: false, message: "Mã đơn hàng không hợp lệ." };
+  }
+
+  try {
+    await connectToDB();
+
+    // 2. Tìm đơn hàng VÀ kiểm tra quyền sở hữu cùng lúc
+    const order = await Order.findOne({
+      _id: orderId,
+      userId: session.user.id, // Đảm bảo người dùng chỉ có thể tìm thấy đơn hàng của chính mình
+    });
+
+    if (!order) {
+      return {
+        success: false,
+        message: "Đơn hàng không tồn tại hoặc bạn không có quyền truy cập.",
+      };
+    }
+
+    // 3. Kiểm tra trạng thái đơn hàng
+    if (order.status !== 'processing') {
+      return {
+        success: false,
+        message: `Chỉ có thể thay đổi địa chỉ cho đơn hàng đang ở trạng thái 'Đang xử lý'. Trạng thái hiện tại: ${order.status}`,
+      };
+    }
+
+    // 4. Cập nhật địa chỉ và lưu lại
+    order.shippingAddress = newAddress;
+    const updatedOrder = await order.save();
+
+    // 5. Làm mới cache cho trang chi tiết đơn hàng
+    revalidatePath(`/profile/orders/${orderId}`);
+    
+    return {
+      success: true,
+      message: "Cập nhật địa chỉ giao hàng thành công.",
+      data: JSON.parse(JSON.stringify(updatedOrder)), 
+    };
+
+  } catch (error) {
+    console.error("[UPDATE_SHIPPING_ADDRESS_ERROR]", error);
+    return { success: false, message: "Đã xảy ra lỗi khi cập nhật địa chỉ." };
   }
 }

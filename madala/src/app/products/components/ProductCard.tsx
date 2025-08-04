@@ -43,9 +43,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   const handleProductClick = () => {
-    // Navigate to product detail page
-    const productId = String(product._id) || product.productId || product.id;
-    router.push(`/products/${productId}`);
+    router.push(`/products/${product.slug}`);
   };
 
   return (

@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { Minus, Plus } from "lucide-react";
 import { useCart } from "../context/CartContext";
-import { useDebounce } from "use-debounce"; 
+import { useDebouncedCallback } from "use-debounce";
 
 interface QuantitySelectorProps {
   cartItemId: string;
   initialQuantity: number;
   stock: number;
-  onQuantityChange: (newQuantity: number) => void; 
+  onQuantityChange: (newQuantity: number) => void;
 }
 
 export default function QuantitySelector({
@@ -22,26 +22,30 @@ export default function QuantitySelector({
 }: QuantitySelectorProps) {
   const { isPending } = useCart();
   const [quantity, setQuantity] = useState(initialQuantity);
-  
-  const [debouncedQuantity] = useDebounce(quantity, 500); // Trì hoãn 500ms
 
-  useEffect(() => {
-    if (debouncedQuantity !== initialQuantity) {
-      onQuantityChange(debouncedQuantity);
-    }
-  }, [debouncedQuantity, initialQuantity, onQuantityChange]);
-  
+  const debouncedOnQuantityChange = useDebouncedCallback(
+    (newQuantity: number) => {
+      onQuantityChange(newQuantity);
+    },
+    500
+  );
+
+  // Đồng bộ state nội bộ với prop từ cha khi nó thay đổi
   useEffect(() => {
     setQuantity(initialQuantity);
   }, [initialQuantity]);
 
   const handleDecrement = () => {
-    setQuantity((prev) => Math.max(1, prev - 1));
-  };
+        const newQuantity = Math.max(1, quantity - 1);
+        setQuantity(newQuantity); // Cập nhật UI ngay lập tức
+        debouncedOnQuantityChange(newQuantity); // Gọi hàm debounced
+    };
 
-  const handleIncrement = () => {
-    setQuantity((prev) => Math.min(stock, prev + 1));
-  };
+    const handleIncrement = () => {
+        const newQuantity = Math.min(stock, quantity + 1);
+        setQuantity(newQuantity); // Cập nhật UI ngay lập tức
+        debouncedOnQuantityChange(newQuantity); // Gọi hàm debounced
+    };
 
   return (
     <div className="flex items-center">
