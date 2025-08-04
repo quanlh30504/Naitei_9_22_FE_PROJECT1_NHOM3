@@ -1,43 +1,49 @@
-import { 
-  LayoutDashboard, 
-  Package, 
+import {
+  LayoutDashboard,
+  Package,
   FolderTree,
-  FileText, 
-  Users, 
-  Settings
-} from 'lucide-react';
+  FileText,
+  Users,
+  Settings,
+  ShoppingCart
+} from "lucide-react";
 
 export const adminNavItems = [
   {
-    title: 'Dashboard',
-    href: '/admin',
+    title: "Dashboard",
+    href: "/admin",
     icon: LayoutDashboard,
   },
   {
-    title: 'Sản phẩm',
-    href: '/admin/products',
+    title: "Sản phẩm",
+    href: "/admin/products",
     icon: Package,
   },
   {
-    title: 'Danh mục',
-    href: '/admin/categories',
+    title: "Đơn hàng",
+    href: "/admin/orders",
+    icon: ShoppingCart,
+  },
+  {
+    title: "Danh mục",
+    href: "/admin/categories",
     icon: FolderTree,
   },
   {
-    title: 'Blog',
-    href: '/admin/blog',
+    title: "Blog",
+    href: "/admin/blog",
     icon: FileText,
   },
   {
-    title: 'Người dùng',
-    href: '/admin/users',
+    title: "Người dùng",
+    href: "/admin/users",
     icon: Users,
   },
   {
-    title: 'Cài đặt',
-    href: '/admin/settings',
+    title: "Cài đặt",
+    href: "/admin/settings",
     icon: Settings,
   },
 ];
 
-export type AdminNavItem = typeof adminNavItems[0];
+export type AdminNavItem = (typeof adminNavItems)[0];
