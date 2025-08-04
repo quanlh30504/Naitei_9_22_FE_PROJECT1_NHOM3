@@ -68,9 +68,9 @@ export default function OrderList() {
     };
 
     fetchOrders();
-  }, [status, searchQuery]); // Thêm searchQuery vào dependency
+  }, [status, searchQuery]); 
 
-  // useEffect cho debouncing việc tìm kiếm
+  // debouncing search
   useEffect(() => {
     const handler = setTimeout(() => {
       if (searchTerm !== searchQuery) {
