@@ -7,13 +7,7 @@ import QuantitySelector from "./QuantitySelector";
 import { Trash2 } from "lucide-react";
 import { useCart, PopulatedCartItem } from "../context/CartContext"; 
 import { getImageUrl } from "@/lib/getImageUrl"
-
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(price);
-};
+import { formatCurrency } from "@/lib/utils";
 
 interface CartItemProps {
   item: PopulatedCartItem;
@@ -62,11 +56,11 @@ export default function CartItem({ item }: CartItemProps) {
         </div>
         <div className="col-span-2 text-center">
           <p className="font-semibold text-sm text-red-600">
-            {formatPrice(item.product.salePrice || item.product.price)}
+            {formatCurrency(item.product.salePrice || item.product.price)}
           </p>
           {item.product.salePrice && (
             <p className="text-xs text-gray-400 line-through">
-              {formatPrice(item.product.price)}
+              {formatCurrency(item.product.price)}
             </p>
           )}
         </div>
@@ -79,7 +73,7 @@ export default function CartItem({ item }: CartItemProps) {
           />
         </div>
         <div className="col-span-1 text-center font-semibold text-red-600 text-sm">
-          {formatPrice((item.product.salePrice ?? item.product.price) * item.quantity)}
+          {formatCurrency((item.product.salePrice ?? item.product.price) * item.quantity)}
         </div>
         <div className="col-span-1 flex justify-center">
           <Button

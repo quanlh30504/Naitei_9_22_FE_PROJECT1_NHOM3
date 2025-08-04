@@ -125,8 +125,8 @@ export default async function Home() {
             {hotTrendProducts.length > 0 ? (
               hotTrendProducts.map((product: IProduct) => (
                 <ProductCard
-                  key={product.productId as string}
-                  id={product.productId as string}
+                  key={product._id as string}
+                  id={product._id as string}
                   name={product.name}
                   slug={product.slug}
                   price={product.price}
