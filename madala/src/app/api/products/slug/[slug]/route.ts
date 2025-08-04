@@ -11,33 +11,11 @@ export async function GET(
     const db = client.db(process.env.MONGODB_DB);
 
     const { slug } = await params;
-    
-    if (!slug) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Slug is required",
-        },
-        { status: 400 }
-      );
-    }
 
-    // Loại bỏ extension nếu có (.jpg, .png, etc.)
-    const cleanSlug = slug.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '');
-    
-    console.log(`Looking for product with slug: ${cleanSlug} (original: ${slug})`);
-
-    // Tìm sản phẩm theo slug (thử cả slug gốc và slug đã clean)
+    // Tìm sản phẩm theo slug - chỉ lấy sản phẩm đang hoạt động
     const product = await db.collection("products").findOne({
-      $or: [
-        { slug: slug },
-        { slug: cleanSlug },
-        { productId: slug },
-        { productId: cleanSlug }
-      ],
-      $and: [
-        { $or: [{ isActive: { $exists: false } }, { isActive: true }] }
-      ]
+      slug: slug,
+      isActive: true,
     });
 
     if (!product) {
