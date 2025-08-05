@@ -14,7 +14,6 @@ import {
   BlogService,
   BlogPost,
   formatDate,
-  getImageUrl,
 } from "@/services/blogService";
 import toast from "react-hot-toast";
 import { Breadcrumbs } from "@/Components/Breadcrumbs";
@@ -110,7 +109,7 @@ export default function NewsDetailPage() {
       {/* Featured Image */}
       <div className="mb-8">
         <img
-          src={getImageUrl(blogPost.featuredImage)}
+          src={blogPost.featuredImage}
           alt={blogPost.title}
           className="w-full h-64 md:h-96 object-cover rounded-lg"
         />

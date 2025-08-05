@@ -10,7 +10,6 @@ import {
   BlogService,
   BlogPost,
   formatDate,
-  getImageUrl,
 } from "@/services/blogService";
 import { BlogPostCard } from "@/Components/news/BlogPostCard";
 import { Pagination } from "@/Components/Pagination";
