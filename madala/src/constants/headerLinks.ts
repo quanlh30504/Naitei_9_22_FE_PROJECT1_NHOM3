@@ -7,75 +7,75 @@ export interface MenuItem {
 export const guestMenuItems: MenuItem[] = [
   {
     href: "/login",
-    text: "Đăng nhập"
+    text: "Đăng nhập",
   },
   {
     href: "/register",
-    text: "Đăng ký"
-  }
+    text: "Đăng ký",
+  },
 ];
 
 export const userMenuItems: MenuItem[] = [
   {
     href: "/profile",
-    text: "Hồ sơ cá nhân"
+    text: "Hồ sơ cá nhân",
   },
   {
     href: "/orders",
-    text: "Đơn hàng của tôi"
+    text: "Đơn hàng của tôi",
   },
   {
     action: "logout",
-    text: "Đăng xuất"
-  }
+    text: "Đăng xuất",
+  },
 ];
 
 export const HEADER_ROUTES = {
   HOME: "/",
-  ABOUT: "/about",
+  ABOUT: "/aboutus",
   PRODUCTS: "/products",
   NEWS: "/news",
   MAP: "/map",
   CONTACT: "/contact",
   AUTH: {
     LOGIN: "/login",
-    REGISTER: "/register"
+    REGISTER: "/register",
   },
   ACCOUNT: {
     WISHLIST: "/account/wishlist",
-    CART: "/cart"
-  }
+    CART: "/cart",
+  },
 } as const;
 
 export const navigationItems = [
   {
     href: HEADER_ROUTES.HOME,
     text: "TRANG CHỦ",
-    hasDropdown: false
+    hasDropdown: false,
   },
   {
     href: HEADER_ROUTES.ABOUT,
     text: "GIỚI THIỆU",
-    hasDropdown: false
+    hasDropdown: false,
   },
   {
     href: HEADER_ROUTES.PRODUCTS,
     text: "SẢN PHẨM",
-    hasDropdown: true
+    hasDropdown: true,
   },
   {
     href: HEADER_ROUTES.NEWS,
     text: "TIN TỨC",
-    hasDropdown: false
+    hasDropdown: false,
   },
   {
     href: HEADER_ROUTES.MAP,
     text: "BẢN ĐỒ",
-    hasDropdown: false
+    hasDropdown: false,
   },
   {
     href: HEADER_ROUTES.CONTACT,
     text: "LIÊN HỆ",
-    hasDropdown: false
-  }
+    hasDropdown: false,
+  },
 ];
