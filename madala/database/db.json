@@ -2,7 +2,7 @@
 "categories": [
     {
       "id": "cat-1",
-      "name": "Mỹ phẩm",
+      "name": "MỸ PHẨM",
       "slug": "my-pham",
       "description": "Các sản phẩm chăm sóc và làm đẹp",
       "parentId": null,
@@ -11,10 +11,10 @@
       "isActive": true
     },
     {
-      "id": "cat-2", 
-      "name": "Trang sức - Vòng tay",
-      "slug": "vong-tay",
-      "description": "Các loại vòng tay thời trang và sang trọng",
+      "id": "cat-2",
+      "name": "TRANG SỨC",
+      "slug": "trang-suc",
+      "description": "Các sản phẩm trang sức cao cấp",
       "parentId": null,
       "level": 1,
       "sortOrder": 2,
@@ -22,9 +22,9 @@
     },
     {
       "id": "cat-3",
-      "name": "Trang sức - Nhẫn",
-      "slug": "nhan",
-      "description": "Bộ sưu tập nhẫn đa phong cách",
+      "name": "PHỤ KIỆN",
+      "slug": "phu-kien",
+      "description": "Các phụ kiện thời trang",
       "parentId": null,
       "level": 1,
       "sortOrder": 3,
@@ -32,72 +32,72 @@
     },
     {
       "id": "cat-4",
-      "name": "Trang sức - Lắc chân",
-      "slug": "lac-chan",
-      "description": "Phụ kiện chân tinh tế và quyến rũ",
+      "name": "NƯỚC HOA",
+      "slug": "nuoc-hoa",
+      "description": "Các loại nước hoa cao cấp",
       "parentId": null,
       "level": 1,
       "sortOrder": 4,
       "isActive": true
     },
     {
-      "id": "cat-5",
-      "name": "Phụ kiện - Giày lười",
-      "slug": "giay-luoi",
-      "description": "Giày lười nam nữ thời trang",
-      "parentId": null,
-      "level": 1,
+      "id": "cat-2-1", 
+      "name": "Vòng tay",
+      "slug": "vong-tay",
+      "description": "Các loại vòng tay thời trang và sang trọng",
+      "parentId": "cat-2",
+      "level": 2,
+      "sortOrder": 1,
+      "isActive": true
+    },
+    {
+      "id": "cat-2-2",
+      "name": "Nhẫn",
+      "slug": "nhan",
+      "description": "Bộ sưu tập nhẫn đa phong cách",
+      "parentId": "cat-2",
+      "level": 2,
+      "sortOrder": 2,
+      "isActive": true
+    },
+    {
+      "id": "cat-2-3",
+      "name": "Lắc chân",
+      "slug": "lac-chan",
+      "description": "Phụ kiện chân tinh tế và quyến rũ",
+      "parentId": "cat-2",
+      "level": 2,
+      "sortOrder": 3,
+      "isActive": true
+    },
+    {
+      "id": "cat-2-4",
+      "name": "Dây chuyền",
+      "slug": "day-chuyen",
+      "description": "Dây chuyền và vòng cổ sang trọng",
+      "parentId": "cat-2",
+      "level": 2,
+      "sortOrder": 4,
+      "isActive": true
+    },
+    {
+      "id": "cat-2-5",
+      "name": "Bông tai",
+      "slug": "bong-tai",
+      "description": "Bộ sưu tập bông tai đa phong cách",
+      "parentId": "cat-2",
+      "level": 2,
       "sortOrder": 5,
       "isActive": true
     },
     {
-      "id": "cat-6",
-      "name": "Phụ kiện - Giày mọi",
-      "slug": "giay-moi",
-      "description": "Giày mọi cao cấp cho nam và nữ",
-      "parentId": null,
-      "level": 1,
-      "sortOrder": 6,
-      "isActive": true
-    },
-    {
-      "id": "cat-7",
-      "name": "Phụ kiện khác",
-      "slug": "phu-kien-khac",
-      "description": "Các phụ kiện đa dạng và độc đáo",
-      "parentId": null,
-      "level": 1,
-      "sortOrder": 7,
-      "isActive": true
-    },
-    {
-      "id": "cat-8",
-      "name": "Nước hoa",
-      "slug": "nuoc-hoa",
-      "description": "Các loại nước hoa cao cấp",
-      "parentId": null,
-      "level": 1,
-      "sortOrder": 8,
-      "isActive": true
-    },
-    {
-      "id": "cat-9",
-      "name": "Trang sức - Phụ kiện trang sức",
+      "id": "cat-2-6",
+      "name": "Phụ kiện trang sức",
       "slug": "phu-kien-trang-suc",
       "description": "Các phụ kiện bổ trợ cho trang sức",
-      "parentId": null,
-      "level": 1,
-      "sortOrder": 9,
-      "isActive": true
-    },
-    {
-      "id": "cat-10",
-      "name": "Trang sức - Bông tai",
-      "slug": "bong-tai",
-      "description": "Bộ sưu tập bông tai đa phong cách",
-      "parentId": null,
-      "level": 1,
-      "sortOrder": 10,
+      "parentId": "cat-2",
+      "level": 2,
+      "sortOrder": 6,
       "isActive": true
     }
   ],
@@ -118,7 +118,7 @@
         "/public/products/bracelet-1-2.jpg",
         "/public/products/bracelet-1-3.jpg"
       ],
-      "categoryIds": ["cat-2"],
+      "categoryIds": ["cat-2-1"],
       "tags": ["tiffany", "lắc tay", "bạc 925", "cao cấp"],
       "attributes": {
         "color": ["Bạc"],
@@ -158,7 +158,7 @@
         "public/products/cosmetic-1.jpg",
         "public/products/cosmetic-1-2.jpg"
       ],
-      "categoryIds": ["cat-4"],
+      "categoryIds": ["cat-1"],
       "tags": ["mỹ phẩm", "chăm sóc da", "lancôme"],
       "attributes": {
         "brand": "Lancôme",
@@ -192,7 +192,7 @@
       "salePrice": 31500000,
       "sku": "DAYCHUYEN-001",
       "stock": 8,
-      "categoryIds": ["cat-6"],
+      "categoryIds": ["cat-2-4"],
       "images": [
         "/public/products/gold-necklace-1.jpg",
         "/public/products/gold-necklace-2.jpg"
@@ -217,7 +217,7 @@
       "salePrice": 3150000,
       "sku": "NUOCHOA-001",
       "stock": 15,
-      "categoryIds": ["cat-11"],
+      "categoryIds": ["cat-4"],
       "images": [
         "/public/products/dior-sauvage-1.jpg",
         "/public/products/dior-sauvage-2.jpg"
@@ -242,7 +242,7 @@
       "salePrice": 2520000,
       "sku": "KEMDUONG-001",
       "stock": 12,
-      "categoryIds": ["cat-4"],
+      "categoryIds": ["cat-1"],
       "images": [
         "/public/products/lancome-cream-1.jpg",
         "/public/products/lancome-cream-2.jpg"
@@ -342,7 +342,7 @@
       "salePrice": 1980000,
       "sku": "NHANDOI-001",
       "stock": 7,
-      "categoryIds": ["cat-5"],
+      "categoryIds": ["cat-2-2"],
       "images": [
         "/public/products/couple-ring-1.jpg",
         "/public/products/couple-ring-2.jpg"
