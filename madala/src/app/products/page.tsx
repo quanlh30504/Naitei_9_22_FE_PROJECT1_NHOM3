@@ -8,15 +8,7 @@ import CompareBox from '@/app/products/components/CompareBox';
 import TagList from '@/app/products/components/TagList';
 import SaleBanner from '@/app/products/components/SaleBanner';
 import ViewToggle from '@/app/products/components/ViewToggle';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/Components/ui/pagination";
+import { PaginationWrapper } from '@/Components/PaginationWrapper';
 import { IProduct } from '@/models/Product';
 import { ICategory } from '@/models/Category';
 import { productService } from '@/services/productService';
@@ -191,109 +183,6 @@ const ProductPage = () => {
         setCurrentPage(1);
     }, [viewMode]);
 
-    // Render pagination
-    const renderPagination = (isCompact = false) => {
-        if (totalPages <= 1) return null;
-
-        const getVisiblePages = () => {
-            const delta = isCompact ? 1 : 2;
-            const range = [];
-            const rangeWithDots = [];
-
-            for (
-                let i = Math.max(2, currentPage - delta);
-                i <= Math.min(totalPages - 1, currentPage + delta);
-                i++
-            ) {
-                range.push(i);
-            }
-
-            if (currentPage - delta > 2) {
-                rangeWithDots.push(1, '...');
-            } else {
-                rangeWithDots.push(1);
-            }
-
-            rangeWithDots.push(...range);
-
-            if (currentPage + delta < totalPages - 1) {
-                rangeWithDots.push('...', totalPages);
-            } else if (totalPages > 1) {
-                rangeWithDots.push(totalPages);
-            }
-
-            return rangeWithDots;
-        };
-
-        const handlePageClick = (page: number | string) => {
-            if (typeof page === 'number') {
-                setCurrentPage(page);
-            }
-        };
-
-        const handlePrevious = () => {
-            if (currentPage > 1) {
-                setCurrentPage(currentPage - 1);
-            }
-        };
-
-        const handleNext = () => {
-            if (currentPage < totalPages) {
-                setCurrentPage(currentPage + 1);
-            }
-        };
-
-        const visiblePages = getVisiblePages();
-
-        return (
-            <Pagination className={isCompact ? "mt-4" : "mt-8"}>
-                <PaginationContent>
-                    <PaginationItem>
-                        <PaginationPrevious
-                            href="#"
-                            onClick={(e: React.MouseEvent) => {
-                                e.preventDefault();
-                                handlePrevious();
-                            }}
-                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                    </PaginationItem>
-
-                    {visiblePages.map((page, index) => (
-                        <PaginationItem key={index}>
-                            {page === '...' ? (
-                                <PaginationEllipsis />
-                            ) : (
-                                <PaginationLink
-                                    href="#"
-                                    onClick={(e: React.MouseEvent) => {
-                                        e.preventDefault();
-                                        handlePageClick(page);
-                                    }}
-                                    isActive={currentPage === page}
-                                    className="cursor-pointer"
-                                >
-                                    {page}
-                                </PaginationLink>
-                            )}
-                        </PaginationItem>
-                    ))}
-
-                    <PaginationItem>
-                        <PaginationNext
-                            href="#"
-                            onClick={(e: React.MouseEvent) => {
-                                e.preventDefault();
-                                handleNext();
-                            }}
-                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                    </PaginationItem>
-                </PaginationContent>
-            </Pagination>
-        );
-    };
-
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -339,7 +228,12 @@ const ProductPage = () => {
                             </div>
                             
                             <div className="flex items-center">
-                                {totalPages > 1 && renderPagination(true)}
+                                <PaginationWrapper
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                    isCompact={true}
+                                />
                             </div>
                         </div>
 
@@ -357,7 +251,12 @@ const ProductPage = () => {
                             />
                         )}
 
-                        {totalPages > 1 && renderPagination(false)}
+                        <PaginationWrapper
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                            isCompact={false}
+                        />
                     </div>
                 </div>
 
@@ -388,7 +287,12 @@ const ProductPage = () => {
                                 </span>
                             </div>
                             <div className="flex items-center">
-                                {totalPages > 1 && renderPagination(true)}
+                                <PaginationWrapper
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                    isCompact={true}
+                                />
                             </div>
                         </div>
 
@@ -405,7 +309,12 @@ const ProductPage = () => {
                                 onToggleFavorite={handleToggleFavorite}
                             />
                         )}
-                        {totalPages > 1 && renderPagination(false)}
+                        <PaginationWrapper
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                            isCompact={false}
+                        />
                     </main>
                 </div>
             </div>

@@ -12,25 +12,36 @@ import { Label } from "@/Components/ui/label";
 import { Button } from "@/Components/ui/button";
 import SubmitButton from "@/Components/Buttons/SubmitButton";
 import ActionButton from "@/Components/Buttons/ActionButton";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [state, dispatch] = useFormState(authenticateCredentials, undefined);
 
   useEffect(() => {
     if (state?.success) {
       toast.success(state.message);
-      
-      window.dispatchEvent(new CustomEvent('loginSuccess'));
-      
+
+      window.dispatchEvent(new CustomEvent("loginSuccess"));
+
       router.push("/");
     }
-    
+
     if (state && !state.success && !state.errors) {
       toast.error(state.message);
     }
   }, [state, router]);
+
+  useEffect(() => {
+    const error = searchParams.get("error");
+
+    // lấy mã lỗi từ URL để hiển thị toast
+    if (error === "CartAuthRequired") {
+      toast.error("Bạn cần đăng nhập để xem giỏ hàng");
+    }
+  }, [searchParams]);
 
   return (
     <main className="bg-white text-gray-800 min-h-screen">
@@ -61,20 +72,13 @@ export default function LoginPage() {
                 required
               />
               {state?.errors?.email && (
-                <p className="text-sm text-red-500">
-                  {state.errors.email[0]}
-                </p>
+                <p className="text-sm text-red-500">{state.errors.email[0]}</p>
               )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password *</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-              />
+              <Input id="password" name="password" type="password" required />
               {state?.errors?.password && (
                 <p className="text-sm text-red-500">
                   {state.errors.password[0]}
@@ -84,9 +88,9 @@ export default function LoginPage() {
 
             <div className="flex items-center justify-between pt-2">
               <Button variant="link" asChild className="p-0 h-auto">
-                 <Link href="#">Quên Mật khẩu?</Link>
+                <Link href="#">Quên Mật khẩu?</Link>
               </Button>
-              <SubmitButton content="Đăng nhập" className="w-40"/>
+              <SubmitButton content="Đăng nhập" className="w-40" />
             </div>
           </form>
         </div>

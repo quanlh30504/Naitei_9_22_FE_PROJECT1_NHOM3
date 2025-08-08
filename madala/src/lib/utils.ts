@@ -18,3 +18,19 @@ export function getValidImageUrl(imageUrl: string): string {
   
   return cleanUrl;
 }
+
+/**
+ * Định dạng một số thành chuỗi tiền tệ theo chuẩn Việt Nam (VND).
+ * @param amount - Số tiền cần định dạng.
+ * @returns Một chuỗi đã được định dạng, ví dụ: "50.000 ₫".
+ */
+export const formatCurrency = (amount: number): string => {
+  if (typeof amount !== 'number' || isNaN(amount)) {
+    return '0 ₫'; 
+  }
+
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+  }).format(amount);
+};

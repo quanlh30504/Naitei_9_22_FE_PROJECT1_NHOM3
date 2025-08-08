@@ -78,6 +78,7 @@ export interface UserHeaderData {
   name: string;
   email: string;
   image?: string;
+  mandalaPayBalance: number;
 }
 
 /**
@@ -95,7 +96,7 @@ export async function getUserForHeader(): Promise<UserHeaderData | null> {
     await connectToDB();
 
     const user = await User.findById(session.user.id)
-      .select("name email image")
+      .select("name email image mandalaPayBalance") 
       .lean();
 
     if (!user) {
@@ -106,6 +107,7 @@ export async function getUserForHeader(): Promise<UserHeaderData | null> {
       name: user.name || "User",
       email: user.email || "",
       image: user.image,
+      mandalaPayBalance: user.mandalaPayBalance || 0,
     };
   } catch (error) {
     console.error("Lỗi khi lấy dữ liệu người dùng cho header:", error);

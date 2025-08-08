@@ -64,7 +64,7 @@ export default async function Home() {
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary/10 to-primary/5 py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold text-primary mb-6 text-[#8BC34A]">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 text-[#8BC34A]">
             Mandala Store
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -91,7 +91,7 @@ export default async function Home() {
             {features.map((feature, index) => (
               <Card key={index} className="text-center">
                 <CardContent className="p-8">
-                  <feature.icon className="h-12 w-12 text-primary mx-auto mb-4 text-[#8BC34A]" />
+                  <feature.icon className="h-12 w-12 mx-auto mb-4 text-[#8BC34A]" />
                   <h3 className="text-xl font-semibold mb-2">
                     {feature.title}
                   </h3>
@@ -125,8 +125,8 @@ export default async function Home() {
             {hotTrendProducts.length > 0 ? (
               hotTrendProducts.map((product: IProduct) => (
                 <ProductCard
-                  key={product.productId as string}
-                  id={product.productId as string}
+                  key={product._id as string}
+                  id={product._id as string}
                   name={product.name}
                   slug={product.slug}
                   price={product.price}

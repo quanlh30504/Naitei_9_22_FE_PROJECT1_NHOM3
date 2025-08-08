@@ -4,7 +4,7 @@ import React from 'react';
 import { IProduct } from '@/models/Product';
 import { ICategory } from '@/models/Category';
 import { FaTimes, FaShoppingCart } from 'react-icons/fa';
-import SafeImage from '@/app/products/components/SafeImage';
+import SafeImage from '@/Components/SafeImage';
 import StarRating from '@/app/products/components/StarRating';
 import { formatPrice } from '@/utils/formatPrice';
 
@@ -23,7 +23,7 @@ const CompareModal: React.FC<CompareModalProps> = ({
   products,
   categories,
   onRemoveProduct,
-  onAddToCart
+  onAddToCart,
 }) => {
   if (!isOpen || products.length === 0) return null;
 
@@ -32,18 +32,18 @@ const CompareModal: React.FC<CompareModalProps> = ({
     const value = product.attributes[key as keyof typeof product.attributes];
     
     if (value === null || value === undefined) {
-      return 'N/A';
+      return "N/A";
     }
-    
+
     if (Array.isArray(value)) {
-      return value.join(', ');
+      return value.join(", ");
     }
-    
-    if (typeof value === 'object') {
+
+    if (typeof value === "object") {
       try {
         return JSON.stringify(value);
       } catch {
-        return 'N/A';
+        return "N/A";
       }
     }
     return String(value);
@@ -51,19 +51,18 @@ const CompareModal: React.FC<CompareModalProps> = ({
 
   // Helper function để lấy tên category từ ID
   const getCategoryById = (categoryId: string) => {
-    return categories.find(cat => 
-      String(cat._id) === categoryId || 
-      cat.categoryId === categoryId
+    return categories.find(
+      (cat) => String(cat._id) === categoryId || cat.categoryId === categoryId
     );
   };
 
   // Function để format category display
   const formatCategoryDisplay = (categoryIds: string[]) => {
-    if (!categoryIds || categoryIds.length === 0) return 'N/A';
-    
+    if (!categoryIds || categoryIds.length === 0) return "N/A";
+
     const categoryNames: string[] = [];
-    
-    categoryIds.forEach(categoryId => {
+
+    categoryIds.forEach((categoryId) => {
       const category = getCategoryById(categoryId);
       if (category) {
         if (category.level === 2 && category.parentId) {
@@ -80,15 +79,15 @@ const CompareModal: React.FC<CompareModalProps> = ({
         }
       }
     });
-    
-    return categoryNames.length > 0 ? categoryNames.join(', ') : 'N/A';
+
+    return categoryNames.length > 0 ? categoryNames.join(", ") : "N/A";
   };
 
   // Lấy toàn bộ thông tin của sản phẩm
   const allAttributes = new Set<string>();
-  products.forEach(product => {
+  products.forEach((product) => {
     if (product.attributes) {
-      Object.keys(product.attributes).forEach(key => allAttributes.add(key));
+      Object.keys(product.attributes).forEach((key) => allAttributes.add(key));
     }
   });
 
@@ -109,9 +108,20 @@ const CompareModal: React.FC<CompareModalProps> = ({
         <div className="overflow-auto max-h-[calc(90vh-120px)]">
           <div className="p-4">
             {/* Products Grid */}
-            <div className={`grid gap-4 ${products.length === 1 ? 'grid-cols-1' : products.length === 2 ? 'grid-cols-2' : 'grid-cols-3'} mb-6`}>
+            <div
+              className={`grid gap-4 ${
+                products.length === 1
+                  ? "grid-cols-1"
+                  : products.length === 2
+                  ? "grid-cols-2"
+                  : "grid-cols-3"
+              } mb-6`}
+            >
               {products.map((product) => (
-                <div key={String(product._id)} className="border rounded-lg p-4 relative">
+                <div
+                  key={String(product._id)}
+                  className="border rounded-lg p-4 relative"
+                >
                   {/* Remove Button */}
                   <button
                     onClick={() => onRemoveProduct(String(product._id))}
@@ -122,7 +132,7 @@ const CompareModal: React.FC<CompareModalProps> = ({
 
                   <div className="mb-3">
                     <SafeImage
-                      src={product.images?.[0] || ''}
+                      src={product.images?.[0] || ""}
                       alt={product.name}
                       width={200}
                       height={200}
@@ -132,11 +142,11 @@ const CompareModal: React.FC<CompareModalProps> = ({
                   </div>
 
                   <h3 className="font-semibold text-sm text-gray-800 mb-2 line-clamp-2">
-                    {String(product.name || 'Unnamed Product')}
+                    {String(product.name || "Unnamed Product")}
                   </h3>
 
                   <div className="mb-2">
-                    <StarRating 
+                    <StarRating
                       rating={product.rating?.average || 0}
                       size="xs"
                       showValue={true}
@@ -174,10 +184,15 @@ const CompareModal: React.FC<CompareModalProps> = ({
                 <table className="w-full border-collapse border border-gray-300">
                   <thead>
                     <tr className="bg-gray-50">
-                      <th className="border border-gray-300 p-3 text-left font-semibold">Thuộc tính</th>
+                      <th className="border border-gray-300 p-3 text-left font-semibold">
+                        Thuộc tính
+                      </th>
                       {products.map((product) => (
-                        <th key={String(product._id)} className="border border-gray-300 p-3 text-center font-semibold text-sm">
-                          {String(product.name || 'Unnamed Product')}
+                        <th
+                          key={String(product._id)}
+                          className="border border-gray-300 p-3 text-center font-semibold text-sm"
+                        >
+                          {String(product.name || "Unnamed Product")}
                         </th>
                       ))}
                     </tr>
@@ -185,38 +200,56 @@ const CompareModal: React.FC<CompareModalProps> = ({
                   <tbody>
                     {/* Thông tin cơ bản: tên, brand, category, short description */}
                     <tr>
-                      <td className="border border-gray-300 p-3 font-medium bg-gray-50">Thương hiệu</td>
+                      <td className="border border-gray-300 p-3 font-medium bg-gray-50">
+                        Thương hiệu
+                      </td>
                       {products.map((product) => (
-                        <td key={String(product._id)} className="border border-gray-300 p-3 text-center text-sm">
-                          {getAttributeValue(product, 'brand')}
+                        <td
+                          key={String(product._id)}
+                          className="border border-gray-300 p-3 text-center text-sm"
+                        >
+                          {getAttributeValue(product, "brand")}
                         </td>
                       ))}
                     </tr>
                     <tr>
-                      <td className="border border-gray-300 p-3 font-medium bg-gray-50">Danh mục</td>
+                      <td className="border border-gray-300 p-3 font-medium bg-gray-50">
+                        Danh mục
+                      </td>
                       {products.map((product) => (
-                        <td key={String(product._id)} className="border border-gray-300 p-3 text-center text-sm">
+                        <td
+                          key={String(product._id)}
+                          className="border border-gray-300 p-3 text-center text-sm"
+                        >
                           {formatCategoryDisplay(product.categoryIds)}
                         </td>
                       ))}
                     </tr>
                     <tr>
-                      <td className="border border-gray-300 p-3 font-medium bg-gray-50">Mô tả ngắn</td>
+                      <td className="border border-gray-300 p-3 font-medium bg-gray-50">
+                        Mô tả ngắn
+                      </td>
                       {products.map((product) => (
-                        <td key={String(product._id)} className="border border-gray-300 p-3 text-center text-sm">
-                          {String(product.shortDescription || 'N/A')}
+                        <td
+                          key={String(product._id)}
+                          className="border border-gray-300 p-3 text-center text-sm"
+                        >
+                          {String(product.shortDescription || "N/A")}
                         </td>
                       ))}
                     </tr>
-                    
+
                     {/* Thông tin động ( xử lý thông tin tùy chọn ( có ở sản phẩm này nhưng không có ở sản phẩm khác)) */}
                     {Array.from(allAttributes).map((attribute) => (
                       <tr key={attribute}>
                         <td className="border border-gray-300 p-3 font-medium bg-gray-50 capitalize">
-                          {attribute.replace(/([A-Z])/g, ' $1').trim()}
+                          {attribute.replace(/([A-Z])/g, " $1").trim()}
                         </td>
                         {products.map((product) => (
-                          <td key={String(product._id)} className="border border-gray-300 p-3 text-center text-sm">
+                          <td
+                            key={String(product._id)}
+                            className="border border-gray-300 p-3 text-center text-sm"
+                          >
                             {getAttributeValue(product, attribute)}
                           </td>
                         ))}

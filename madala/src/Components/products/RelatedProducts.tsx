@@ -8,7 +8,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Star } from 'lucide-react';
 import { getImageUrl } from '@/lib/getImageUrl';
 import { IProduct } from '@/models/Product';
-
+import { formatCurrency } from '@/lib/utils';
 interface RelatedProductsProps {
   products: IProduct[];
   title?: string;
@@ -18,12 +18,6 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
   products, 
   title = "SẢN PHẨM BÁN CHẠY" 
 }) => {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price);
-  };
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -73,7 +67,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
                         {renderStars(product.rating.average)}
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        ({product.rating.count})
+                        ({product.rating.count || 0})
                       </span>
                     </div>
                     
@@ -82,10 +76,10 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
                       {product.salePrice && product.salePrice < product.price ? (
                         <>
                           <span className="font-bold text-[#8BC34A] text-sm">
-                            {formatPrice(product.salePrice)}
+                            {formatCurrency(product.salePrice)}
                           </span>
                           <span className="text-xs text-muted-foreground line-through">
-                            {formatPrice(product.price)}
+                            {formatCurrency(product.price)}
                           </span>
                           {product.salePrice && product.salePrice < product.price && (
                             <Badge variant="destructive" className="text-xs px-1 py-0">
@@ -95,7 +89,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
                         </>
                       ) : (
                         <span className="font-bold text-foreground text-sm">
-                          {formatPrice(product.price)}
+                          {formatCurrency(product.price)}
                         </span>
                       )}
                     </div>

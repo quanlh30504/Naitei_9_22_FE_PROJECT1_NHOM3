@@ -12,7 +12,7 @@ import {
   formatDate,
 } from "@/services/blogService";
 import { BlogPostCard } from "@/Components/news/BlogPostCard";
-import { PaginationWrapper } from "@/Components/ui/pagination-wrapper";
+import { PaginationWrapper } from "@/Components/PaginationWrapper";
 
 export default function NewsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");

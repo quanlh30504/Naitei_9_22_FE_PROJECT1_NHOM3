@@ -1,11 +1,11 @@
-'use client';
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { IProduct } from '@/models/Product';
-import { FaHeart, FaShoppingCart, FaBalanceScale } from 'react-icons/fa';
-import SafeImage from '@/app/products/components/SafeImage';
-import StarRating from '@/app/products/components/StarRating';
-import { useCompare } from '@/contexts/CompareContext';
+"use client";
+import React from "react";
+import { useRouter } from "next/navigation";
+import { IProduct } from "@/models/Product";
+import { FaHeart, FaShoppingCart, FaBalanceScale } from "react-icons/fa";
+import SafeImage from "@/Components/SafeImage";
+import StarRating from "@/app/products/components/StarRating";
+import { useCompare } from "@/contexts/CompareContext";
 
 interface ProductCardProps {
   product: IProduct;
@@ -13,15 +13,16 @@ interface ProductCardProps {
   onToggleFavorite?: (product: IProduct) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ 
-  product, 
-  onAddToCart, 
-  onToggleFavorite
+const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  onAddToCompare,
+  onAddToCart,
+  onToggleFavorite,
 }) => {
   const router = useRouter();
   const { isInCompare, addToCompare, removeFromCompare } = useCompare();
   const hasDiscount = product.salePrice < product.price;
-  const discountPercent = hasDiscount 
+  const discountPercent = hasDiscount
     ? Math.round(((product.price - product.salePrice) / product.price) * 100)
     : 0;
 
@@ -30,7 +31,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleCompareClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const productId = String(product._id) || product.productId || product.id;
-    
+
     if (isProductInCompare) {
       // Nếu đã có trong danh sách so sánh, loại bỏ
       removeFromCompare(productId);
@@ -48,24 +49,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <div 
-      className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer flex flex-col h-full ${
-        isProductInCompare ? 'ring-2 ring-[#8ba63a] ring-opacity-50' : ''
+    <div
+      className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${
+        isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
       }`}
       onClick={handleProductClick}
     >
-      <div 
-        className="relative group/image"
+      <div
+        className="relative group/image cursor-pointer"
+        onClick={handleProductClick}
       >
         <SafeImage
-          src={product.images?.[0] || ''}
+          src={product.images?.[0] || ""}
           alt={product.name}
           width={300}
           height={300}
           className="w-full h-48 object-cover transition-transform duration-300 group-hover/image:scale-105"
           fallbackClassName="w-full h-48"
         />
-        
+
         {/* Phần discount */}
         {hasDiscount && (
           <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-semibold">
@@ -77,49 +79,52 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <button
           onClick={handleCompareClick}
           className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-300 ${
-            isProductInCompare 
-              ? 'bg-[#8ba63a] text-white hover:bg-red-500' 
-              : 'bg-white bg-opacity-90 text-gray-600 hover:bg-[#8ba63a] hover:text-white'
+            isProductInCompare
+              ? "bg-[#8ba63a] text-white hover:bg-red-500"
+              : "bg-white bg-opacity-90 text-gray-600 hover:bg-[#8ba63a] hover:text-white"
           }`}
-          title={isProductInCompare ? 'Bỏ khỏi danh sách so sánh' : 'Thêm vào so sánh'}
+          title={
+            isProductInCompare
+              ? "Bỏ khỏi danh sách so sánh"
+              : "Thêm vào so sánh"
+          }
         >
           <FaBalanceScale className="text-sm" />
         </button>
       </div>
 
       {/* Product Information */}
-      <div className="p-4 flex flex-col flex-grow">
-        <div className="flex-grow">
-          <p className="text-sm text-gray-500 uppercase tracking-wide mb-1">
-            {product.attributes?.brand || 'Brand'}
-          </p>
+      <div className="p-4">
+        <p className="text-sm text-gray-500 uppercase tracking-wide mb-1">
+          {product.attributes?.brand || "Brand"}
+        </p>
 
-          <h3 
-            className="font-semibold text-gray-800 mb-2 line-clamp-2 h-12 hover:text-[#8ba63a] transition-colors"
-          >
-            {product.name}
-          </h3>
+        <h3
+          className="font-semibold text-gray-800 mb-2 line-clamp-2 h-12 cursor-pointer hover:text-[#8ba63a] transition-colors"
+          onClick={handleProductClick}
+        >
+          {product.name}
+        </h3>
 
-          <div className="mb-2">
-            <StarRating 
-              rating={product.rating?.average || 0}
-              size="xs"
-              showValue={true}
-              reviewCount={product.rating?.count || 0}
-            />
-          </div>
+        <div className="mb-2">
+          <StarRating
+            rating={product.rating?.average || 0}
+            size="xs"
+            showValue={true}
+            reviewCount={product.rating?.count || 0}
+          />
+        </div>
 
-          <div className="mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-[#8ba63a]">
-                {product.salePrice.toLocaleString('vi-VN')}₫
+        <div className="mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-[#8ba63a]">
+              {product.salePrice.toLocaleString("vi-VN")}₫
+            </span>
+            {hasDiscount && (
+              <span className="text-sm text-gray-500 line-through">
+                {product.price.toLocaleString("vi-VN")}₫
               </span>
-              {hasDiscount && (
-                <span className="text-sm text-gray-500 line-through">
-                  {product.price.toLocaleString('vi-VN')}₫
-                </span>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
@@ -135,7 +140,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <FaShoppingCart className="text-xs" />
             MUA HÀNG
           </button>
-          
+
           <button
             onClick={(e) => {
               e.stopPropagation();
