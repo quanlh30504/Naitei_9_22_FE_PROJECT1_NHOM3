@@ -29,12 +29,12 @@ export default async function ProfileLayout({
     }
 
     return (
-      <main className="bg-gray-50 min-h-screen py-10">
+      <main className="bg-gray-50 dark:bg-gray-900 min-h-screen py-10">
         <div className="container mx-auto max-w-7xl px-4">
           <div className="flex flex-col md:flex-row gap-8">
             {/* Sidebar */}
             <ProfileSidebar user={JSON.parse(JSON.stringify(fullUserData))} />
-            <section className="w-full md:w-3/4 bg-white p-8 rounded-lg shadow-sm">
+            <section className="w-full md:w-3/4 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
               {children}
             </section>
           </div>
@@ -45,12 +45,12 @@ export default async function ProfileLayout({
     // Ghi lại lỗi trên server 
     console.error("Lỗi trong ProfileLayout:", error);
     return (
-      <main className="bg-gray-50 min-h-screen py-10">
+      <main className="bg-gray-50 dark:bg-gray-900 min-h-screen py-10">
         <div className="container mx-auto max-w-7xl px-4">
-          <div className="flex items-center justify-center bg-white p-8 rounded-lg shadow-sm">
+          <div className="flex items-center justify-center bg-white dark:bg-gray-800 p-8 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-red-600 mb-4">Đã xảy ra lỗi</h2>
-              <p className="text-gray-600">Không thể tải thông tin cá nhân của bạn. Vui lòng thử lại sau.</p>
+              <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">Đã xảy ra lỗi</h2>
+              <p className="text-gray-600 dark:text-gray-400">Không thể tải thông tin cá nhân của bạn. Vui lòng thử lại sau.</p>
             </div>
           </div>
         </div>
