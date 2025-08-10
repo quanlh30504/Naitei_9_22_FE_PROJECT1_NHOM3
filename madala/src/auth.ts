@@ -1,30 +1,18 @@
 /**
  * AUTH.TS - NextAuth.js Authentication Configuration
-<<<<<<< HEAD
  *
-=======
- * 
->>>>>>> 7e6b1d5 ([Task] Rebase tk-28,29,53,57,59 : Feature dashboard for admin)
  * CHỨC NĂNG CHÍNH:
  * - Cấu hình NextAuth.js cho toàn bộ ứng dụng
  * - Xác thực người dùng qua email/password (Credentials Provider)
  * - Kết nối với MongoDB để lưu trữ sessions và accounts
  * - Quản lý JWT tokens và session callbacks
  * - Xử lý đăng nhập/đăng xuất users
-<<<<<<< HEAD
  *
-=======
- * 
->>>>>>> 7e6b1d5 ([Task] Rebase tk-28,29,53,57,59 : Feature dashboard for admin)
  * SỬ DỤNG:
  * - Import { auth } từ file này để check authentication trong API routes
  * - Tự động tạo các API endpoints: /api/auth/signin, /api/auth/signout, etc.
  * - Providers: useSession(), signIn(), signOut() trong React components
-<<<<<<< HEAD
  *
-=======
- * 
->>>>>>> 7e6b1d5 ([Task] Rebase tk-28,29,53,57,59 : Feature dashboard for admin)
  * CẤU HÌNH:
  * - MongoDB Adapter để lưu session data
  * - JWT strategy với custom callbacks
@@ -89,11 +77,7 @@ export const authConfig = {
             id: (user as any)._id.toString(),
             email: (user as any).email,
             name: (user as any).name,
-<<<<<<< HEAD
             role: (user as any).role || "user",
-=======
-            roles: (user as any).roles || 'user'
->>>>>>> 7e6b1d5 ([Task] Rebase tk-28,29,53,57,59 : Feature dashboard for admin)
           };
         } catch (error) {
           console.error("Auth error:", error);
@@ -108,7 +92,6 @@ export const authConfig = {
   },
 
   callbacks: {
-<<<<<<< HEAD
     async jwt({ token, user, account }: any) {
       if (user && account) {
         await connectToDB();
@@ -136,21 +119,12 @@ export const authConfig = {
         if (userInDb) {
           token.isActive = userInDb.isActive !== false;
         }
-=======
-    async jwt({ token, user }: any) {
-      if (user) {
-        token.id = user.id;
-        token.roles = user.roles;
-        token.name = user.name;
-        token.email = user.email;
->>>>>>> 7e6b1d5 ([Task] Rebase tk-28,29,53,57,59 : Feature dashboard for admin)
       }
       return token;
     },
 
     async session({ session, token }: any) {
       if (token && session.user) {
-<<<<<<< HEAD
         await connectToDB();
         let userInDb = null;
         if (token.id) {
@@ -171,23 +145,13 @@ export const authConfig = {
           session.user.role = token.role;
           session.user.isActive = token.isActive;
         }
-=======
-        session.user.id = token.id;
-        session.user.roles = token.roles;
-        session.user.name = token.name;
-        session.user.email = token.email;
->>>>>>> 7e6b1d5 ([Task] Rebase tk-28,29,53,57,59 : Feature dashboard for admin)
       }
       return session;
     },
   },
   pages: {
     signIn: "/login",
-<<<<<<< HEAD
     error: "/login",
-=======
-    error: '/login',
->>>>>>> 7e6b1d5 ([Task] Rebase tk-28,29,53,57,59 : Feature dashboard for admin)
   },
   secret: process.env.AUTH_SECRET,
   trustHost: true,

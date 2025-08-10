@@ -8,6 +8,8 @@ import CompareBox from '@/app/products/components/CompareBox';
 import TagList from '@/app/products/components/TagList';
 import SaleBanner from '@/app/products/components/SaleBanner';
 import ViewToggle from '@/app/products/components/ViewToggle';
+import SortFilter, { SortOption } from '@/app/products/components/SortFilter';
+import ProductCounter from '@/app/products/components/ProductCounter';
 import { PaginationWrapper } from '@/Components/PaginationWrapper';
 import { IProduct } from '@/models/Product';
 import { ICategory } from '@/models/Category';
@@ -24,6 +26,7 @@ const ProductPage = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
+    const [sortOption, setSortOption] = useState<SortOption>('default');
 
     // MAX prod được hiển thị
     const getProductsPerPage = () => {
@@ -34,6 +37,25 @@ const ProductPage = () => {
     const tags = Array.from(new Set(
         Array.isArray(products) ? products.flatMap(p => p.tags || []) : []
     ));
+
+    // Hàm sắp xếp sản phẩm
+    const sortProducts = (products: IProduct[], sortOption: SortOption): IProduct[] => {
+        const sortedProducts = [...products];
+        
+        switch (sortOption) {
+            case 'name-asc':
+                return sortedProducts.sort((a, b) => a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' }));
+            case 'name-desc':
+                return sortedProducts.sort((a, b) => b.name.localeCompare(a.name, 'vi', { sensitivity: 'base' }));
+            case 'price-asc':
+                return sortedProducts.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
+            case 'price-desc':
+                return sortedProducts.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
+            case 'default':
+            default:
+                return sortedProducts;
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -65,7 +87,7 @@ const ProductPage = () => {
                 const products = await productService.getAllProducts();
 
                 setProducts(products);
-                setFilteredProducts(products);
+                setFilteredProducts(sortProducts(products, sortOption));
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'An error occurred');
                 console.error('Error fetching initial products:', err);
@@ -108,7 +130,7 @@ const ProductPage = () => {
                 }
 
                 setProducts(products);
-                setFilteredProducts(products);
+                setFilteredProducts(sortProducts(products, sortOption));
                 setCurrentPage(1); // reset về page 1 khi filter thay đổi
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'An error occurred');
@@ -120,6 +142,12 @@ const ProductPage = () => {
 
         fetchProducts();
     }, [selectedCategory, selectedTags]); 
+
+    // Áp dụng sắp xếp khi sortOption thay đổi
+    useEffect(() => {
+        setFilteredProducts(sortProducts(products, sortOption));
+        setCurrentPage(1); // reset về page 1 khi sort thay đổi
+    }, [sortOption, products]); 
 
 
     const handleCategorySelect = (category: string) => {
@@ -134,7 +162,7 @@ const ProductPage = () => {
                     const products = await productService.getAllProducts();
                     
                     setProducts(products);
-                    setFilteredProducts(products);
+                    setFilteredProducts(sortProducts(products, sortOption));
                     setCurrentPage(1);
                 } catch (err) {
                     setError(err instanceof Error ? err.message : 'An error occurred');
@@ -160,6 +188,10 @@ const ProductPage = () => {
 
     const handleClearAllTags = () => {
         setSelectedTags([]);
+    };
+
+    const handleSortChange = (option: SortOption) => {
+        setSortOption(option);
     };
 
     // Chức năng thêm vào giỏ hàng
@@ -251,12 +283,27 @@ const ProductPage = () => {
                             />
                         )}
 
-                        <PaginationWrapper
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={setCurrentPage}
-                            isCompact={false}
-                        />
+                        {/* Bottom Pagination for mobile */}
+                        <div className="lg:hidden">
+                            <PaginationWrapper
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                                isCompact={false}
+                                className="flex justify-center"
+                            />
+                        </div>
+
+                        {/* Bottom Pagination for desktop */}
+                        <div className="hidden lg:block">
+                            <PaginationWrapper
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                                isCompact={false}
+                                className="flex justify-center"
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -279,20 +326,30 @@ const ProductPage = () => {
 
                     {/* Main Content */}
                     <main className="col-span-3">
-                        <div className="flex justify-between items-center mb-6">
-                            <div className="flex items-center gap-4">
-                                <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
-                                <span className="text-sm text-gray-600">
-                                    {filteredProducts.length} sản phẩm
-                                </span>
-                            </div>
-                            <div className="flex items-center">
-                                <PaginationWrapper
-                                    currentPage={currentPage}
-                                    totalPages={totalPages}
-                                    onPageChange={setCurrentPage}
-                                    isCompact={true}
-                                />
+                        {/* Header Section with improved layout */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6 transition-all duration-300 hover:shadow-lg">
+                            <div className="flex items-center justify-between">
+                                {/* Left side - View controls and product count */}
+                                <div className="flex items-center gap-6">
+                                    <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
+                                    <ProductCounter count={filteredProducts.length} />
+                                </div>
+                                
+                                {/* Right side - Sort and pagination */}
+                                <div className="flex items-center gap-4">
+                                    <SortFilter
+                                        currentSort={sortOption}
+                                        onSortChange={handleSortChange}
+                                        isLoading={loading}
+                                    />
+                                    <PaginationWrapper
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        onPageChange={setCurrentPage}
+                                        isCompact={true}
+                                        className="flex justify-center mt-0"
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -309,12 +366,17 @@ const ProductPage = () => {
                                 onToggleFavorite={handleToggleFavorite}
                             />
                         )}
-                        <PaginationWrapper
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={setCurrentPage}
-                            isCompact={false}
-                        />
+                        
+                        {/* Bottom Pagination - Centered alignment */}
+                        <div className="flex justify-center">
+                            <PaginationWrapper
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                                isCompact={false}
+                                className=""
+                            />
+                        </div>
                     </main>
                 </div>
             </div>

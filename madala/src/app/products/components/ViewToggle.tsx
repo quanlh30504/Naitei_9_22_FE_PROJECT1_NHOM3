@@ -22,15 +22,15 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
   ];
 
   return (
-    <div className="flex items-center bg-gray-100 p-1 rounded-lg">
+    <div className="flex items-center bg-gray-100 dark:bg-gray-700 p-1 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onViewChange(tab.id)}
-          className={`p-2 rounded-md transition-colors ${
+          className={`p-2.5 rounded-md transition-all duration-200 transform hover:scale-110 ${
             viewMode === tab.id
-              ? 'bg-white text-[#8ba63a] shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-md border border-blue-200 dark:border-blue-600'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-600/50'
           }`}
           title={tab.label}
         >

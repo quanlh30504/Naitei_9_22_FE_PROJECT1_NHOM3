@@ -79,10 +79,10 @@ const StarRating: React.FC<StarRatingProps> = ({
                 )}
             </div>
             {showValue && (
-                <span className={`text-gray-600 ${sizeClasses[size]}`}>
+                <span className={"text-gray-600 text-sm flex items-center gap-1"}>
                     ({rating.toFixed(1)})
                     {reviewCount > 0 && (
-                        <span className="text-gray-500"> • {reviewCount} đánh giá</span>
+                        <span className="text-gray-500 whitespace-nowrap">• {reviewCount} đánh giá</span>
                     )}
                 </span>
             )}

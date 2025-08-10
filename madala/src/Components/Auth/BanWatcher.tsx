@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 export default function BanWatcher() {
-    const { data: session, status } = useSession();
+    const { data: session, status, update } = useSession();
     const router = useRouter();
     const pathname = usePathname();
     const lastPath = useRef<string | null>(null);
