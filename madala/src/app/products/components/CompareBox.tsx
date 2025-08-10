@@ -1,5 +1,8 @@
 "use client";
 import React, { useState } from "react";
+import { addItemToCart } from '@/lib/actions/cart';
+import { useCartStore } from '@/store/useCartStore';
+import { toast } from 'react-hot-toast';
 import { IProduct } from "@/models/Product";
 import { ICategory } from "@/models/Category";
 import { useCompareStore } from "@/store/useCompareStore";
@@ -17,8 +20,18 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Chức năng thêm vào giỏ hàng
-  const handleAddToCart = (product: IProduct) => {
-    // TODO: Implement add to cart functionality here.
+  const { syncCart } = useCartStore();
+  const handleAddToCart = async (product: IProduct) => {
+    const res = await addItemToCart(String(product._id), 1);
+    if (res.success) {
+      toast.success('Đã thêm sản phẩm vào giỏ hàng!');
+      // Nếu server trả về cart mới, đồng bộ lại cart client (nếu cần)
+      if (res.data && res.data.cart) {
+        syncCart(res.data.cart);
+      }
+    } else {
+      toast.error(res.message || 'Thêm vào giỏ hàng thất bại!');
+    }
   };
 
   return (

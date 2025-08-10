@@ -208,7 +208,7 @@ export default function CreateProduct() {
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-800">
                   Thêm sản phẩm mới
                 </h1>
-                <p className="text-base font-medium text-gray-700 dark:text-gray-300">Tạo sản phẩm mới trong hệ thống</p>
+                <p className="text-base font-medium text-gray-700 dark:text-white">Tạo sản phẩm mới trong hệ thống</p>
           </div>
         </div>
 
