@@ -103,19 +103,19 @@ export const accountLinks = [
 
 export const paymentMethods = [
   {
-    src: "/api/images/payments/mastercard.png",
+    src: "/payments/mastercard.png",
     alt: "Mastercard"
   },
   {
-    src: "/api/images/payments/visa.png",
+    src: "/payments/visa.png",
     alt: "Visa"
   },
   {
-    src: "/api/images/payments/paypal.png",
+    src: "/payments/paypal.png",
     alt: "PayPal"
   },
   {
-    src: "/api/images/payments/maestro.png",
+    src: "/payments/maestro.png",
     alt: "Maestro"
   }
 ];
