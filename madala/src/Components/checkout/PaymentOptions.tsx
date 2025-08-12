@@ -3,7 +3,7 @@
 import { useState, useMemo, useTransition } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useCart } from "@/app/cart/context/CartContext";
+import { useCartStore } from "@/store/useCartStore";
 import { placeOrder } from "@/lib/actions/order";
 import { Button } from "@/Components/ui/button";
 import { Card, CardContent } from "@/Components/ui/card";
@@ -27,7 +27,7 @@ export default function PaymentOptions({
   checkoutItems = [],
   shippingFee,
 }: PaymentOptionsProps) {
-  const { clearOrderedItems } = useCart();
+  const { clearOrderedItems } = useCartStore();
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
   const [isPending, startTransition] = useTransition();

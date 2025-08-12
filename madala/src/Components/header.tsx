@@ -18,21 +18,16 @@ import {
   User,
   Menu,
   ChevronDown,
-  Heart,
   Wallet,
 } from "lucide-react";
-import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
-import userImage from "@/assets/images/Users/user-image.jpg";
 import {
   userMenuItems,
   guestMenuItems,
   navigationItems,
-  HEADER_ROUTES,
-  MenuItem,
 } from "@/constants/headerLinks";
 import { getUserForHeader, UserHeaderData } from "@/lib/actions/user";
-import { useCart } from "@/app/cart/context/CartContext";
+import { useCartStore } from "@/store/useCartStore";
 import { formatCurrency } from "@/lib/utils";
 
 export default function Header({
@@ -50,7 +45,7 @@ export default function Header({
   const [userData, setUserData] = useState(initialUserData);
 
   // dữ liệu giỏ hàng
-  const { totalItems } = useCart();
+  const { totalItems } = useCartStore();
 
   useEffect(() => {
     setUserData(initialUserData);

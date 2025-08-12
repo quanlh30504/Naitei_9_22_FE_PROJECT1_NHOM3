@@ -3,7 +3,7 @@ import { useMemo, useTransition } from "react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/Components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-import { useCart } from "@/app/cart/context/CartContext";
+import { useCartStore } from "@/store/useCartStore";
 import { Loader2, MapPin } from "lucide-react";
 import type { AddressType } from "@/types/address";
 import { useRouter } from "next/navigation"; 
@@ -16,7 +16,7 @@ interface OrderSummaryProps {
 
 export default function OrderSummary({ selectedAddress, onOpenAddressModal }: OrderSummaryProps) {
        const router = useRouter(); 
-    const { items, selectedItemIds } = useCart();
+    const { items, selectedItemIds } = useCartStore();
     const [isPending, startTransition] = useTransition();
 
     const { totalOriginal, totalDiscount, totalFinal, selectedCount } = useMemo(() => {

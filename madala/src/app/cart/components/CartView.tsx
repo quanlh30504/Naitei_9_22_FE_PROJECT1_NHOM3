@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CartItemsList from "./CartItemsList";
 import OrderSummary from "./OrderSummary";
 import AddressSelectionModal from "@/Components/Profile/AddressSelectionModal";
+import { useCartStore } from '@/store/useCartStore';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+
+
 
 type AddressType = {
     _id: string;
@@ -26,6 +30,30 @@ export default function CartView({ initialAddresses }: CartViewProps) {
     const [selectedAddress, setSelectedAddress] = useState<AddressType | undefined>(() => {
         return initialAddresses.find(addr => addr.isDefault) || initialAddresses[0];
     });
+
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const { items, selectedItemIds, toggleItemSelected } = useCartStore();
+
+    useEffect(() => {
+        const selectItemId = searchParams.get('selectItemId');
+        
+        if (selectItemId) {
+            const itemExists = items.some(item => item._id === selectItemId);
+            const isAlreadySelected = selectedItemIds.includes(selectItemId);
+
+            if (itemExists && !isAlreadySelected) {
+                toggleItemSelected(selectItemId);
+            }
+
+            // Xóa param khỏi URL sau khi xử lý
+            const newParams = new URLSearchParams(searchParams.toString());
+            newParams.delete('selectItemId');
+            router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+        }
+    }, [items, searchParams, selectedItemIds, pathname, router, toggleItemSelected]);
+
 
     const handleAddressSelect = (address: AddressType) => {
         setSelectedAddress(address);

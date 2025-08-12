@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { Minus, Plus } from "lucide-react";
-import { useCart } from "../context/CartContext";
+import { useCartStore } from "@/store/useCartStore";
 import { useDebouncedCallback } from "use-debounce";
 
 interface QuantitySelectorProps {
@@ -20,7 +20,7 @@ export default function QuantitySelector({
   stock,
   onQuantityChange,
 }: QuantitySelectorProps) {
-  const { isPending } = useCart();
+  const { isPending } = useCartStore();
   const [quantity, setQuantity] = useState(initialQuantity);
 
   const debouncedOnQuantityChange = useDebouncedCallback(

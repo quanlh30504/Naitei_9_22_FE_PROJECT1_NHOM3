@@ -5,7 +5,7 @@ import { IProduct } from "@/models/Product";
 import { FaHeart, FaShoppingCart, FaBalanceScale } from "react-icons/fa";
 import SafeImage from "@/Components/SafeImage";
 import StarRating from "@/app/products/components/StarRating";
-import { useCompare } from "@/contexts/CompareContext";
+import { useCompareStore } from "@/store/useCompareStore";
 
 interface ProductCardProps {
   product: IProduct;
@@ -15,12 +15,11 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({
   product,
-  onAddToCompare,
   onAddToCart,
   onToggleFavorite,
 }) => {
   const router = useRouter();
-  const { isInCompare, addToCompare, removeFromCompare } = useCompare();
+  const { isInCompare, addToCompare, removeFromCompare } = useCompareStore();
   const hasDiscount = product.salePrice < product.price;
   const discountPercent = hasDiscount
     ? Math.round(((product.price - product.salePrice) / product.price) * 100)

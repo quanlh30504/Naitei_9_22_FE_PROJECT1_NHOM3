@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { IProduct } from "@/models/Product";
 import { ICategory } from "@/models/Category";
-import { useCompare } from "@/contexts/CompareContext";
+import { useCompareStore } from "@/store/useCompareStore";
 import { FaTimes, FaBalanceScale } from "react-icons/fa";
 import { formatPrice } from "@/utils/formatPrice";
 import SafeImage from "@/Components/SafeImage";
@@ -13,7 +13,7 @@ interface CompareBoxProps {
 }
 
 const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
-  const { compareProducts, removeFromCompare, clearCompare } = useCompare();
+  const { compareProducts, removeFromCompare, clearCompare } = useCompareStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Chức năng thêm vào giỏ hàng

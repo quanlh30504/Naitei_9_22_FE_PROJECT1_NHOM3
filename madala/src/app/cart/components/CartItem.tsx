@@ -5,7 +5,7 @@ import { Checkbox } from "@/Components/ui/checkbox";
 import { Button } from "@/Components/ui/button";
 import QuantitySelector from "./QuantitySelector"; 
 import { Trash2 } from "lucide-react";
-import { useCart, PopulatedCartItem } from "../context/CartContext"; 
+import { useCartStore, PopulatedCartItem } from "@/store/useCartStore"; 
 import { getImageUrl } from "@/lib/getImageUrl"
 import { formatCurrency } from "@/lib/utils";
 
@@ -24,7 +24,7 @@ export default function CartItem({ item }: CartItemProps) {
     );
   }
 
-  const { selectedItemIds, toggleItemSelected, removeItems, updateQuantity , isPending } = useCart();
+  const { selectedItemIds, toggleItemSelected, removeItems, updateQuantity , isPending } = useCartStore();
   
   const isSelected = selectedItemIds.includes(item._id);
 
