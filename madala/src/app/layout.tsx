@@ -1,17 +1,13 @@
-import { SessionProvider } from "next-auth/react";
 import AuthProvider from "@/Components/Auth/AuthProvider";
 import ToastProvider from "@/Components/ToastProvider";
 import { ConditionalLayout } from "@/Components/ConditionalLayout";
-import CompareProvider from "@/contexts/CompareContext";
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { getUserForHeader } from "@/lib/actions/user";
-import Header from "@/Components/header";
 import Footer from "@/Components/footer";
-import { getCart } from "@/lib/actions/cart";
-import { CartProvider } from "@/app/cart/context/CartContext";
+import AppProviders from "@/Components/AppProviders";
+import SiteHeader from "@/Components/SiteHeader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,13 +29,8 @@ export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
+
 }) {
-  const userData = await getUserForHeader();
-
-  // lấy dữ liệu giỏ hàng của người dùng
-  const cartResult = await getCart();
-  const initialCart = cartResult.success ? cartResult.data : null;
-
   return (
     <html lang="vi">
       <body
@@ -47,16 +38,15 @@ export default async function RootLayout({
       >
         <AuthProvider>
           <ToastProvider />
-          <CartProvider initialCart={JSON.parse(JSON.stringify(initialCart))}>
+          {/* AppProviders sẽ lo việc fetch cart và cung cấp context */}
+          <AppProviders>
             <ConditionalLayout
-              header={<Header initialUserData={userData} />}
+              header={<SiteHeader />} // SiteHeader sẽ tự fetch data của nó
               footer={<Footer />}
             >
-              <CompareProvider>
-                <main className="min-h-screen">{children}</main>
-              </CompareProvider>
+              <main className="min-h-screen">{children}</main>
             </ConditionalLayout>
-          </CartProvider>
+          </AppProviders>
         </AuthProvider>
       </body>
     </html>
