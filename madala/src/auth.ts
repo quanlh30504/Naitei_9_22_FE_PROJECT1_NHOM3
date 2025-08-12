@@ -1,18 +1,18 @@
 /**
  * AUTH.TS - NextAuth.js Authentication Configuration
- * 
+ *
  * CHỨC NĂNG CHÍNH:
  * - Cấu hình NextAuth.js cho toàn bộ ứng dụng
  * - Xác thực người dùng qua email/password (Credentials Provider)
  * - Kết nối với MongoDB để lưu trữ sessions và accounts
  * - Quản lý JWT tokens và session callbacks
  * - Xử lý đăng nhập/đăng xuất users
- * 
+ *
  * SỬ DỤNG:
  * - Import { auth } từ file này để check authentication trong API routes
  * - Tự động tạo các API endpoints: /api/auth/signin, /api/auth/signout, etc.
  * - Providers: useSession(), signIn(), signOut() trong React components
- * 
+ *
  * CẤU HÌNH:
  * - MongoDB Adapter để lưu session data
  * - JWT strategy với custom callbacks
@@ -26,9 +26,21 @@ import clientPromise from "./lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import connectToDB from "@/lib/db";
+import GoogleProvider from "next-auth/providers/google";
+import GitHubProvider from "next-auth/providers/github";
 
 export const authConfig = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+
+    // --- Provider 2: GitHub ---
+    GitHubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    }),
     Credentials({
       name: "credentials",
       credentials: {
@@ -64,7 +76,7 @@ export const authConfig = {
             id: (user as any)._id.toString(),
             email: (user as any).email,
             name: (user as any).name,
-            roles: (user as any).roles || 'user'
+            roles: (user as any).roles || "user",
           };
         } catch (error) {
           console.error("Auth error:", error);
@@ -79,29 +91,42 @@ export const authConfig = {
   },
 
   callbacks: {
-    async jwt({ token, user }: any) {
-      if (user) {
-        token.id = user.id;
-        token.roles = user.roles;
-        token.name = user.name;
-        token.email = user.email;
-      }
-      return token;
+    async jwt({ token, user, account }: any) {
+      await connectToDB();
+  
+            // `user` chỉ tồn tại trong lần đăng nhập đầu tiên.
+            if (user) {
+                // Đăng nhập bằng Credentials
+                if (account?.provider === 'credentials') {
+                    token.id = user.id;
+                    token.roles = (user as any).roles;
+                }
+                //  Đăng nhập bằng Google/GitHub (hoặc OAuth khác)
+                else if (account?.provider === 'google' || account?.provider === 'github') {
+                    // Adapter đã tạo user trong DB -> cần tìm lại user đó để lấy _id và roles.
+                    const existingUser = await User.findOne({ email: user.email });
+                    if (existingUser) {
+                        token.id = existingUser._id.toString();
+                        token.roles = existingUser.roles || 'user'; 
+                    }
+                }
+            }
+            return token;
+
+      
     },
 
     async session({ session, token }: any) {
       if (token && session.user) {
         session.user.id = token.id;
         session.user.roles = token.roles;
-        session.user.name = token.name;
-        session.user.email = token.email;
       }
       return session;
     },
   },
   pages: {
     signIn: "/login",
-    error: '/login',
+    error: "/login",
   },
   secret: process.env.AUTH_SECRET,
   trustHost: true,

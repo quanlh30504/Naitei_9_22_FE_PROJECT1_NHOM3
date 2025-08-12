@@ -9,8 +9,10 @@ import Link from "next/link";
 import SubmitButton from "@/Components/Buttons/SubmitButton";
 import ActionButton from "@/Components/Buttons/ActionButton";
 import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
 import { FormLabel } from "@/Components/FormLabel";
+import { signIn } from "next-auth/react";
+import { ChromeIcon, GithubIcon } from "lucide-react";
+import { Button } from "@/Components/ui/button";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -27,6 +29,10 @@ export default function RegisterPage() {
       toast.error(state.message);
     }
   }, [state, router]);
+
+  const handleSocialLogin = async (provider: "google" | "github") => {
+    await signIn(provider, { callbackUrl: "/" }, { prompt: "select_account" });
+  };
 
   return (
     <main className="bg-white text-gray-800 min-h-screen">
@@ -159,6 +165,34 @@ export default function RegisterPage() {
               </ActionButton>
             </div>
           </form>
+
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-gray-50 px-2 text-muted-foreground">
+                Hoặc tiếp tục với
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Button
+              variant="outline"
+              onClick={() => handleSocialLogin("google")}
+            >
+              <ChromeIcon className="mr-2 h-4 w-4" />
+              Google
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleSocialLogin("github")}
+            >
+              <GithubIcon className="mr-2 h-4 w-4" />
+              GitHub
+            </Button>
+          </div>
         </div>
       </div>
     </main>
