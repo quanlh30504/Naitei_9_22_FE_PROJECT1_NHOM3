@@ -1,17 +1,15 @@
-import { SessionProvider } from "next-auth/react";
 import AuthProvider from "@/Components/Auth/AuthProvider";
 import ToastProvider from "@/Components/ToastProvider";
 import { ConditionalLayout } from "@/Components/ConditionalLayout";
-import CompareProvider from "@/contexts/CompareContext";
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { getUserForHeader } from "@/lib/actions/user";
-import Header from "@/Components/header";
 import Footer from "@/Components/footer";
+import SiteHeader from "@/Components/SiteHeader";
 import { getCart } from "@/lib/actions/cart";
-import { CartProvider } from "@/app/cart/context/CartContext";
+import StoreInitializer from "@/Components/StoreInitializer";
+import CartStateSyncer from "@/Components/CartStateSyncer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,12 +32,11 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const userData = await getUserForHeader();
-
-  // lấy dữ liệu giỏ hàng của người dùng
   const cartResult = await getCart();
   const initialCart = cartResult.success ? cartResult.data : null;
-
+  const plainInitialCart = initialCart
+    ? JSON.parse(JSON.stringify(initialCart))
+    : null;
   return (
     <html lang="vi">
       <body
@@ -47,16 +44,13 @@ export default async function RootLayout({
       >
         <AuthProvider>
           <ToastProvider />
-          <CartProvider initialCart={JSON.parse(JSON.stringify(initialCart))}>
-            <ConditionalLayout
-              header={<Header initialUserData={userData} />}
-              footer={<Footer />}
-            >
-              <CompareProvider>
-                <main className="min-h-screen">{children}</main>
-              </CompareProvider>
-            </ConditionalLayout>
-          </CartProvider>
+          <CartStateSyncer serverCart={plainInitialCart} />
+          <ConditionalLayout
+            header={<SiteHeader />} // SiteHeader sẽ tự fetch data của nó
+            footer={<Footer />}
+          >
+            <main className="min-h-screen">{children}</main>
+          </ConditionalLayout>
         </AuthProvider>
       </body>
     </html>

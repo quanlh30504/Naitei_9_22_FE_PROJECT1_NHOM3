@@ -3,11 +3,11 @@ import { Checkbox } from "@/Components/ui/checkbox";
 import { Button } from "@/Components/ui/button";
 import { Trash2 } from "lucide-react";
 import CartItem from "./CartItem";
-import { useCart } from "../context/CartContext";
+import { useCartStore } from "@/store/useCartStore";
 import { useMemo } from "react";
 
 export default function CartItemsList() {
-  const { items, selectedItemIds, toggleSelectAll, removeItems, isPending } = useCart();
+  const { items, selectedItemIds, toggleSelectAll, removeItems, isPending } = useCartStore();
 
   const allSelected = useMemo(
     () => items.length > 0 && selectedItemIds.length === items.length,

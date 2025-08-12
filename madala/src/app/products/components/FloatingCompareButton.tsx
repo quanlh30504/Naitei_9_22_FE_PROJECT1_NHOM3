@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { useCompare } from '@/contexts/CompareContext';
+import { useCompareStore } from '@/store/useCompareStore';
 import { ICategory } from '@/models/Category';
 import { IProduct } from '@/models/Product';
 import CompareModal from '@/app/products/components/CompareModal';
@@ -12,7 +12,8 @@ interface FloatingCompareButtonProps {
 }
 
 const FloatingCompareButton: React.FC<FloatingCompareButtonProps> = ({ categories, onAddToCart }) => {
-    const { compareProducts, compareCount, removeFromCompare } = useCompare();
+    const { compareProducts, removeFromCompare } = useCompareStore();
+    const compareCount = useCompareStore((state) => state.compareProducts.length);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     if (compareCount === 0) return null;

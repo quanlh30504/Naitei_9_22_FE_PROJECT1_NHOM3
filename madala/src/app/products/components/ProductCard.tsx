@@ -5,7 +5,8 @@ import { IProduct } from "@/models/Product";
 import { FaHeart, FaShoppingCart, FaBalanceScale } from "react-icons/fa";
 import SafeImage from "@/Components/SafeImage";
 import StarRating from "@/app/products/components/StarRating";
-import { useCompare } from "@/contexts/CompareContext";
+import { useCompareStore } from "@/store/useCompareStore";
+import { getProductDiscount } from "@/lib/utils";
 
 interface ProductCardProps {
   product: IProduct;
@@ -15,17 +16,12 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({
   product,
-  onAddToCompare,
   onAddToCart,
   onToggleFavorite,
 }) => {
   const router = useRouter();
-  const { isInCompare, addToCompare, removeFromCompare } = useCompare();
-  const hasDiscount = product.salePrice < product.price;
-  const discountPercent = hasDiscount
-    ? Math.round(((product.price - product.salePrice) / product.price) * 100)
-    : 0;
-
+  const { isInCompare, addToCompare, removeFromCompare } = useCompareStore();
+  const { hasDiscount, discountPercent } = getProductDiscount(product);
   const isProductInCompare = isInCompare(String(product._id));
 
   const handleCompareClick = (e: React.MouseEvent) => {
@@ -42,7 +38,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   const handleProductClick = () => {
-    // Chuyển hướng sang page details 
+    // Chuyển hướng sang page details
     if (product.slug) {
       router.push(`/products/${product.slug}`);
     }
