@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
-import { ICategory } from '@/models/Category';
-import { Button } from "@/Components/ui/button";
+import React, { useState } from "react";
+import { FaChevronDown, FaChevronRight } from "react-icons/fa";
+import { ICategory } from "@/models/Category";
+import { Button } from "@/components/ui/button";
 
 interface CategorySidebarProps {
   categories: ICategory[];
@@ -14,17 +14,21 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
   selectedCategory,
   onSelectCategory,
 }) => {
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set()
+  );
 
   const getCategoryId = (category: ICategory): string => {
-    return category.categoryId || '';
+    return category.categoryId || "";
   };
 
-  const level1Categories = categories.filter(cat => cat.level === 1).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+  const level1Categories = categories
+    .filter((cat) => cat.level === 1)
+    .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
   const getSubcategories = (parentCategoryId: string) => {
     return categories
-      .filter(cat => cat.level === 2 && cat.parentId === parentCategoryId)
+      .filter((cat) => cat.level === 2 && cat.parentId === parentCategoryId)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   };
 
@@ -51,11 +55,11 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
         {/* Show All Products Button */}
         <Button
           variant="ghost"
-          onClick={() => onSelectCategory('')}
+          onClick={() => onSelectCategory("")}
           className={`w-full justify-start px-3 py-2 text-sm font-medium border-b border-gray-200 pb-3 mb-3 rounded-none ${
-            selectedCategory === ''
-              ? 'text-green-600 bg-green-50'
-              : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+            selectedCategory === ""
+              ? "text-green-600 bg-green-50"
+              : "text-gray-700 hover:text-green-600 hover:bg-green-50"
           }`}
         >
           Tất cả sản phẩm
@@ -78,8 +82,8 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
                   onClick={() => onSelectCategory(categoryId)}
                   className={`flex-1 justify-start px-3 py-2 text-sm font-medium rounded-none ${
                     isSelected
-                      ? 'text-green-600 bg-green-50'
-                      : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+                      ? "text-green-600 bg-green-50"
+                      : "text-gray-700 hover:text-green-600 hover:bg-green-50"
                   }`}
                 >
                   {category.name}
@@ -107,7 +111,8 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
                 <div className="ml-6 mt-2 space-y-1">
                   {subcategories.map((subcategory) => {
                     const subcategoryId = getCategoryId(subcategory);
-                    const isSubcategorySelected = selectedCategory === subcategoryId;
+                    const isSubcategorySelected =
+                      selectedCategory === subcategoryId;
 
                     return (
                       <Button
@@ -116,8 +121,8 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
                         onClick={() => onSelectCategory(subcategoryId)}
                         className={`w-full justify-start px-3 py-1.5 text-sm rounded ${
                           isSubcategorySelected
-                            ? 'text-green-600 bg-green-50'
-                            : 'text-gray-600 hover:text-green-600 hover:bg-green-50'
+                            ? "text-green-600 bg-green-50"
+                            : "text-gray-600 hover:text-green-600 hover:bg-green-50"
                         }`}
                       >
                         • {subcategory.name}

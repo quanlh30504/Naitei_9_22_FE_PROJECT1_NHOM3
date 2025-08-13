@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { AdminLayout } from "@/Components/admin/AdminLayout";
-import { Button } from "@/Components/ui/button";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Eye } from "lucide-react";
 import toast from "react-hot-toast";
 import { useBlogForm } from "@/hooks/useBlogForm";
-import BlogBasicInfo from "@/Components/admin/blog/BlogBasicInfo";
-import BlogContentEditor from "@/Components/admin/blog/BlogContentEditor";
-import BlogImageUpload from "@/Components/admin/blog/BlogImageUpload";
-import BlogTagsManager from "@/Components/admin/blog/BlogTagsManager";
-import BlogSettings from "@/Components/admin/blog/BlogSettings";
+import BlogBasicInfo from "@/components/admin/blog/BlogBasicInfo";
+import BlogContentEditor from "@/components/admin/blog/BlogContentEditor";
+import BlogImageUpload from "@/components/admin/blog/BlogImageUpload";
+import BlogTagsManager from "@/components/admin/blog/BlogTagsManager";
+import BlogSettings from "@/components/admin/blog/BlogSettings";
 
 export default function EditBlog() {
   const params = useParams();
@@ -30,7 +30,7 @@ export default function EditBlog() {
     handleTagsChange,
     handleFeaturedChange,
     handlePublishedChange,
-    updateFormData
+    updateFormData,
   } = useBlogForm();
 
   // Fetch blog post data
@@ -53,17 +53,17 @@ export default function EditBlog() {
             featuredImage: post.featuredImage,
             tags: post.tags || [],
             isPublished: post.isPublished,
-            isFeatured: post.isFeatured
+            isFeatured: post.isFeatured,
           });
           setDataLoaded(true); // ← Đánh dấu đã load xong
         } else {
-          toast.error('Không tìm thấy bài viết');
-          window.location.href = '/admin/blog';
+          toast.error("Không tìm thấy bài viết");
+          window.location.href = "/admin/blog";
         }
       } catch (error) {
-        console.error('Error fetching blog post:', error);
-        toast.error('Lỗi khi tải bài viết');
-        window.location.href = '/admin/blog';
+        console.error("Error fetching blog post:", error);
+        toast.error("Lỗi khi tải bài viết");
+        window.location.href = "/admin/blog";
       } finally {
         setLoading(false);
       }
@@ -73,13 +73,17 @@ export default function EditBlog() {
   }, [slug]); // ← Chỉ dependency slug
 
   const handleSave = async (publish?: boolean) => {
-    if (!formData.title.trim() || !formData.content.trim() || !formData.excerpt.trim()) {
-      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+    if (
+      !formData.title.trim() ||
+      !formData.content.trim() ||
+      !formData.excerpt.trim()
+    ) {
+      toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
       return;
     }
 
     if (!formData.featuredImage) {
-      toast.error('Vui lòng chọn ảnh đại diện');
+      toast.error("Vui lòng chọn ảnh đại diện");
       return;
     }
 
@@ -95,9 +99,9 @@ export default function EditBlog() {
       }
 
       const response = await fetch(`/api/blog/${slug}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updateData),
       });
@@ -105,16 +109,16 @@ export default function EditBlog() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('Cập nhật bài viết thành công');
+        toast.success("Cập nhật bài viết thành công");
         if (result.data.slug !== slug) {
           window.location.href = `/admin/blog/edit/${result.data.slug}`;
         }
       } else {
-        toast.error(result.error || 'Lỗi khi cập nhật bài viết');
+        toast.error(result.error || "Lỗi khi cập nhật bài viết");
       }
     } catch (error) {
-      console.error('Error updating blog post:', error);
-      toast.error('Lỗi khi cập nhật bài viết');
+      console.error("Error updating blog post:", error);
+      toast.error("Lỗi khi cập nhật bài viết");
     } finally {
       setSaving(false);
     }
@@ -139,13 +143,18 @@ export default function EditBlog() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={() => window.location.href = '/admin/blog'}>
+            <Button
+              variant="ghost"
+              onClick={() => (window.location.href = "/admin/blog")}
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Quay lại
             </Button>
             <div>
               <h1 className="text-3xl font-bold">Chỉnh sửa bài viết</h1>
-              <p className="text-muted-foreground">Cập nhật nội dung bài viết</p>
+              <p className="text-muted-foreground">
+                Cập nhật nội dung bài viết
+              </p>
             </div>
           </div>
           <div className="flex space-x-2">
@@ -158,10 +167,7 @@ export default function EditBlog() {
               Lưu thay đổi
             </Button>
             {!formData.isPublished && (
-              <Button
-                onClick={() => handleSave(true)}
-                disabled={saving}
-              >
+              <Button onClick={() => handleSave(true)} disabled={saving}>
                 <Eye className="h-4 w-4 mr-2" />
                 Xuất bản
               </Button>

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
 import { useState } from "react";
-import { AdminLayout } from "@/Components/admin/AdminLayout";
-import { Button } from "@/Components/ui/button";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Eye } from "lucide-react";
 import toast from "react-hot-toast";
 import { useBlogForm } from "@/hooks/useBlogForm";
-import BlogBasicInfo from "@/Components/admin/blog/BlogBasicInfo";
-import BlogContentEditor from "@/Components/admin/blog/BlogContentEditor";
-import BlogImageUpload from "@/Components/admin/blog/BlogImageUpload";
-import BlogTagsManager from "@/Components/admin/blog/BlogTagsManager";
-import BlogSettings from "@/Components/admin/blog/BlogSettings";
+import BlogBasicInfo from "@/components/admin/blog/BlogBasicInfo";
+import BlogContentEditor from "@/components/admin/blog/BlogContentEditor";
+import BlogImageUpload from "@/components/admin/blog/BlogImageUpload";
+import BlogTagsManager from "@/components/admin/blog/BlogTagsManager";
+import BlogSettings from "@/components/admin/blog/BlogSettings";
 
 export default function CreateBlog() {
   const [saving, setSaving] = useState(false);
@@ -22,45 +22,49 @@ export default function CreateBlog() {
     handleContentChange,
     handleImageChange,
     handleTagsChange,
-    handleFeaturedChange
+    handleFeaturedChange,
   } = useBlogForm();
 
   const handleSave = async (publish = false) => {
-    if (!formData.title.trim() || !formData.content.trim() || !formData.excerpt.trim()) {
-      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+    if (
+      !formData.title.trim() ||
+      !formData.content.trim() ||
+      !formData.excerpt.trim()
+    ) {
+      toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
       return;
     }
 
     if (!formData.featuredImage) {
-      toast.error('Vui lòng chọn ảnh đại diện');
+      toast.error("Vui lòng chọn ảnh đại diện");
       return;
     }
 
     try {
       setSaving(true);
-      const response = await fetch('/api/blog', {
-        method: 'POST',
+      const response = await fetch("/api/blog", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
           isPublished: publish,
-          publishedAt: publish ? new Date().toISOString() : undefined
+          publishedAt: publish ? new Date().toISOString() : undefined,
         }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        toast.success(`${publish ? 'Xuất bản' : 'Lưu'} bài viết thành công`);
-        window.location.href = '/admin/blog';
+        toast.success(`${publish ? "Xuất bản" : "Lưu"} bài viết thành công`);
+        window.location.href = "/admin/blog";
       } else {
-        toast.error(result.error || 'Lỗi khi lưu bài viết');
+        toast.error(result.error || "Lỗi khi lưu bài viết");
       }
     } catch (error) {
-      console.error('Error saving blog post:', error);
-      toast.error('Lỗi khi lưu bài viết');
+      console.error("Error saving blog post:", error);
+      toast.error("Lỗi khi lưu bài viết");
     } finally {
       setSaving(false);
     }
@@ -78,7 +82,9 @@ export default function CreateBlog() {
             </Button>
             <div>
               <h1 className="text-3xl font-bold">Tạo bài viết mới</h1>
-              <p className="text-muted-foreground">Viết và xuất bản bài viết mới</p>
+              <p className="text-muted-foreground">
+                Viết và xuất bản bài viết mới
+              </p>
             </div>
           </div>
           <div className="flex space-x-2">
@@ -90,10 +96,7 @@ export default function CreateBlog() {
               <Save className="h-4 w-4 mr-2" />
               Lưu nháp
             </Button>
-            <Button
-              onClick={() => handleSave(true)}
-              disabled={saving}
-            >
+            <Button onClick={() => handleSave(true)} disabled={saving}>
               <Eye className="h-4 w-4 mr-2" />
               Xuất bản
             </Button>

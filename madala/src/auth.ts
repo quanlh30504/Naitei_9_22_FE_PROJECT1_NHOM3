@@ -93,27 +93,28 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user, account }: any) {
       await connectToDB();
-  
-            // `user` chỉ tồn tại trong lần đăng nhập đầu tiên.
-            if (user) {
-                // Đăng nhập bằng Credentials
-                if (account?.provider === 'credentials') {
-                    token.id = user.id;
-                    token.roles = (user as any).roles;
-                }
-                //  Đăng nhập bằng Google/GitHub (hoặc OAuth khác)
-                else if (account?.provider === 'google' || account?.provider === 'github') {
-                    // Adapter đã tạo user trong DB -> cần tìm lại user đó để lấy _id và roles.
-                    const existingUser = await User.findOne({ email: user.email });
-                    if (existingUser) {
-                        token.id = existingUser._id.toString();
-                        token.roles = existingUser.roles || 'user'; 
-                    }
-                }
-            }
-            return token;
 
-      
+      // `user` chỉ tồn tại trong lần đăng nhập đầu tiên.
+      if (user) {
+        // Đăng nhập bằng Credentials
+        if (account?.provider === "credentials") {
+          token.id = user.id;
+          token.roles = (user as any).roles;
+        }
+        //  Đăng nhập bằng Google/GitHub (hoặc OAuth khác)
+        else if (
+          account?.provider === "google" ||
+          account?.provider === "github"
+        ) {
+          // Adapter đã tạo user trong DB -> cần tìm lại user đó để lấy _id và roles.
+          const existingUser = await User.findOne({ email: user.email });
+          if (existingUser) {
+            token.id = existingUser._id.toString();
+            token.roles = existingUser.roles || "user";
+          }
+        }
+      }
+      return token;
     },
 
     async session({ session, token }: any) {

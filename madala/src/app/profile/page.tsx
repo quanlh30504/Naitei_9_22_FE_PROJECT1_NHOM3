@@ -1,9 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import UserInfoForm from "@/Components/Profile/UserInfoForm";
+import UserInfoForm from "@/components/Profile/UserInfoForm";
 import UserModel from "@/models/User";
 import connectToDB from "@/lib/db";
-
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -18,12 +17,12 @@ export default async function ProfilePage() {
     redirect("/login");
   }
   let safeUserData;
-    try {
-        safeUserData = JSON.parse(JSON.stringify(fullUserData));
-    } catch (error) {
-        console.error("Failed to parse user data:", error);
-        safeUserData = null; 
-    }
+  try {
+    safeUserData = JSON.parse(JSON.stringify(fullUserData));
+  } catch (error) {
+    console.error("Failed to parse user data:", error);
+    safeUserData = null;
+  }
 
   return (
     <div>

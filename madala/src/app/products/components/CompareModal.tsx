@@ -1,12 +1,12 @@
 // Mở popup so sánh sản phẩm
-'use client';
-import React from 'react';
-import { IProduct } from '@/models/Product';
-import { ICategory } from '@/models/Category';
-import { FaTimes, FaShoppingCart } from 'react-icons/fa';
-import SafeImage from '@/Components/SafeImage';
-import StarRating from '@/app/products/components/StarRating';
-import { formatPrice } from '@/utils/formatPrice';
+"use client";
+import React from "react";
+import { IProduct } from "@/models/Product";
+import { ICategory } from "@/models/Category";
+import { FaTimes, FaShoppingCart } from "react-icons/fa";
+import SafeImage from "@/components/SafeImage";
+import StarRating from "@/app/products/components/StarRating";
+import { formatPrice } from "@/utils/formatPrice";
 
 interface CompareModalProps {
   isOpen: boolean;
@@ -28,9 +28,9 @@ const CompareModal: React.FC<CompareModalProps> = ({
   if (!isOpen || products.length === 0) return null;
 
   const getAttributeValue = (product: IProduct, key: string) => {
-    if (!product.attributes) return 'N/A';
+    if (!product.attributes) return "N/A";
     const value = product.attributes[key as keyof typeof product.attributes];
-    
+
     if (value === null || value === undefined) {
       return "N/A";
     }

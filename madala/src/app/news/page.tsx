@@ -2,17 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Button } from "@/Components/ui/button";
+import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Grid, List } from "lucide-react";
-import { Badge } from "@/Components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/Components/ui/card";
-import {
-  BlogService,
-  BlogPost,
-  formatDate,
-} from "@/services/blogService";
-import { BlogPostCard } from "@/Components/news/BlogPostCard";
-import { PaginationWrapper } from "@/Components/PaginationWrapper";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { BlogService, BlogPost, formatDate } from "@/services/blogService";
+import { BlogPostCard } from "@/components/news/BlogPostCard";
+import { PaginationWrapper } from "@/components/PaginationWrapper";
 
 export default function NewsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");

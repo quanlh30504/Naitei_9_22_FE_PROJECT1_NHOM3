@@ -1,23 +1,23 @@
 /**
  * ACTIONS.TS - Server Actions cho Authentication
- * 
+ *
  * CHỨC NĂNG CHÍNH:
  * - Server Actions xử lý đăng nhập và đăng ký users
  * - Chạy hoàn toàn ở server-side, bảo mật cao
  * - Tích hợp với NextAuth.js authentication system
  * - Validation và error handling cho form submissions
- * 
+ *
  * ACTIONS BAO GỒM:
  * - authenticate(): Xử lý đăng nhập user
  * - register(): Xử lý đăng ký user mới
- * 
+ *
  * FEATURES:
  * - Hash password bằng bcryptjs
- * - Validation email format và password strength  
+ * - Validation email format và password strength
  * - Check duplicate email khi đăng ký
  * - Integration với MongoDB User model
  * - Proper error messages cho UI
- * 
+ *
  * SỬ DỤNG: Gọi từ React components với useFormState/useFormStatus
  */
 
@@ -29,8 +29,8 @@ import connectToDB from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { signIn } from "@/auth";
 
-
-type ActionState = {
+type ActionState =
+  | {
       success?: boolean;
       message: string;
       errors?: {
@@ -41,7 +41,8 @@ type ActionState = {
         confirmPassword?: string[];
         phone?: string[];
       };
-} | undefined;
+    }
+  | undefined;
 
 // --- Action cho Đăng nhập ---
 /**
@@ -66,15 +67,16 @@ export async function authenticateCredentials(
 
     await connectToDB();
     const user = await User.findOne({ email }).lean();
-    
+
     if (!user) {
       return { message: "Email hoặc mật khẩu không chính xác." };
     }
 
     // Kiểm tra user có bị ban không
     if (user.isActive === false) {
-      return { 
-        message: "⚠️ Tài khoản của bạn đã bị vô hiệu hóa bởi quản trị viên. Vui lòng liên hệ admin để được hỗ trợ." 
+      return {
+        message:
+          "⚠️ Tài khoản của bạn đã bị vô hiệu hóa bởi quản trị viên. Vui lòng liên hệ admin để được hỗ trợ.",
       };
     }
 
@@ -90,9 +92,8 @@ export async function authenticateCredentials(
       password,
       redirect: false,
     });
-    
-    return { success: true, message: "Đăng nhập thành công! " };
 
+    return { success: true, message: "Đăng nhập thành công! " };
   } catch (error) {
     if (error instanceof AuthError) {
       console.error(
@@ -104,7 +105,9 @@ export async function authenticateCredentials(
         case "CredentialsSignin":
           return { message: "Email hoặc mật khẩu không chính xác." };
         case "CallbackRouteError":
-          return { message: "Lỗi xác thực. Vui lòng kiểm tra lại thông tin đăng nhập." };
+          return {
+            message: "Lỗi xác thực. Vui lòng kiểm tra lại thông tin đăng nhập.",
+          };
         default:
           return { message: "Đã có lỗi không mong muốn xảy ra." };
       }
@@ -161,7 +164,7 @@ export async function registerUser(
       name: `${firstName} ${lastName}`,
       email,
       password: hashedPassword,
-      phone: phone.trim()
+      phone: phone.trim(),
       // Role sẽ được tự động gán là "user" theo default trong schema
     });
 

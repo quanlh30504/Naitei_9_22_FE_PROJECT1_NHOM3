@@ -6,13 +6,13 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { registerUser } from "@/lib/actions";
 import Link from "next/link";
-import SubmitButton from "@/Components/Buttons/SubmitButton";
-import ActionButton from "@/Components/Buttons/ActionButton";
-import { Input } from "@/Components/ui/input";
-import { FormLabel } from "@/Components/FormLabel";
+import SubmitButton from "@/components/Buttons/SubmitButton";
+import ActionButton from "@/components/Buttons/ActionButton";
+import { Input } from "@/components/ui/input";
+import { FormLabel } from "@/components/FormLabel";
 import { signIn } from "next-auth/react";
 import { ChromeIcon, GithubIcon } from "lucide-react";
-import { Button } from "@/Components/ui/button";
+import { Button } from "@/components/ui/button";
 
 export default function RegisterPage() {
   const router = useRouter();

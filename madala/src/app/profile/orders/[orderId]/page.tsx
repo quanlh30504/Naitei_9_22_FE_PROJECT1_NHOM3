@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { getOrderDetails } from "@/lib/actions/order";
-import OrderDetailsClient from "@/Components/order/OrderDetailsClient";
+import OrderDetailsClient from "@/components/order/OrderDetailsClient";
 
 // render động để thấy dữ liệu mới nhất
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function OrderDetailPage({
   params,
@@ -14,7 +14,7 @@ export default async function OrderDetailPage({
   const response = await getOrderDetails(orderId);
 
   if (!response.success || !response.data) {
-    notFound(); 
+    notFound();
   }
   const order = response.data;
 

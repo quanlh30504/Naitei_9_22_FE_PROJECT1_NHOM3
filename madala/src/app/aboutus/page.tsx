@@ -1,8 +1,8 @@
 "use client";
 import Image from "next/image";
 import { useState } from "react";
-import Breadcrumb from "@/Components/Breadcrumb";
-import { Button } from "@/Components/ui/button";
+import Breadcrumb from "@/components/Breadcrumb";
+import { Button } from "@/components/ui/button";
 import aboutUsImg from "../../../public/about-us.jpg";
 
 export default function AboutUsPage() {

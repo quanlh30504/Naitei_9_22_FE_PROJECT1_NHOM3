@@ -5,12 +5,12 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { getAllOrdersPaginated } from "@/lib/actions/order";
 import { IOrder, OrderStatus } from "@/models/Order";
 
-import OrderTabs from "@/Components/order/OrderTabs";
-import AdminOrderTable from "@/Components/admin/AdminOrderTable";
-import PaginationControls from "@/Components/admin/PaginationControls";
-import { Input } from "@/Components/ui/input";
+import OrderTabs from "@/components/order/OrderTabs";
+import AdminOrderTable from "@/components/admin/AdminOrderTable";
+import PaginationControls from "@/components/admin/PaginationControls";
+import { Input } from "@/components/ui/input";
 import { Search, Loader2 } from "lucide-react";
-import { AdminLayout } from "@/Components/admin/AdminLayout";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 
 function AdminOrdersPageContent() {
   const router = useRouter();
@@ -32,8 +32,8 @@ function AdminOrdersPageContent() {
     // và searchQuery chưa đồng bộ với searchTerm
     // -> đồng bộ
     if (searchQuery !== searchTerm) {
-        // Nếu URL chưa cập nhật -> đợi
-        return;
+      // Nếu URL chưa cập nhật -> đợi
+      return;
     }
 
     const fetchOrders = async () => {
@@ -56,17 +56,17 @@ function AdminOrdersPageContent() {
     fetchOrders();
   }, [status, page, searchQuery]);
 
-  // useEffect cập nhật URL sau một khoảng trễ 
+  // useEffect cập nhật URL sau một khoảng trễ
   useEffect(() => {
     const handler = setTimeout(() => {
       // Chỉ cập nhật URL nếu giá trị nhập khác với giá trị trên URL
       if (searchTerm !== searchQuery) {
         const params = new URLSearchParams(searchParams);
-        params.set('search', searchTerm);
-        params.set('page', '1'); // Luôn reset về trang 1 khi tìm kiếm
+        params.set("search", searchTerm);
+        params.set("page", "1"); // Luôn reset về trang 1 khi tìm kiếm
         router.push(`${pathname}?${params.toString()}`);
       }
-    }, 200); 
+    }, 200);
 
     return () => {
       clearTimeout(handler);
@@ -112,11 +112,13 @@ function AdminOrdersPageContent() {
 
 export default function AdminOrdersPage() {
   return (
-    <Suspense fallback={
-      <div className="flex h-full w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex h-full w-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      }
+    >
       <AdminOrdersPageContent />
     </Suspense>
   );

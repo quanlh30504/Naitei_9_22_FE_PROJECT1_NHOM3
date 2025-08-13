@@ -1,10 +1,10 @@
 "use client";
-import Breadcrumb from "@/Components/Breadcrumb";
+import Breadcrumb from "@/components/Breadcrumb";
 import GoogleMap from "@/app/map/components/GoogleMap";
-import VietnamFlag from "@/Components/icons/VietnamFlag";
-import LocationIcon from "@/Components/icons/LocationIcon";
-import ClockIcon from "@/Components/icons/ClockIcon";
-import CalendarIcon from "@/Components/icons/CalendarIcon";
+import VietnamFlag from "@/components/icons/VietnamFlag";
+import LocationIcon from "@/components/icons/LocationIcon";
+import ClockIcon from "@/components/icons/ClockIcon";
+import CalendarIcon from "@/components/icons/CalendarIcon";
 import { Star } from "lucide-react";
 
 export default function MapPage() {

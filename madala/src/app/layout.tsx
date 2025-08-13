@@ -1,13 +1,13 @@
-import AuthProvider from "@/Components/Auth/AuthProvider";
-import ToastProvider from "@/Components/ToastProvider";
-import { ConditionalLayout } from "@/Components/ConditionalLayout";
+import AuthProvider from "@/components/Auth/AuthProvider";
+import ToastProvider from "@/components/ToastProvider";
+import { ConditionalLayout } from "@/components/ConditionalLayout";
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Footer from "@/Components/footer";
-import AppProviders from "@/Components/AppProviders";
-import SiteHeader from "@/Components/SiteHeader";
+import Footer from "@/components/footer";
+import AppProviders from "@/components/AppProviders";
+import SiteHeader from "@/components/SiteHeader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +29,6 @@ export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-
 }) {
   return (
     <html lang="vi">

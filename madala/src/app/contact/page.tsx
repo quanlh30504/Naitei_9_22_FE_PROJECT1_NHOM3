@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
-import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Phone, Mail, MessageCircle } from "lucide-react";
-import Breadcrumb from "@/Components/Breadcrumb";
+import Breadcrumb from "@/components/Breadcrumb";
 
 export default function ContactUsPage() {
   const [formData, setFormData] = useState({
@@ -158,28 +158,33 @@ export default function ContactUsPage() {
 
           {/* Dynamic Form */}
           <div
-            className={`bg-white rounded-lg shadow-md p-8 ${currentMethod?.formBg
-              } border-l-4 ${selectedMethod === "phone"
+            className={`bg-white rounded-lg shadow-md p-8 ${
+              currentMethod?.formBg
+            } border-l-4 ${
+              selectedMethod === "phone"
                 ? "border-green-400"
                 : selectedMethod === "email"
-                  ? "border-red-400"
-                  : "border-blue-400"
-              }`}
+                ? "border-red-400"
+                : "border-blue-400"
+            }`}
           >
             {/* Form Header */}
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
-                {currentMethod?.icon && <currentMethod.icon className="w-6 h-6" />}
+                {currentMethod?.icon && (
+                  <currentMethod.icon className="w-6 h-6" />
+                )}
                 {formContent?.title}
               </h2>
               <div className="flex justify-center mt-2">
                 <div
-                  className={`w-24 h-1 rounded-full ${selectedMethod === "phone"
+                  className={`w-24 h-1 rounded-full ${
+                    selectedMethod === "phone"
                       ? "bg-green-400"
                       : selectedMethod === "email"
-                        ? "bg-red-400"
-                        : "bg-blue-400"
-                    }`}
+                      ? "bg-red-400"
+                      : "bg-blue-400"
+                  }`}
                 ></div>
               </div>
             </div>
@@ -208,8 +213,8 @@ export default function ContactUsPage() {
                   {selectedMethod === "phone"
                     ? "Số điện thoại"
                     : selectedMethod === "zalo"
-                      ? "Số điện thoại"
-                      : "Email"}{" "}
+                    ? "Số điện thoại"
+                    : "Email"}{" "}
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -245,12 +250,13 @@ export default function ContactUsPage() {
                   value={formData.message}
                   onChange={handleInputChange}
                   rows={6}
-                  className={`w-full min-h-[120px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 resize-vertical transition-all duration-300 ${selectedMethod === "phone"
+                  className={`w-full min-h-[120px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 resize-vertical transition-all duration-300 ${
+                    selectedMethod === "phone"
                       ? "focus:ring-green-400 focus:border-green-400"
                       : selectedMethod === "email"
-                        ? "focus:ring-red-400 focus:border-red-400"
-                        : "focus:ring-blue-400 focus:border-blue-400"
-                    }`}
+                      ? "focus:ring-red-400 focus:border-red-400"
+                      : "focus:ring-blue-400 focus:border-blue-400"
+                  }`}
                   placeholder={formContent?.placeholder}
                 />
               </div>
@@ -260,12 +266,13 @@ export default function ContactUsPage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className={`px-8 py-2 font-medium text-white transition-all duration-300 transform hover:scale-105 ${selectedMethod === "phone"
+                  className={`px-8 py-2 font-medium text-white transition-all duration-300 transform hover:scale-105 ${
+                    selectedMethod === "phone"
                       ? "bg-green-600 hover:bg-green-700"
                       : selectedMethod === "email"
-                        ? "bg-red-600 hover:bg-red-700"
-                        : "bg-blue-600 hover:bg-blue-700"
-                    }`}
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  }`}
                 >
                   <span className="flex items-center gap-2">
                     {isSubmitting ? (
@@ -275,7 +282,9 @@ export default function ContactUsPage() {
                       </>
                     ) : (
                       <>
-                        {formContent?.buttonIcon && <formContent.buttonIcon className="w-4 h-4" />}
+                        {formContent?.buttonIcon && (
+                          <formContent.buttonIcon className="w-4 h-4" />
+                        )}
                         {formContent?.buttonText}
                       </>
                     )}

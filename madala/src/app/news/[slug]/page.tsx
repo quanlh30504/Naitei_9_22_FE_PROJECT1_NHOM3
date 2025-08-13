@@ -3,20 +3,16 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
-import { Textarea } from "@/Components/ui/textarea";
-import { Badge } from "@/Components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Home } from "lucide-react";
-import { CommentForm } from '@/Components/news/CommentForm'; 
+import { CommentForm } from "@/components/news/CommentForm";
 
-import {
-  BlogService,
-  BlogPost,
-  formatDate,
-} from "@/services/blogService";
+import { BlogService, BlogPost, formatDate } from "@/services/blogService";
 import toast from "react-hot-toast";
-import { Breadcrumbs } from "@/Components/Breadcrumbs";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export default function NewsDetailPage() {
   const params = useParams();

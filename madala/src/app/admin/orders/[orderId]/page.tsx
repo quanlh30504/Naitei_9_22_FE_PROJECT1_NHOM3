@@ -8,21 +8,21 @@ import { getAdminOrderDetails } from "@/lib/actions/order";
 import { IOrder, OrderStatus } from "@/models/Order";
 
 // Import các component từ shadcn/ui và lucide-react
-import { Button } from "@/Components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/Components/ui/card";
-import { Badge } from "@/Components/ui/badge";
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import CancelOrderButton from "@/Components/order/CancelOrderButton";
-import SafeImage from "@/Components/SafeImage";
+import CancelOrderButton from "@/components/order/CancelOrderButton";
+import SafeImage from "@/components/SafeImage";
 import { formatCurrency } from "@/lib/utils";
-import AdminLayout from "@/Components/admin/AdminLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 const getStatusBadge = (status: OrderStatus) => {
   switch (status) {
@@ -109,7 +109,9 @@ export default function AdminOrderDetailPage() {
             <h1 className="text-2xl font-bold text-gray-800">
               Chi tiết đơn hàng #{order.orderId}
             </h1>
-            <div className="flex justify-center content-center">{getStatusBadge(order.status)}</div>
+            <div className="flex justify-center content-center">
+              {getStatusBadge(order.status)}
+            </div>
           </div>
         </div>
         <p className="text-sm text-muted-foreground mb-8">

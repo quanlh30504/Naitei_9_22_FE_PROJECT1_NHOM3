@@ -3,7 +3,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { IProduct } from "@/models/Product";
 import { FaHeart, FaShoppingCart, FaBalanceScale } from "react-icons/fa";
-import SafeImage from "@/Components/SafeImage";
+import SafeImage from "@/components/SafeImage";
 import StarRating from "@/app/products/components/StarRating";
 import { useCompare } from "@/contexts/CompareContext";
 
@@ -42,7 +42,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   const handleProductClick = () => {
-    // Chuyển hướng sang page details 
+    // Chuyển hướng sang page details
     if (product.slug) {
       router.push(`/products/${product.slug}`);
     }

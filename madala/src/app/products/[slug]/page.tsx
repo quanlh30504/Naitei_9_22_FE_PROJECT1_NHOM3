@@ -1,14 +1,14 @@
-import { notFound } from 'next/navigation';
-import { Metadata } from 'next';
-import { productService } from '@/services/productService';
-import { getImageUrl } from '@/lib/getImageUrl';
-import { IProduct } from '@/models/Product';
-import ProductImageGallery from '@/Components/products/ProductImageGallery';
-import ProductInfo from '@/Components/products/ProductInfo';
-import ProductTabs from '@/Components/products/ProductTabs';
-import RelatedProducts from '@/Components/products/RelatedProducts';
-import { Breadcrumbs } from '@/Components/Breadcrumbs';
-import { formatCurrency } from '@/lib/utils';
+import { notFound } from "next/navigation";
+import { Metadata } from "next";
+import { productService } from "@/services/productService";
+import { getImageUrl } from "@/lib/getImageUrl";
+import { IProduct } from "@/models/Product";
+import ProductImageGallery from "@/components/products/ProductImageGallery";
+import ProductInfo from "@/components/products/ProductInfo";
+import ProductTabs from "@/components/products/ProductTabs";
+import RelatedProducts from "@/components/products/RelatedProducts";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { formatCurrency } from "@/lib/utils";
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -34,7 +34,7 @@ export async function generateMetadata({
       openGraph: {
         title: product.name,
         description: product.shortDescription || product.description,
-        images: [getImageUrl(product.images?.[0] || '')],
+        images: [getImageUrl(product.images?.[0] || "")],
       },
     };
   } catch (error) {
@@ -83,11 +83,11 @@ export default async function ProductDetailPage({
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
-        <Breadcrumbs 
+        <Breadcrumbs
           items={[
-            { href: '/', label: 'Trang chủ' },
-            { href: '/products', label: 'Sản phẩm' },
-            { href: '#', label: product.name }
+            { href: "/", label: "Trang chủ" },
+            { href: "/products", label: "Sản phẩm" },
+            { href: "#", label: product.name },
           ]}
         />
 
@@ -104,8 +104,8 @@ export default async function ProductDetailPage({
 
           {/* Product Info */}
           <div>
-            <ProductInfo 
-              productId={product._id}  
+            <ProductInfo
+              productId={product._id}
               name={product.name}
               price={product.price}
               salePrice={product.salePrice}
@@ -129,7 +129,7 @@ export default async function ProductDetailPage({
 
         {/* Product Details Section */}
         <div className="mt-12">
-          <ProductTabs 
+          <ProductTabs
             productId={product.slug}
             description={product.description}
             attributes={product.attributes}

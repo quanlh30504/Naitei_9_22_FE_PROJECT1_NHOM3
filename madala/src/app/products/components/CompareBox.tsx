@@ -5,7 +5,7 @@ import { ICategory } from "@/models/Category";
 import { useCompare } from "@/contexts/CompareContext";
 import { FaTimes, FaBalanceScale } from "react-icons/fa";
 import { formatPrice } from "@/utils/formatPrice";
-import SafeImage from "@/Components/SafeImage";
+import SafeImage from "@/components/SafeImage";
 import CompareModal from "./CompareModal";
 
 interface CompareBoxProps {

@@ -1,8 +1,8 @@
-import Link from 'next/link';
-import { PlusCircle, AlertTriangle } from 'lucide-react';
-import { getAddresses } from '@/lib/actions/address';
-import { Button } from '@/Components/ui/button';
-import AddressList from '@/Components/Profile/AddressList';
+import Link from "next/link";
+import { PlusCircle, AlertTriangle } from "lucide-react";
+import { getAddresses } from "@/lib/actions/address";
+import { Button } from "@/components/ui/button";
+import AddressList from "@/components/Profile/AddressList";
 
 export default async function AddressesPage() {
   try {
@@ -31,7 +31,7 @@ export default async function AddressesPage() {
       </div>
     );
   } catch (error) {
-    // Ghi lại lỗi trên server 
+    // Ghi lại lỗi trên server
     console.error("Lỗi khi tải danh sách địa chỉ:", error);
 
     // Render UI thông báo lỗi
@@ -40,7 +40,8 @@ export default async function AddressesPage() {
         <AlertTriangle className="h-12 w-12 mb-4" />
         <h2 className="text-xl font-bold mb-2">Không thể tải địa chỉ</h2>
         <p className="max-w-md">
-          Đã có lỗi xảy ra trong quá trình tải danh sách địa chỉ của bạn. Vui lòng thử lại sau.
+          Đã có lỗi xảy ra trong quá trình tải danh sách địa chỉ của bạn. Vui
+          lòng thử lại sau.
         </p>
       </div>
     );

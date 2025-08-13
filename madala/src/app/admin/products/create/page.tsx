@@ -1,58 +1,61 @@
-'use client'
+"use client";
 
-import { useState } from "react"
-import { AdminLayout } from "@/Components/admin/AdminLayout"
-import { Button } from "@/Components/ui/button"
-import { Input } from "@/Components/ui/input"
-import { Textarea } from "@/Components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card"
-import { Label } from "@/Components/ui/label"
-import { Switch } from "@/Components/ui/switch"
-import { ArrowLeft, Upload, X, Plus } from "lucide-react"
-import toast from "react-hot-toast"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import Image from "next/image"
-import { validateProductForm, uploadImagesToCloudinary } from "@/lib/utils/productUtils"
+import { useState } from "react";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Upload, X, Plus } from "lucide-react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  validateProductForm,
+  uploadImagesToCloudinary,
+} from "@/lib/utils/productUtils";
 
 interface ProductFormData {
-  name: string
-  description: string
-  shortDescription: string
-  price: string
-  salePrice: string
-  sku: string
-  stock: string
-  images: string[]
-  categoryIds: string[]
-  tags: string[]
+  name: string;
+  description: string;
+  shortDescription: string;
+  price: string;
+  salePrice: string;
+  sku: string;
+  stock: string;
+  images: string[];
+  categoryIds: string[];
+  tags: string[];
   attributes: {
-    brand?: string
-    type?: string
-    material?: string
-    color?: string
-    size?: string
-    weight?: string
-  }
-  isActive: boolean
-  isFeatured: boolean
-  isHotTrend: boolean
-  discountPercentage: string
+    brand?: string;
+    type?: string;
+    material?: string;
+    color?: string;
+    size?: string;
+    weight?: string;
+  };
+  isActive: boolean;
+  isFeatured: boolean;
+  isHotTrend: boolean;
+  discountPercentage: string;
 }
 
 export default function CreateProduct() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [uploadingImage, setUploadingImage] = useState(false)
-  
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   const [formData, setFormData] = useState<ProductFormData>({
-    name: '',
-    description: '',
-    shortDescription: '',
-    price: '',
-    salePrice: '',
-    sku: '',
-    stock: '0',
+    name: "",
+    description: "",
+    shortDescription: "",
+    price: "",
+    salePrice: "",
+    sku: "",
+    stock: "0",
     images: [],
     categoryIds: [],
     tags: [],
@@ -60,130 +63,139 @@ export default function CreateProduct() {
     isActive: true,
     isFeatured: false,
     isHotTrend: false,
-    discountPercentage: '0'
-  })
+    discountPercentage: "0",
+  });
 
-  const [newTag, setNewTag] = useState('')
-  const [newCategory, setNewCategory] = useState('')
+  const [newTag, setNewTag] = useState("");
+  const [newCategory, setNewCategory] = useState("");
 
   const handleInputChange = (field: keyof ProductFormData, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
-    }))
-  }
+      [field]: value,
+    }));
+  };
 
   const handleAttributeChange = (key: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       attributes: {
         ...prev.attributes,
-        [key]: value
-      }
-    }))
-  }
+        [key]: value,
+      },
+    }));
+  };
 
   const addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }))
-      setNewTag('')
+        tags: [...prev.tags, newTag.trim()],
+      }));
+      setNewTag("");
     }
-  }
+  };
 
   const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }))
-  }
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
+  };
 
   const addCategory = () => {
-    if (newCategory.trim() && !formData.categoryIds.includes(newCategory.trim())) {
-      setFormData(prev => ({
+    if (
+      newCategory.trim() &&
+      !formData.categoryIds.includes(newCategory.trim())
+    ) {
+      setFormData((prev) => ({
         ...prev,
-        categoryIds: [...prev.categoryIds, newCategory.trim()]
-      }))
-      setNewCategory('')
+        categoryIds: [...prev.categoryIds, newCategory.trim()],
+      }));
+      setNewCategory("");
     }
-  }
+  };
 
   const removeCategory = (categoryToRemove: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      categoryIds: prev.categoryIds.filter(cat => cat !== categoryToRemove)
-    }))
-  }
+      categoryIds: prev.categoryIds.filter((cat) => cat !== categoryToRemove),
+    }));
+  };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = event.target.files;
     if (!files || files.length === 0) {
-      toast.error('Vui lòng chọn ít nhất một file')
-      return
+      toast.error("Vui lòng chọn ít nhất một file");
+      return;
     }
 
-    setUploadingImage(true)
+    setUploadingImage(true);
     try {
-      const imageUrls = await uploadImagesToCloudinary(files)
-      
-      setFormData(prev => ({
+      const imageUrls = await uploadImagesToCloudinary(files);
+
+      setFormData((prev) => ({
         ...prev,
-        images: [...prev.images, ...imageUrls]
-      }))
-      
-      toast.success(`Tải lên ${imageUrls.length} ảnh thành công`)
+        images: [...prev.images, ...imageUrls],
+      }));
+
+      toast.success(`Tải lên ${imageUrls.length} ảnh thành công`);
     } catch (cloudinaryError) {
-      console.error('Cloudinary upload failed:', cloudinaryError)
-      toast.error(cloudinaryError instanceof Error ? cloudinaryError.message : 'Lỗi khi tải lên ảnh')
+      console.error("Cloudinary upload failed:", cloudinaryError);
+      toast.error(
+        cloudinaryError instanceof Error
+          ? cloudinaryError.message
+          : "Lỗi khi tải lên ảnh"
+      );
     } finally {
-      setUploadingImage(false)
+      setUploadingImage(false);
     }
-  }
+  };
 
   const removeImage = (indexToRemove: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      images: prev.images.filter((_, index) => index !== indexToRemove)
-    }))
-  }
+      images: prev.images.filter((_, index) => index !== indexToRemove),
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     // Validation using utility function
-    const validationError = validateProductForm(formData)
+    const validationError = validateProductForm(formData);
     if (validationError) {
-      toast.error(validationError)
-      return
+      toast.error(validationError);
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await fetch('/api/admin/products', {
-        method: 'POST',
+      const response = await fetch("/api/admin/products", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
-      })
-      
-      const data = await response.json()
-      
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
       if (data.success) {
-        toast.success('Tạo sản phẩm thành công!')
-        router.push('/admin/products')
+        toast.success("Tạo sản phẩm thành công!");
+        router.push("/admin/products");
       } else {
-        toast.error(data.error || 'Lỗi khi tạo sản phẩm')
+        toast.error(data.error || "Lỗi khi tạo sản phẩm");
       }
     } catch (error) {
-      console.error('Error creating product:', error)
-      toast.error('Lỗi khi tạo sản phẩm')
+      console.error("Error creating product:", error);
+      toast.error("Lỗi khi tạo sản phẩm");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <AdminLayout>
@@ -197,8 +209,12 @@ export default function CreateProduct() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Thêm sản phẩm mới</h1>
-              <p className="text-muted-foreground">Tạo sản phẩm mới trong hệ thống</p>
+              <h1 className="text-3xl font-bold text-foreground">
+                Thêm sản phẩm mới
+              </h1>
+              <p className="text-muted-foreground">
+                Tạo sản phẩm mới trong hệ thống
+              </p>
             </div>
           </div>
         </div>
@@ -216,7 +232,7 @@ export default function CreateProduct() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="Nhập tên sản phẩm"
                     required
                   />
@@ -226,7 +242,7 @@ export default function CreateProduct() {
                   <Input
                     id="sku"
                     value={formData.sku}
-                    onChange={(e) => handleInputChange('sku', e.target.value)}
+                    onChange={(e) => handleInputChange("sku", e.target.value)}
                     placeholder="Ví dụ: MYPHAM-001"
                     required
                   />
@@ -238,7 +254,9 @@ export default function CreateProduct() {
                 <Input
                   id="shortDescription"
                   value={formData.shortDescription}
-                  onChange={(e) => handleInputChange('shortDescription', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("shortDescription", e.target.value)
+                  }
                   placeholder="Mô tả ngắn về sản phẩm"
                 />
               </div>
@@ -248,7 +266,9 @@ export default function CreateProduct() {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
                   placeholder="Mô tả chi tiết về sản phẩm"
                   rows={4}
                 />
@@ -269,7 +289,7 @@ export default function CreateProduct() {
                     id="price"
                     type="number"
                     value={formData.price}
-                    onChange={(e) => handleInputChange('price', e.target.value)}
+                    onChange={(e) => handleInputChange("price", e.target.value)}
                     placeholder="0"
                     min="0"
                     required
@@ -281,7 +301,9 @@ export default function CreateProduct() {
                     id="salePrice"
                     type="number"
                     value={formData.salePrice}
-                    onChange={(e) => handleInputChange('salePrice', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("salePrice", e.target.value)
+                    }
                     placeholder="0"
                     min="0"
                   />
@@ -292,20 +314,24 @@ export default function CreateProduct() {
                     id="stock"
                     type="number"
                     value={formData.stock}
-                    onChange={(e) => handleInputChange('stock', e.target.value)}
+                    onChange={(e) => handleInputChange("stock", e.target.value)}
                     placeholder="0"
                     min="0"
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="discountPercentage">Phần trăm giảm giá (%)</Label>
+                <Label htmlFor="discountPercentage">
+                  Phần trăm giảm giá (%)
+                </Label>
                 <Input
                   id="discountPercentage"
                   type="number"
                   value={formData.discountPercentage}
-                  onChange={(e) => handleInputChange('discountPercentage', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("discountPercentage", e.target.value)
+                  }
                   placeholder="0"
                   min="0"
                   max="100"
@@ -333,7 +359,7 @@ export default function CreateProduct() {
                   />
                   <Button type="button" disabled={uploadingImage} size="sm">
                     <Upload className="mr-2 h-4 w-4" />
-                    {uploadingImage ? 'Đang tải...' : 'Tải lên'}
+                    {uploadingImage ? "Đang tải..." : "Tải lên"}
                   </Button>
                 </div>
               </div>
@@ -380,7 +406,9 @@ export default function CreateProduct() {
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
                     placeholder="Nhập ID danh mục (ví dụ: cat-1)"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCategory())}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), addCategory())
+                    }
                   />
                   <Button type="button" onClick={addCategory} size="sm">
                     <Plus className="h-4 w-4" />
@@ -389,7 +417,10 @@ export default function CreateProduct() {
                 {formData.categoryIds.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {formData.categoryIds.map((category, index) => (
-                      <div key={index} className="flex items-center bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm">
+                      <div
+                        key={index}
+                        className="flex items-center bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
+                      >
                         {category}
                         <Button
                           type="button"
@@ -413,7 +444,9 @@ export default function CreateProduct() {
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     placeholder="Nhập tag"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), addTag())
+                    }
                   />
                   <Button type="button" onClick={addTag} size="sm">
                     <Plus className="h-4 w-4" />
@@ -422,7 +455,10 @@ export default function CreateProduct() {
                 {formData.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {formData.tags.map((tag, index) => (
-                      <div key={index} className="flex items-center bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm">
+                      <div
+                        key={index}
+                        className="flex items-center bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
+                      >
                         {tag}
                         <Button
                           type="button"
@@ -452,8 +488,10 @@ export default function CreateProduct() {
                   <Label htmlFor="brand">Thương hiệu</Label>
                   <Input
                     id="brand"
-                    value={formData.attributes.brand || ''}
-                    onChange={(e) => handleAttributeChange('brand', e.target.value)}
+                    value={formData.attributes.brand || ""}
+                    onChange={(e) =>
+                      handleAttributeChange("brand", e.target.value)
+                    }
                     placeholder="Ví dụ: Lancôme"
                   />
                 </div>
@@ -461,8 +499,10 @@ export default function CreateProduct() {
                   <Label htmlFor="type">Loại sản phẩm</Label>
                   <Input
                     id="type"
-                    value={formData.attributes.type || ''}
-                    onChange={(e) => handleAttributeChange('type', e.target.value)}
+                    value={formData.attributes.type || ""}
+                    onChange={(e) =>
+                      handleAttributeChange("type", e.target.value)
+                    }
                     placeholder="Ví dụ: Kem dưỡng ẩm"
                   />
                 </div>
@@ -470,8 +510,10 @@ export default function CreateProduct() {
                   <Label htmlFor="material">Chất liệu</Label>
                   <Input
                     id="material"
-                    value={formData.attributes.material || ''}
-                    onChange={(e) => handleAttributeChange('material', e.target.value)}
+                    value={formData.attributes.material || ""}
+                    onChange={(e) =>
+                      handleAttributeChange("material", e.target.value)
+                    }
                     placeholder="Ví dụ: Cotton"
                   />
                 </div>
@@ -479,8 +521,10 @@ export default function CreateProduct() {
                   <Label htmlFor="color">Màu sắc</Label>
                   <Input
                     id="color"
-                    value={formData.attributes.color || ''}
-                    onChange={(e) => handleAttributeChange('color', e.target.value)}
+                    value={formData.attributes.color || ""}
+                    onChange={(e) =>
+                      handleAttributeChange("color", e.target.value)
+                    }
                     placeholder="Ví dụ: Đỏ, Xanh"
                   />
                 </div>
@@ -488,8 +532,10 @@ export default function CreateProduct() {
                   <Label htmlFor="size">Kích thước</Label>
                   <Input
                     id="size"
-                    value={formData.attributes.size || ''}
-                    onChange={(e) => handleAttributeChange('size', e.target.value)}
+                    value={formData.attributes.size || ""}
+                    onChange={(e) =>
+                      handleAttributeChange("size", e.target.value)
+                    }
                     placeholder="Ví dụ: S, M, L, XL"
                   />
                 </div>
@@ -497,8 +543,10 @@ export default function CreateProduct() {
                   <Label htmlFor="weight">Trọng lượng</Label>
                   <Input
                     id="weight"
-                    value={formData.attributes.weight || ''}
-                    onChange={(e) => handleAttributeChange('weight', e.target.value)}
+                    value={formData.attributes.weight || ""}
+                    onChange={(e) =>
+                      handleAttributeChange("weight", e.target.value)
+                    }
                     placeholder="Ví dụ: 50ml, 100g"
                   />
                 </div>
@@ -521,7 +569,9 @@ export default function CreateProduct() {
                 </div>
                 <Switch
                   checked={formData.isActive}
-                  onCheckedChange={(checked) => handleInputChange('isActive', checked)}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("isActive", checked)
+                  }
                 />
               </div>
 
@@ -534,7 +584,9 @@ export default function CreateProduct() {
                 </div>
                 <Switch
                   checked={formData.isFeatured}
-                  onCheckedChange={(checked) => handleInputChange('isFeatured', checked)}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("isFeatured", checked)
+                  }
                 />
               </div>
 
@@ -547,7 +599,9 @@ export default function CreateProduct() {
                 </div>
                 <Switch
                   checked={formData.isHotTrend}
-                  onCheckedChange={(checked) => handleInputChange('isHotTrend', checked)}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("isHotTrend", checked)
+                  }
                 />
               </div>
             </CardContent>
@@ -561,11 +615,11 @@ export default function CreateProduct() {
               </Button>
             </Link>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Đang tạo...' : 'Tạo sản phẩm'}
+              {loading ? "Đang tạo..." : "Tạo sản phẩm"}
             </Button>
           </div>
         </form>
       </div>
     </AdminLayout>
-  )
+  );
 }

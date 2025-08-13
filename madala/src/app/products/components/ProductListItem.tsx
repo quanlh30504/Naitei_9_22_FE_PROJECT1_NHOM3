@@ -3,7 +3,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { IProduct } from "@/models/Product";
 import { FaHeart, FaShoppingCart, FaBalanceScale } from "react-icons/fa";
-import SafeImage from "@/Components/SafeImage";
+import SafeImage from "@/components/SafeImage";
 import StarRating from "@/app/products/components/StarRating";
 import { useCompare } from "@/contexts/CompareContext";
 

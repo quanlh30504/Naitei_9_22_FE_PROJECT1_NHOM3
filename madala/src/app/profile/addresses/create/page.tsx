@@ -1,4 +1,4 @@
-import AddressForm from "@/Components/Profile/AddressForm";
+import AddressForm from "@/components/Profile/AddressForm";
 
 export default function CreateAddressPage() {
   return (
