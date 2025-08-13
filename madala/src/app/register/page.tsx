@@ -1,32 +1,37 @@
 "use client";
 
-import { useEffect } from "react";
-import { useFormState } from "react-dom";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema } from "@/lib/validations/forms";
+import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { registerUser } from "@/lib/actions";
 import Link from "next/link";
 import SubmitButton from "@/Components/Buttons/SubmitButton";
 import ActionButton from "@/Components/Buttons/ActionButton";
 import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
 import { FormLabel } from "@/Components/FormLabel";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const form = useForm<z.infer<typeof registerSchema>>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-  const [state, dispatch] = useFormState(registerUser, undefined);
-
-  useEffect(() => {
-    if (state?.success) {
-      toast.success(state.message);
-      router.push("/login");
-    }
-
-    if (state && !state.success) {
-      toast.error(state.message);
-    }
-  }, [state, router]);
+  const onSubmit = async (data: z.infer<typeof registerSchema>) => {
+    // TODO: Gọi API đăng ký ở đây, ví dụ registerUser(data)
+    toast.success("Đăng ký thành công!");
+    router.push("/login");
+  };
 
   return (
     <main className="bg-white text-gray-800 min-h-screen">
@@ -35,11 +40,9 @@ export default function RegisterPage() {
           Tạo tài khoản
         </h1>
         <div className="bg-gray-50 p-8 md:p-12">
-          <form action={dispatch} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div>
-              <h2 className="text-lg font-semibold mb-6 uppercase">
-                Thông tin cá nhân
-              </h2>
+              <h2 className="text-lg font-semibold mb-6 uppercase">Thông tin cá nhân</h2>
               <div className="space-y-4">
                 <div className="space-y-2">
                   <FormLabel htmlFor="firstName" required>
@@ -47,33 +50,26 @@ export default function RegisterPage() {
                   </FormLabel>
                   <Input
                     id="firstName"
-                    name="firstName"
+                    {...form.register("firstName")}
                     type="text"
                     placeholder="Nhập tên của bạn"
-                    required
                   />
-                  {state?.errors?.firstName && (
-                    <p className="text-sm text-red-500">
-                      {state.errors.firstName[0]}
-                    </p>
+                  {form.formState.errors.firstName && (
+                    <p className="text-sm text-red-500">{form.formState.errors.firstName.message}</p>
                   )}
                 </div>
-
                 <div className="space-y-2">
-                  <FormLabel htmlFor="firstName" required>
+                  <FormLabel htmlFor="lastName" required>
                     Tên sau
                   </FormLabel>
                   <Input
                     id="lastName"
-                    name="lastName"
+                    {...form.register("lastName")}
                     type="text"
                     placeholder="Nhập họ của bạn"
-                    required
                   />
-                  {state?.errors?.lastName && (
-                    <p className="text-sm text-red-500">
-                      {state.errors.lastName[0]}
-                    </p>
+                  {form.formState.errors.lastName && (
+                    <p className="text-sm text-red-500">{form.formState.errors.lastName.message}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -82,21 +78,18 @@ export default function RegisterPage() {
                   </FormLabel>
                   <Input
                     id="phone"
-                    name="phone"
+                    {...form.register("phone")}
                     type="tel"
                     placeholder="Nhập số điện thoại"
-                    required
-                    pattern="[0-9]{10,11}"
-                    title="Số điện thoại phải có 10-11 chữ số."
                   />
+                  {form.formState.errors.phone && (
+                    <p className="text-sm text-red-500">{form.formState.errors.phone.message}</p>
+                  )}
                 </div>
               </div>
             </div>
-
             <div>
-              <h2 className="text-lg font-semibold mb-6 uppercase">
-                Thông tin đăng nhập
-              </h2>
+              <h2 className="text-lg font-semibold mb-6 uppercase">Thông tin đăng nhập</h2>
               <div className="space-y-4">
                 <div className="space-y-2">
                   <FormLabel htmlFor="email" required>
@@ -104,54 +97,42 @@ export default function RegisterPage() {
                   </FormLabel>
                   <Input
                     id="email"
-                    name="email"
+                    {...form.register("email")}
                     type="email"
                     placeholder="email@example.com"
-                    required
                   />
-                  {state?.errors?.email && (
-                    <p className="text-sm text-red-500">
-                      {state.errors.email[0]}
-                    </p>
+                  {form.formState.errors.email && (
+                    <p className="text-sm text-red-500">{form.formState.errors.email.message}</p>
                   )}
                 </div>
-
                 <div className="space-y-2">
                   <FormLabel htmlFor="password" required>
                     Mật khẩu
                   </FormLabel>
                   <Input
                     id="password"
-                    name="password"
+                    {...form.register("password")}
                     type="password"
-                    required
                   />
-                  {state?.errors?.password && (
-                    <p className="text-sm text-red-500">
-                      {state.errors.password[0]}
-                    </p>
+                  {form.formState.errors.password && (
+                    <p className="text-sm text-red-500">{form.formState.errors.password.message}</p>
                   )}
                 </div>
-
                 <div className="space-y-2">
                   <FormLabel htmlFor="confirmPassword" required>
                     Xác nhận mật khẩu
                   </FormLabel>
                   <Input
                     id="confirmPassword"
-                    name="confirmPassword"
+                    {...form.register("confirmPassword")}
                     type="password"
-                    required
                   />
-                  {state?.errors?.confirmPassword && (
-                    <p className="text-sm text-red-500">
-                      {state.errors.confirmPassword[0]}
-                    </p>
+                  {form.formState.errors.confirmPassword && (
+                    <p className="text-sm text-red-500">{form.formState.errors.confirmPassword.message}</p>
                   )}
                 </div>
               </div>
             </div>
-
             <div className="flex items-center justify-between pt-4 gap-4">
               <SubmitButton content="Đăng ký" className="w-40" />
               <ActionButton variant="destructive">

@@ -1,12 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-import { BlogFormData } from "@/types/blog";
+import { UseFormRegister, FieldErrors } from "react-hook-form";
+import { BlogFormData } from "@/lib/validations/forms";
 
 interface BlogContentEditorProps {
-    content: string;
-    onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+    register: UseFormRegister<BlogFormData>;
+    errors: FieldErrors<BlogFormData>;
 }
 
-export default function BlogContentEditor({ content, onChange }: BlogContentEditorProps) {
+export default function BlogContentEditor({ register, errors }: BlogContentEditorProps) {
     return (
         <Card>
             <CardHeader>
@@ -15,11 +16,11 @@ export default function BlogContentEditor({ content, onChange }: BlogContentEdit
             <CardContent>
                 <textarea
                     placeholder="Viết nội dung bài viết ở đây..."
-                    value={content}
-                    onChange={onChange}
+                    {...register("content")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                     rows={15}
                 />
+                {errors.content && <span className="text-red-500 text-xs">{errors.content.message as string}</span>}
             </CardContent>
         </Card>
     );

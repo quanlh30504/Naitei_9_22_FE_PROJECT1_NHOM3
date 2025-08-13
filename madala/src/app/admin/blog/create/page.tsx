@@ -15,27 +15,20 @@ import BlogSettings from "@/Components/admin/blog/BlogSettings";
 export default function CreateBlog() {
   const [saving, setSaving] = useState(false);
   const {
-    formData,
-    handleTitleChange,
-    handleSlugChange,
-    handleExcerptChange,
-    handleContentChange,
-    handleImageChange,
-    handleTagsChange,
-    handleFeaturedChange
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    watch,
+    getValues,
+    reset
   } = useBlogForm();
 
-  const handleSave = async (publish = false) => {
-    if (!formData.title.trim() || !formData.content.trim() || !formData.excerpt.trim()) {
-      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
-      return;
-    }
-
-    if (!formData.featuredImage) {
+  const onSubmit = async (data: any, publish = false) => {
+    if (!data.featuredImage) {
       toast.error('Vui lòng chọn ảnh đại diện');
       return;
     }
-
     try {
       setSaving(true);
       const response = await fetch('/api/blog', {
@@ -44,14 +37,12 @@ export default function CreateBlog() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
+          ...data,
           isPublished: publish,
           publishedAt: publish ? new Date().toISOString() : undefined
         }),
       });
-
       const result = await response.json();
-
       if (result.success) {
         toast.success(`${publish ? 'Xuất bản' : 'Lưu'} bài viết thành công`);
         window.location.href = '/admin/blog';
@@ -81,59 +72,43 @@ export default function CreateBlog() {
               <p className="text-muted-foreground">Viết và xuất bản bài viết mới</p>
             </div>
           </div>
-          <div className="flex space-x-2">
+          {/* Nút đã chuyển xuống dưới form, tránh lỗi handleSave */}
+        </div>
+
+        <form onSubmit={handleSubmit((data) => onSubmit(data, false))}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              <BlogBasicInfo register={register} errors={errors} watch={watch} />
+              <BlogContentEditor register={register} errors={errors} />
+            </div>
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <BlogImageUpload control={control} />
+              <BlogTagsManager control={control} />
+              <BlogSettings control={control} />
+            </div>
+          </div>
+          <div className="flex space-x-2 mt-6">
             <Button
               variant="outline"
-              onClick={() => handleSave(false)}
+              type="submit"
               disabled={saving}
+              onClick={() => handleSubmit((data) => onSubmit(data, false))()}
             >
               <Save className="h-4 w-4 mr-2" />
               Lưu nháp
             </Button>
             <Button
-              onClick={() => handleSave(true)}
+              type="button"
               disabled={saving}
+              onClick={() => handleSubmit((data) => onSubmit(data, true))()}
             >
               <Eye className="h-4 w-4 mr-2" />
               Xuất bản
             </Button>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            <BlogBasicInfo
-              formData={formData}
-              onTitleChange={handleTitleChange}
-              onSlugChange={handleSlugChange}
-              onExcerptChange={handleExcerptChange}
-            />
-
-            <BlogContentEditor
-              content={formData.content}
-              onChange={handleContentChange}
-            />
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <BlogImageUpload
-              featuredImage={formData.featuredImage}
-              onImageChange={handleImageChange}
-            />
-
-            <BlogTagsManager
-              tags={formData.tags}
-              onTagsChange={handleTagsChange}
-            />
-
-            <BlogSettings
-              isFeatured={formData.isFeatured}
-              onFeaturedChange={handleFeaturedChange}
-            />
-          </div>
-        </div>
+        </form>
       </div>
     </AdminLayout>
   );

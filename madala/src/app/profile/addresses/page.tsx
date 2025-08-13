@@ -3,6 +3,7 @@ import { PlusCircle, AlertTriangle } from 'lucide-react';
 import { getAddresses } from '@/lib/actions/address';
 import { Button } from '@/Components/ui/button';
 import AddressList from '@/Components/Profile/AddressList';
+import { serializeMongoArray } from '@/lib/utils/serialize';
 
 export default async function AddressesPage() {
   try {
@@ -13,6 +14,7 @@ export default async function AddressesPage() {
     }
 
     const addresses = response.data || [];
+    const serializedAddresses = serializeMongoArray(addresses);
 
     return (
       <div>
@@ -27,7 +29,7 @@ export default async function AddressesPage() {
             </Link>
           </Button>
         </div>
-        <AddressList initialAddresses={addresses} />
+        <AddressList initialAddresses={serializedAddresses} />
       </div>
     );
   } catch (error) {
