@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -7,7 +6,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/Components/ui/button';
 import { adminNavItems } from '@/constants/adminNavigation';
-import { 
+import {
   LogOut,
   Menu,
   X,
@@ -34,10 +33,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+  <div className="flex min-h-screen bg-gray-50">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -45,7 +44,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 bg-white shadow-lg transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:relative lg:flex lg:flex-shrink-0",
+        "relative z-50 bg-white shadow-lg transition-all duration-300 ease-in-out lg:translate-x-0 lg:relative lg:flex h-screen overflow-y-auto",
         sidebarOpen ? "translate-x-0" : "-translate-x-full",
         sidebarCollapsed ? "lg:w-16" : "lg:w-64",
         "w-64"
@@ -61,7 +60,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 {sidebarCollapsed ? "AM" : "Admin Mandala"}
               </h1>
             </Link>
-            
+
             {/* Desktop collapse button */}
             <Button
               variant="ghost"
@@ -96,8 +95,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <Link key={item.href} href={item.href}>
                   <div className={cn(
                     "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 group",
-                    isActive 
-                      ? "bg-primary text-primary-foreground" 
+                    isActive
+                      ? "bg-primary text-primary-foreground"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
                     sidebarCollapsed ? "lg:justify-center lg:px-2" : ""
                   )}>
@@ -111,7 +110,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     )}>
                       {item.title}
                     </span>
-                    
                     {/* Tooltip for collapsed state */}
                     {sidebarCollapsed && (
                       <div className="hidden lg:group-hover:block absolute left-16 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap z-50">
@@ -143,8 +141,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 </span>
               </Button>
             </Link>
-            <Button 
-              variant="ghost" 
+
+            <Button
+              variant="ghost"
               className={cn(
                 "w-full text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-300",
                 sidebarCollapsed ? "lg:justify-center lg:px-2" : "justify-start"
@@ -167,7 +166,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </div>
 
       {/* Main content area */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+  <div className="flex flex-col flex-1 min-h-0">
         {/* Top bar */}
         <header className="bg-white shadow-sm border-b px-4 py-3 lg:px-6 flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -184,7 +183,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 Quản trị hệ thống
               </h2>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               {/* User info */}
               <div className="hidden sm:flex items-center space-x-2">
@@ -207,8 +206,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
-          <div className="max-w-7xl mx-auto h-full">
+  <main className="flex-1 p-4 lg:p-6">
+          <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
@@ -216,3 +215,5 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     </div>
   );
 }
+
+export default AdminLayout;

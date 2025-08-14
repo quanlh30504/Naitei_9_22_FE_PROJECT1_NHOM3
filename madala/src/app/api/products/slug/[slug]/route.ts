@@ -12,30 +12,10 @@ export async function GET(
 
     const { slug } = await params;
     
-    if (!slug) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Slug is required",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Loại bỏ extension nếu có (.jpg, .png, etc.)
-    const cleanSlug = slug.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '');
-    
     // Tìm sản phẩm theo slug (thử cả slug gốc và slug đã clean)
     const product = await db.collection("products").findOne({
-      $or: [
-        { slug: slug },
-        { slug: cleanSlug },
-        { productId: slug },
-        { productId: cleanSlug }
-      ],
-      $and: [
-        { $or: [{ isActive: { $exists: false } }, { isActive: true }] }
-      ]
+      slug: slug,
+      isActive: true,
     });
 
     if (!product) {

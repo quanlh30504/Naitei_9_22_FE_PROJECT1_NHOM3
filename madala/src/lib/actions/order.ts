@@ -7,7 +7,7 @@ import connectToDB from "@/lib/db";
 import User, { IUser } from "@/models/User";
 import Product, { IProduct } from "@/models/Product";
 import Address, { IAddress } from "@/models/Address";
-import Order, { PaymentMethod, IOrderItem, OrderStatus } from "@/models/Order";
+import Order, { PaymentMethod, IOrderItem, OrderStatus, IOrder } from "@/models/Order";
 import Cart from "@/models/Cart";
 import CartItem, { ICartItem } from "@/models/CartItem";
 
@@ -98,18 +98,21 @@ export async function placeOrder(
       subtotal += price * item.quantity;
       subdiscount += (price - priceSale) * item.quantity;
 
-      orderItems.push({
-        productId: item.product._id,
-        name: item.product.name,
-        sku: item.product.sku,
-        image: item.product.images[0] || "",
-        price: priceSale,
-        quantity: item.quantity,
-        attributes: {
-          color: undefined,
-          size: undefined,
-        },
-      });
+
+      if (typeof item.product._id === 'string' || typeof item.product._id === 'object') {
+        orderItems.push({
+          productId: new mongoose.Types.ObjectId(String(item.product._id)),
+          name: item.product.name,
+          sku: item.product.sku,
+          image: item.product.images[0] || "",
+          price: priceSale,
+          quantity: item.quantity,
+          attributes: {
+            color: undefined,
+            size: undefined,
+          },
+        });
+      }
 
       stockUpdates.push({
         updateOne: {
@@ -312,10 +315,24 @@ export async function getOrderDetails(
       return { success: false, message: "Không tìm thấy đơn hàng." };
     }
 
+    // Nếu order là mảng, lấy phần tử đầu tiên
+    const orderData = Array.isArray(order) ? order[0] : order;
+    // Map lại object trả về từ MongoDB thành đúng shape IOrder
+    const mapOrder = (orderObj: any): IOrder => ({
+      ...orderObj,
+      _id: orderObj._id?.toString(),
+      userId: orderObj.userId?.toString(),
+      items: orderObj.items?.map((item: any) => ({
+        ...item,
+        productId: item.productId?.toString(),
+      })) || [],
+      createdAt: orderObj.createdAt?.toString(),
+      updatedAt: orderObj.updatedAt?.toString(),
+    });
     return {
       success: true,
       message: "Lấy chi tiết đơn hàng thành công.",
-      data: order,
+      data: mapOrder(orderData),
     };
   } catch (error) {
     console.error("[GET_ORDER_DETAILS_ERROR]", error);
@@ -362,7 +379,7 @@ export async function cancelOrder(orderId: string): Promise<ActionResponse> {
     }
 
     // Chuẩn bị các thao tác hoàn trả tồn kho
-    const stockUpdates = order.items.map((item) => ({
+  const stockUpdates = order.items.map((item: IOrderItem) => ({
       updateOne: {
         filter: { _id: item.productId },
         update: { $inc: { stock: item.quantity } },
@@ -464,3 +481,160 @@ export async function updateShippingAddress({
     return { success: false, message: "Đã xảy ra lỗi khi cập nhật địa chỉ." };
   }
 }
+// Check role admin
+async function isAdmin() {
+    const session = await auth();
+    // Thay 'admin' bằng vai trò thực tế của bạn trong database
+  return session?.user?.role === 'admin'; 
+}
+
+type PaginatedOrdersResponse = {
+    orders: IOrder[];
+    totalPages: number;
+    currentPage: number;
+};
+
+export async function getAllOrdersPaginated({ 
+    status, 
+    page = 1, 
+    limit = 10,
+    search = '' 
+}: { 
+    status?: OrderStatus, 
+    page?: number, 
+    limit?: number,
+    search?: string 
+}): Promise<ActionResponse<PaginatedOrdersResponse>> {
+    if (!await isAdmin()) {
+        return { success: false, message: "Không có quyền truy cập." };
+    }
+
+    try {
+        await connectToDB();
+        
+        const query: mongoose.FilterQuery<IOrder> = {};
+
+        // Thêm bộ lọc trạng thái
+  const validStatuses = Order.schema.path('status').options.enum;
+        if (status && validStatuses.includes(status)) {
+            query.status = status;
+        }
+
+        // **LOGIC TÌM KIẾM MỚI**
+        if (search) {
+            const searchRegex = new RegExp(search, 'i'); // 'i' for case-insensitive
+            query.$or = [
+                { orderId: { $regex: searchRegex } },
+                { 'shippingAddress.fullName': { $regex: searchRegex } },
+                { 'shippingAddress.phoneNumber': { $regex: searchRegex } }
+            ];
+        }
+
+        const skip = (page - 1) * limit;
+        const totalOrders = await Order.countDocuments(query);
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        const orders = await Order.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        // Map lại từng order về đúng shape
+        const mapOrder = (orderObj: any): IOrder => ({
+          ...orderObj,
+          _id: orderObj._id?.toString(),
+          userId: orderObj.userId?.toString(),
+          items: orderObj.items?.map((item: any) => ({
+            ...item,
+            productId: item.productId?.toString(),
+          })) || [],
+          createdAt: orderObj.createdAt?.toString(),
+          updatedAt: orderObj.updatedAt?.toString(),
+        });
+    return { 
+      success: true, 
+      message: "Lấy danh sách đơn hàng thành công.", 
+      data: { orders: orders.map(mapOrder), totalPages, currentPage: page }
+    };
+    } catch (error) {
+        console.error("[GET_ALL_ORDERS_PAGINATED_ERROR]", error);
+        return { success: false, message: "Lỗi khi lấy danh sách đơn hàng." };
+    }
+}
+/**
+ * [Admin] Cập nhật trạng thái của một đơn hàng.
+ */
+export async function updateOrderStatus(orderId: string, newStatus: OrderStatus): Promise<ActionResponse> {
+     if (!await isAdmin()) {
+        return { success: false, message: "Không có quyền truy cập." };
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+        return { success: false, message: "ID đơn hàng không hợp lệ." };
+    }
+
+    try {
+        await connectToDB();
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return { success: false, message: "Không tìm thấy đơn hàng." };
+        }
+
+        order.status = newStatus;
+        await order.save();
+
+        revalidatePath("/admin/orders");
+
+        return { success: true, message: `Cập nhật trạng thái đơn hàng thành công.` };
+    } catch (error) {
+        console.error("[UPDATE_ORDER_STATUS_ERROR]", error);
+        return { success: false, message: "Lỗi khi cập nhật trạng thái đơn hàng." };
+    }
+}
+
+/**
+ * [Admin] Lấy thông tin chi tiết của một đơn hàng bằng ID.
+ * Chỉ admin mới có quyền truy cập.
+ * @param {string} orderId - ID của đơn hàng cần lấy.
+ * @returns {Promise<ActionResponse<IOrder>>} Chi tiết đơn hàng.
+ */
+export async function getAdminOrderDetails(orderId: string): Promise<ActionResponse<IOrder>> {
+    if (!await isAdmin()) {
+        return { success: false, message: "Không có quyền truy cập." };
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+        return { success: false, message: "ID đơn hàng không hợp lệ." };
+    }
+
+  try {
+    await connectToDB();
+    const order = await Order.findOne({ _id: orderId }).lean();
+    if (!order) {
+      return { success: false, message: "Không tìm thấy đơn hàng." };
+    }
+    // Convert all ObjectId fields to string for client safety
+    // Map lại object trả về từ MongoDB thành đúng shape IOrder
+    const mapOrder = (orderObj: any): IOrder => ({
+      ...orderObj,
+      _id: orderObj._id?.toString(),
+      userId: orderObj.userId?.toString(),
+      items: orderObj.items?.map((item: any) => ({
+        ...item,
+        productId: item.productId?.toString(),
+      })) || [],
+      createdAt: orderObj.createdAt?.toString(),
+      updatedAt: orderObj.updatedAt?.toString(),
+    });
+    return {
+      success: true,
+      message: "Lấy chi tiết đơn hàng thành công.",
+      data: mapOrder(Array.isArray(order) ? order[0] : order),
+    };
+  } catch (error) {
+    console.error("[GET_ADMIN_ORDER_DETAILS_ERROR]", error);
+    return { success: false, message: "Lỗi khi lấy chi tiết đơn hàng." };
+  }
+}
+

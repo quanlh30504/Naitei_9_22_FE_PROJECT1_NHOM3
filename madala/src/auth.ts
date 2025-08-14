@@ -1,5 +1,25 @@
+/**
+ * AUTH.TS - NextAuth.js Authentication Configuration
+ * 
+ * CHỨC NĂNG CHÍNH:
+ * - Cấu hình NextAuth.js cho toàn bộ ứng dụng
+ * - Xác thực người dùng qua email/password (Credentials Provider)
+ * - Kết nối với MongoDB để lưu trữ sessions và accounts
+ * - Quản lý JWT tokens và session callbacks
+ * - Xử lý đăng nhập/đăng xuất users
+ * 
+ * SỬ DỤNG:
+ * - Import { auth } từ file này để check authentication trong API routes
+ * - Tự động tạo các API endpoints: /api/auth/signin, /api/auth/signout, etc.
+ * - Providers: useSession(), signIn(), signOut() trong React components
+ * 
+ * CẤU HÌNH:
+ * - MongoDB Adapter để lưu session data
+ * - JWT strategy với custom callbacks
+ * - Session callbacks để thêm user roles vào session object
+ */
+
 import NextAuth from "next-auth";
-import type { AuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "./lib/mongodb";
@@ -15,25 +35,37 @@ export const authConfig = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials: any) {
         try {
           if (!credentials?.email || !credentials?.password) {
             return null;
           }
           await connectToDB();
           const user = await User.findOne({ email: credentials.email }).lean();
-          if (!user || !user.password) {
+          if (!user || !(user as any).password) {
             return null;
           }
+
+          // Kiểm tra password
           const isValid = await bcrypt.compare(
             credentials.password,
-            user.password
+            (user as any).password
           );
           if (!isValid) {
             return null;
           }
 
-          return user;
+          // Kiểm tra user có bị ban không (double check)
+          if ((user as any).isActive === false) {
+            return null;
+          }
+
+          return {
+            id: (user as any)._id.toString(),
+            email: (user as any).email,
+            name: (user as any).name,
+            role: (user as any).role || 'user'
+          };
         } catch (error) {
           console.error("Auth error:", error);
           return null;
@@ -43,43 +75,36 @@ export const authConfig = {
   ],
   adapter: MongoDBAdapter(clientPromise),
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
   },
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: any) {
       if (user) {
-         if ((user as any)._id) {
-          token.id = (user as any)._id.toString();
-        } else {
-          token.id = user.id;
-        }
+        token.id = user.id;
         token.role = user.role;
         token.name = user.name;
         token.email = user.email;
-        token.image = user.image;
       }
       return token;
     },
 
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       if (token && session.user) {
-        // lấy thông tin từ token và gán vào session.user
-        session.user.id = token.id as string;
-        session.user.role = token.role as "user" | "admin";
+        session.user.id = token.id;
+        session.user.role = token.role;
         session.user.name = token.name;
         session.user.email = token.email;
-        session.user.image = token.image as string | null;
       }
       return session;
     },
   },
   pages: {
     signIn: "/login",
-    error: '/login', // quay lại đăng nhập nếu có lỗi
+    error: '/login',
   },
   secret: process.env.AUTH_SECRET,
   trustHost: true,
-} satisfies AuthConfig;
+};
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
