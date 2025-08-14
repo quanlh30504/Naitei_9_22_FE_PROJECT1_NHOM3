@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import connectToDB from "@/lib/db";
 import User from "@/models/User";
+import Wallet from "@/models/Wallet";
 import { revalidatePath } from "next/cache";
 
 type ProfileUpdateState =
@@ -75,40 +76,51 @@ export async function updateProfile(
 
 // Định nghĩa kiểu dữ liệu trả về cho Header
 export interface UserHeaderData {
+  _id: string;
   name: string;
   email: string;
   image?: string;
-  mandalaPayBalance: number;
+  wallet?: {
+    balance: number;
+  };
 }
 
 /**
- * Lấy thông tin cơ bản của người dùng để hiển thị trên Header.
- * Chỉ chọn các trường cần thiết để tối ưu hiệu suất.
- * @returns Dữ liệu người dùng cho Header hoặc null nếu không đăng nhập.
+ * Lấy thông tin người dùng VÀ ví để hiển thị trên Header.
  */
 export async function getUserForHeader(): Promise<UserHeaderData | null> {
   try {
     const session = await auth();
-    if (!session?.user?.id) {
+    const userId = session?.user?.id;
+
+    if (!userId) {
       return null;
     }
 
     await connectToDB();
 
-    const user = await User.findById(session.user.id)
-      .select("name email image mandalaPayBalance") 
-      .lean();
+    // 2. Lấy thông tin user cơ bản
+    const user = await User.findById(userId).select("name email image").lean();
 
     if (!user) {
       return null;
     }
 
-    return {
+    // 3. Tìm ví tương ứng với user
+    const wallet = await Wallet.findOne({ userId: user._id }).select("balance").lean();
+
+    // 4. Tổng hợp dữ liệu
+    const userData: UserHeaderData = {
+      _id: user._id.toString(),
       name: user.name || "User",
       email: user.email || "",
       image: user.image,
-      mandalaPayBalance: user.mandalaPayBalance || 0,
+      // Nếu có wallet, gán object wallet, nếu không thì để undefined
+      wallet: wallet ? { balance: wallet.balance } : undefined,
     };
+
+    return userData;
+
   } catch (error) {
     console.error("Lỗi khi lấy dữ liệu người dùng cho header:", error);
     return null;

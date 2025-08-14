@@ -18,7 +18,6 @@ import {
   User,
   Menu,
   ChevronDown,
-  Wallet,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import {
@@ -28,8 +27,9 @@ import {
 } from "@/constants/headerLinks";
 import { getUserForHeader, UserHeaderData } from "@/lib/actions/user";
 import { useCartStore } from "@/store/useCartStore";
-import { formatCurrency } from "@/lib/utils";
 import { ThemeToggle } from "@/Components/ui/ThemeToggle";
+import MandalaPayButton from '@/Components/mandala-pay/shared/MandalaPayButton'; 
+
 
 export default function Header({
   initialUserData,
@@ -185,17 +185,7 @@ export default function Header({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {session?.user && userData && (
-              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 p-2">
-                <Wallet className="h-7 w-7 text-primary" />
-                <div className="flex flex-col text-left">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Ví Mandala</span>
-                  <span className="text-sm font-bold">
-                    {formatCurrency(userData.mandalaPayBalance ?? 0)}
-                  </span>
-                </div>
-              </div>
-            )}
+            {session?.user && <MandalaPayButton userData={userData} />}
 
             <Link
               href="/cart"
