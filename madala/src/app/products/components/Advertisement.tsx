@@ -1,16 +1,13 @@
 'use client';
-import React from 'react';
-import Image from 'next/image';
-import advertisementImg from '../../../../public/products/advertisement.jpg';
+
+import SimpleBanner from '@/Components/banner/SimpleBanner';
 
 const Advertisement = () => {
     return (
-        <div className="relative rounded-lg overflow-hidden shadow-sm hidden lg:block">
-            <Image
-                src={advertisementImg}
-                alt="Advertisement"
-                className="w-full h-auto object-cover"
-                priority
+        <div className="hidden lg:block">
+            <SimpleBanner
+                type="advertisement"
+                className="rounded-lg overflow-hidden shadow-sm h-64"
             />
         </div>
     );
