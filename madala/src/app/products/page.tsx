@@ -2,12 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import ProductGrid from '@/app/products/components/ProductGrid';
 import ProductList from '@/app/products/components/ProductList';
-import Advertisement from '@/app/products/components/Advertisement';
 import CategorySidebar from '@/app/products/components/CategorySidebar';
 import CompareBox from '@/app/products/components/CompareBox';
 import TagList from '@/app/products/components/TagList';
-import SaleBanner from '@/app/products/components/SaleBanner';
 import ViewToggle from '@/app/products/components/ViewToggle';
+import SimpleBanner from '@/Components/banner/SimpleBanner';
 import { PaginationWrapper } from '@/Components/PaginationWrapper';
 import { IProduct } from '@/models/Product';
 import { ICategory } from '@/models/Category';
@@ -119,12 +118,12 @@ const ProductPage = () => {
         };
 
         fetchProducts();
-    }, [selectedCategory, selectedTags]); 
+    }, [selectedCategory, selectedTags]);
 
 
     const handleCategorySelect = (category: string) => {
         setSelectedCategory(category);
-        
+
         // nếu không có tags được lựa chọn sẽ tự lấy tất cả sản phẩm
         if (category === '' && selectedTags.length === 0) {
             const fetchAllProducts = async () => {
@@ -132,7 +131,7 @@ const ProductPage = () => {
                     setLoading(true);
                     // Sử dụng productService
                     const products = await productService.getAllProducts();
-                    
+
                     setProducts(products);
                     setFilteredProducts(products);
                     setCurrentPage(1);
@@ -201,7 +200,10 @@ const ProductPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <SaleBanner />
+            {/* Sale Banner at top - chỉ hiển thị ảnh */}
+            <div className="mb-8">
+                <SimpleBanner type="sale" />
+            </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="lg:hidden space-y-6">
@@ -226,7 +228,7 @@ const ProductPage = () => {
                                     {filteredProducts.length} sản phẩm
                                 </span>
                             </div>
-                            
+
                             <div className="flex items-center">
                                 <PaginationWrapper
                                     currentPage={currentPage}
@@ -274,7 +276,10 @@ const ProductPage = () => {
                             onSelectTag={handleTagSelect}
                             onClearAllTags={handleClearAllTags}
                         />
-                        <Advertisement />
+                        {/* Advertisement Banner */}
+                        <div className="mt-6">
+                            <SimpleBanner type="advertisement" />
+                        </div>
                     </aside>
 
                     {/* Main Content */}

@@ -11,6 +11,7 @@ export const CLOUDINARY_FOLDERS = {
   BLOGS: 'mandala/blogs',
   PRODUCTS: 'mandala/products',
   PAYMENTS: 'mandala/payments',
+  BANNERS: 'mandala/banners',
 } as const;
 
 export const UPLOAD_CONFIGS = {
@@ -32,6 +33,13 @@ export const UPLOAD_CONFIGS = {
     folder: CLOUDINARY_FOLDERS.PAYMENTS,
     transformation: [
       { width: 400, height: 200, crop: 'fit', quality: 'auto' },
+      { format: 'webp' }
+    ]
+  },
+  banner: {
+    folder: CLOUDINARY_FOLDERS.BANNERS,
+    transformation: [
+      { width: 1920, height: 600, crop: 'fill', quality: 'auto' },
       { format: 'webp' }
     ]
   }
@@ -58,13 +66,13 @@ export const uploadToCloudinary = async (
 
     const config = UPLOAD_CONFIGS[type];
     const timestamp = Date.now();
-    
+
     let fileName = customFileName;
     if (!fileName && file instanceof File) {
       fileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '-').toLowerCase();
     }
-    
-    const publicId = fileName 
+
+    const publicId = fileName
       ? `${fileName.split('.')[0]}-${timestamp}`
       : `${type}-${timestamp}`;
 
