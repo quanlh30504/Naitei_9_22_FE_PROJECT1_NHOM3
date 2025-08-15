@@ -9,8 +9,9 @@ import Link from "next/link";
 import SubmitButton from "@/Components/Buttons/SubmitButton";
 import ActionButton from "@/Components/Buttons/ActionButton";
 import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
 import { FormLabel } from "@/Components/FormLabel";
+import { signIn } from "next-auth/react";
+import SocialLoginButtons from "@/Components/Auth/SocialLoginButtons";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -165,6 +166,7 @@ export default function RegisterPage() {
               </ActionButton>
             </div>
           </form>
+          <SocialLoginButtons />
         </div>
       </div>
     </main>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 import { authenticateCredentials } from "@/lib/actions";
+import { signIn } from "next-auth/react";
 
 import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
@@ -13,6 +14,7 @@ import { Button } from "@/Components/ui/button";
 import SubmitButton from "@/Components/Buttons/SubmitButton";
 import ActionButton from "@/Components/Buttons/ActionButton";
 import { useSearchParams } from "next/navigation";
+import SocialLoginButtons from "@/Components/Auth/SocialLoginButtons";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,17 +33,20 @@ export default function LoginPage() {
 
     if (state && !state.success && !state.errors) {
       // Kiểm tra nếu là thông báo tài khoản bị ban
-      if (state.message.includes("vô hiệu hóa") || state.message.includes("⚠️")) {
+      if (
+        state.message.includes("vô hiệu hóa") ||
+        state.message.includes("⚠️")
+      ) {
         toast.error(state.message, {
           duration: 8000, // Hiển thị lâu hơn cho thông báo quan trọng
           style: {
-            background: '#fee2e2',
-            color: '#991b1b',
-            border: '2px solid #fca5a5',
-            fontSize: '14px',
-            fontWeight: '600'
+            background: "#fee2e2",
+            color: "#991b1b",
+            border: "2px solid #fca5a5",
+            fontSize: "14px",
+            fontWeight: "600",
           },
-          icon: '🚫'
+          icon: "🚫",
         });
       } else {
         toast.error(state.message);
@@ -57,6 +62,7 @@ export default function LoginPage() {
       toast.error("Bạn cần đăng nhập để xem giỏ hàng");
     }
   }, [searchParams]);
+
 
   return (
     <main className="bg-white text-gray-800 min-h-screen">
@@ -87,7 +93,8 @@ export default function LoginPage() {
                   </div>
                   <div className="mt-2">
                     <div className="text-xs text-red-600">
-                      📧 Liên hệ admin qua email: admin@madala.com để được hỗ trợ
+                      📧 Liên hệ admin qua email: admin@madala.com để được hỗ
+                      trợ
                     </div>
                   </div>
                 </div>
@@ -132,6 +139,7 @@ export default function LoginPage() {
               <SubmitButton content="Đăng nhập" className="w-40" />
             </div>
           </form>
+          <SocialLoginButtons />
         </div>
       </div>
     </main>
