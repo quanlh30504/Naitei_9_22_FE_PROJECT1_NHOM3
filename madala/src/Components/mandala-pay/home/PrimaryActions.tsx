@@ -4,28 +4,28 @@ import Link from 'next/link';
 // Định nghĩa cấu trúc và dữ liệu cho các hành động
 const actions = [
   {
-    href: '/top-up',
+    href: '/mandala-pay/top-up',
     label: 'Nạp tiền',
     icon: ArrowDownToLine,
     color: 'bg-blue-100 dark:bg-blue-900/50',
     iconColor: 'text-blue-500 dark:text-blue-400',
   },
   {
-    href: '/transfer',
+    href: '/mandala-pay/transfer',
     label: 'Chuyển tiền',
     icon: Send,
     color: 'bg-green-100 dark:bg-green-900/50',
     iconColor: 'text-green-500 dark:text-green-400',
   },
   {
-    href: '/scan-qr',
+    href: '/mandala-pay/scan-qr',
     label: 'Thanh toán',
     icon: QrCode,
     color: 'bg-orange-100 dark:bg-orange-900/50',
     iconColor: 'text-orange-500 dark:text-orange-400',
   },
   {
-    href: '/vouchers',
+    href: '/mandala-pay/vouchers',
     label: 'Ưu đãi',
     icon: Ticket,
     color: 'bg-purple-100 dark:bg-purple-900/50',

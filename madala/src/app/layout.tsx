@@ -8,13 +8,10 @@ import { ThemeProvider } from "@/Components/providers/ThemeProvider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "@/Components/header";
 import Footer from "@/Components/footer";
 import SiteHeader from "@/Components/SiteHeader";
 import { getCart } from "@/lib/actions/cart";
-import StoreInitializer from "@/Components/StoreInitializer";
 import CartStateSyncer from "@/Components/CartStateSyncer";
-import { CartProvider } from "@/app/cart/context/CartContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,17 +56,10 @@ export default async function RootLayout({
           <AuthProvider>
             <BanWatcher />
             <ToastProvider />
-            <CartProvider initialCart={JSON.parse(JSON.stringify(initialCart))}>
-              <CartStateSyncer serverCart={plainInitialCart} />
-              <ConditionalLayout
-                header={<SiteHeader />}
-                footer={<Footer />}
-              >
-                <CompareProvider>
-                  {children}
-                </CompareProvider>
-              </ConditionalLayout>
-            </CartProvider>
+            <CartStateSyncer serverCart={plainInitialCart} />
+            <ConditionalLayout header={<SiteHeader />} footer={<Footer />}>
+              {children}
+            </ConditionalLayout>
           </AuthProvider>
         </ThemeProvider>
       </body>
