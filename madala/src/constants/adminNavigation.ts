@@ -5,7 +5,8 @@ import {
   FileText,
   Users,
   Settings,
-  ShoppingCart
+  ShoppingCart,
+  Image
 } from "lucide-react";
 
 export const adminNavItems = [
@@ -28,6 +29,11 @@ export const adminNavItems = [
     title: "Danh mục",
     href: "/admin/categories",
     icon: FolderTree,
+  },
+  {
+    title: "Banner",
+    href: "/admin/banners",
+    icon: Image,
   },
   {
     title: "Blog",
