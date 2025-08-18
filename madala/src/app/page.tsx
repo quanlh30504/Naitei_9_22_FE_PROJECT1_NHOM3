@@ -1,4 +1,3 @@
-import { auth, signOut } from "@/auth";
 import Link from "next/link";
 import { Star, ShoppingCart, TrendingUp, Award, Flame } from "lucide-react";
 import { Button } from "@/Components/ui/button";
@@ -12,6 +11,7 @@ import SocialLinks from "@/Components/SocialLinks";
 import AboutSection from "@/Components/AboutSection";
 import BlogSection from "@/Components/BlogSection";
 import SubscribeForm from "@/Components/SubscribeForm";
+import { findHotTrendProducts } from "@/lib/actions/product";
 
 const features = [
   {
@@ -50,11 +50,7 @@ export default async function Home() {
   let hotTrendProducts: IProduct[] = [];
 
   try {
-    const products = await productService.getProducts({
-      hotTrend: true,
-    });
-    // Giới hạn chỉ lấy 9 sản phẩm đầu tiên
-    hotTrendProducts = products.slice(0, 9);
+    hotTrendProducts = await findHotTrendProducts()
   } catch (error) {
     console.error("Error fetching hot trend products:", error);
   }

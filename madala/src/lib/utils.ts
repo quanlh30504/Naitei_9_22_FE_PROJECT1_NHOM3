@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { IProduct } from "@/models/Product";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -34,3 +35,20 @@ export const formatCurrency = (amount: number): string => {
     currency: 'VND',
   }).format(amount);
 };
+
+
+/**
+ * Tính toán thông tin giảm giá cho một sản phẩm.
+ * @param product - Đối tượng sản phẩm.
+ * @returns Một object chứa `hasDiscount` (boolean) và `discountPercent` (number).
+ */
+export function getProductDiscount(product: IProduct): { hasDiscount: boolean; discountPercent: number } {
+  // Kiểm tra salePrice có tồn tại và nhỏ hơn giá gốc không
+  const hasDiscount = typeof product.salePrice === 'number' && product.salePrice < product.price;
+
+  const discountPercent = hasDiscount
+    ? Math.round(((product.price - product.salePrice) / product.price) * 100)
+    : 0;
+
+  return { hasDiscount, discountPercent };
+}
