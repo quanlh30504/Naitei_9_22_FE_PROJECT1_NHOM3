@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { createAddress, updateAddress } from "@/lib/actions/address";
@@ -28,10 +28,10 @@ interface AddressFormProps {
     onSuccess?: () => void; // Callback xử lý khi thành công (dùng trong giao diện AddressSelectModal)
 }
 
-export default function AddressForm({ initialData, onSuccess }: AddressFormProps) {
+function AddressForm({ initialData, onSuccess }: AddressFormProps) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
-    
+
     const isEditMode = !!initialData;
 
     const [formData, setFormData] = useState<AddressDataType>({
@@ -44,14 +44,18 @@ export default function AddressForm({ initialData, onSuccess }: AddressFormProps
         isDefault: initialData?.isDefault || false,
     });
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-    };
+    }, []);
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSwitchChange = useCallback((checked: boolean) => {
+        setFormData(prev => ({ ...prev, isDefault: checked }));
+    }, []);
+
+    const handleSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
+
         startTransition(async () => {
             const result = isEditMode
                 ? await updateAddress(initialData!._id!, formData)
@@ -59,29 +63,29 @@ export default function AddressForm({ initialData, onSuccess }: AddressFormProps
 
             if (result.success) {
                 toast.success(result.message);
-                
+
                 // **LOGIC ĐIỀU HƯỚNG **
                 if (onSuccess) {
                     // Nếu có callback (tức là đang trong giao diện AddressSelectModel), gọi callback (modal chuyển view về 'LIST')
-                    onSuccess(); 
+                    onSuccess();
                 } else {
                     // Nếu không, quay lại trang trước
-                    router.back(); 
+                    router.back();
                 }
             } else {
                 toast.error(result.message);
             }
         });
-    };
+    }, [isEditMode, initialData, formData, onSuccess, router]);
 
     // Logic route tương tự như submit
-    const handleCancel = () => {
+    const handleCancel = useCallback(() => {
         if (onSuccess) {
-            onSuccess(); 
+            onSuccess();
         } else {
             router.back();
         }
-    };
+    }, [onSuccess, router]);
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -117,17 +121,17 @@ export default function AddressForm({ initialData, onSuccess }: AddressFormProps
             </div>
 
             <div className="flex items-center space-x-2 pt-2">
-                <Switch 
-                    id="isDefault" 
+                <Switch
+                    id="isDefault"
                     checked={formData.isDefault}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isDefault: checked }))}
+                    onCheckedChange={handleSwitchChange}
                 />
                 <Label htmlFor="isDefault">Đặt làm địa chỉ mặc định</Label>
             </div>
 
             <div className="flex justify-end gap-4 pt-4">
-                <Button 
-                    type="button" 
+                <Button
+                    type="button"
                     variant="outline"
                     onClick={handleCancel}
                     disabled={isPending}
@@ -148,3 +152,5 @@ export default function AddressForm({ initialData, onSuccess }: AddressFormProps
         </form>
     );
 }
+
+export default memo(AddressForm);

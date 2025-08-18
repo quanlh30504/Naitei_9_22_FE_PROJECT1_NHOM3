@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from "react"
 import { Badge } from "@/Components/ui/badge"
 import { Product } from "@/types/product"
 
@@ -7,7 +8,7 @@ interface StatusBadgeProps {
   product: Product
 }
 
-export function StatusBadge({ product }: StatusBadgeProps) {
+function StatusBadge({ product }: StatusBadgeProps) {
   if (!product.isActive) {
     return <Badge variant="destructive">Vô hiệu hóa</Badge>
   }
@@ -16,3 +17,6 @@ export function StatusBadge({ product }: StatusBadgeProps) {
   }
   return <Badge variant="default">Hoạt động</Badge>
 }
+
+export const MemoizedStatusBadge = memo(StatusBadge);
+export { MemoizedStatusBadge as StatusBadge };

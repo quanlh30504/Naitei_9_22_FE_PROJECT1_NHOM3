@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 import { getMyOrders } from "@/lib/actions/order";
@@ -21,6 +21,7 @@ import { Search } from "lucide-react";
 import SafeImage from "@/Components/SafeImage";
 import { formatCurrency } from "@/lib/utils";
 
+// Memoize status badge function
 const getStatusBadge = (status: OrderStatus) => {
   switch (status) {
     case "pending":
@@ -40,7 +41,7 @@ const getStatusBadge = (status: OrderStatus) => {
   }
 };
 
-export default function OrderList() {
+const OrderList = memo(() => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -53,22 +54,32 @@ export default function OrderList() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchQuery); // State cho ô input
 
-  // useEffect để fetch dữ liệu khi URL thay đổi
-  useEffect(() => {
-    const fetchOrders = async () => {
-      setIsLoading(true);
-      // Gọi action với cả status và searchQuery
-      const response = await getMyOrders({ status, search: searchQuery });
+  // Memoize fetch orders function
+  const fetchOrders = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Gọi action với cả status và searchQuery, fix type issue
+      const response = await getMyOrders({
+        status: status || undefined,
+        search: searchQuery
+      });
       if (response.success && response.data) {
         setOrders(response.data);
       } else {
         setOrders([]);
       }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      setOrders([]);
+    } finally {
       setIsLoading(false);
-    };
+    }
+  }, [status, searchQuery]);
 
+  // useEffect để fetch dữ liệu khi URL thay đổi
+  useEffect(() => {
     fetchOrders();
-  }, [status, searchQuery]); // Thêm searchQuery vào dependency
+  }, [fetchOrders]);
 
   // useEffect cho debouncing việc tìm kiếm
   useEffect(() => {
@@ -82,7 +93,7 @@ export default function OrderList() {
         }
         router.push(`${pathname}?${params.toString()}`);
       }
-    }, 200); 
+    }, 200);
 
     return () => clearTimeout(handler);
   }, [searchTerm, searchQuery, pathname, router, searchParams]);
@@ -115,7 +126,7 @@ export default function OrderList() {
       </div>
       {orders && orders.length > 0 ? (
         orders.map((order: IOrder) => (
-          <Card key={order._id.toString()}>
+          <Card key={String(order._id)}>
             <CardHeader className="flex flex-row justify-between items-center">
               <div>
                 <p className="text-sm font-medium">
@@ -123,7 +134,7 @@ export default function OrderList() {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Ngày đặt:{" "}
-                  {new Date(order.createdAt).toLocaleDateString("vi-VN")}
+                  {order.createdAt ? new Date(order.createdAt).toLocaleDateString("vi-VN") : 'N/A'}
                 </p>
               </div>
               {getStatusBadge(order.status)}
@@ -177,4 +188,8 @@ export default function OrderList() {
       )}
     </div>
   );
-}
+});
+
+OrderList.displayName = 'OrderList';
+
+export default OrderList;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { AdminGuard } from '@/Components/admin/AdminGuard';
 import { AdminLayout } from '@/Components/admin/AdminLayout';
 import { userService } from '@/services/userService';
@@ -25,7 +25,7 @@ interface UserStats {
     bannedUsers: number;
 }
 
-export default function UsersManagementPage() {
+function UsersManagementPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [stats, setStats] = useState<UserStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -35,18 +35,18 @@ export default function UsersManagementPage() {
     const [totalUsers, setTotalUsers] = useState(0);
     const usersPerPage = 10;
 
-    // Fetch user statistics
-    const fetchStats = async () => {
+    // Memoize fetch user statistics function
+    const fetchStats = useCallback(async () => {
         try {
             const statsData = await userService.getUserStats();
             setStats(statsData);
         } catch (error) {
             console.error('Error fetching stats:', error);
         }
-    };
+    }, []);
 
-    // Fetch users
-    const fetchUsers = async (page = 1, search = '') => {
+    // Memoize fetch users function
+    const fetchUsers = useCallback(async (page = 1, search = '') => {
         try {
             setLoading(true);
             const response = await userService.getAllUsers({
@@ -75,10 +75,10 @@ export default function UsersManagementPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [usersPerPage]);
 
-    // Toggle user status
-    const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    // Memoize toggle user status function
+    const toggleUserStatus = useCallback(async (userId: string, currentStatus: boolean) => {
         try {
             const response = await userService.updateUser(userId, { isActive: !currentStatus });
 
@@ -97,32 +97,38 @@ export default function UsersManagementPage() {
             console.error('Error updating user status:', error);
             toast.error('Có lỗi xảy ra khi cập nhật trạng thái người dùng');
         }
-    };
+    }, [users, fetchStats]);
 
-    // Handle search
-    const handleSearch = (value: string) => {
+    // Memoize handle search function
+    const handleSearch = useCallback((value: string) => {
         setSearchTerm(value);
         setCurrentPage(1);
         fetchUsers(1, value);
-    };
+    }, [fetchUsers]);
 
-    // Handle page change
-    const handlePageChange = (page: number) => {
+    // Memoize handle page change function
+    const handlePageChange = useCallback((page: number) => {
         setCurrentPage(page);
         fetchUsers(page, searchTerm);
-    };
+    }, [fetchUsers, searchTerm]);
 
-    // Clear search
-    const clearSearch = () => {
+    // Memoize clear search function
+    const clearSearch = useCallback(() => {
         setSearchTerm('');
         setCurrentPage(1);
         fetchUsers(1, '');
-    };
+    }, [fetchUsers]);
+
+    // Memoize refresh function
+    const handleRefresh = useCallback(() => {
+        fetchStats();
+        fetchUsers(currentPage, searchTerm);
+    }, [fetchStats, fetchUsers, currentPage, searchTerm]);
 
     useEffect(() => {
         fetchStats();
         fetchUsers();
-    }, []);
+    }, [fetchStats, fetchUsers]);
 
     return (
         <AdminGuard>
@@ -135,10 +141,7 @@ export default function UsersManagementPage() {
                             <p className="text-gray-600 mt-1">Quản lý thông tin người dùng trong hệ thống</p>
                         </div>
                         <button
-                            onClick={() => {
-                                fetchStats();
-                                fetchUsers(currentPage, searchTerm);
-                            }}
+                            onClick={handleRefresh}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                         >
                             Làm mới
@@ -236,16 +239,16 @@ export default function UsersManagementPage() {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'admin'
-                                                                ? 'bg-purple-100 text-purple-800'
-                                                                : 'bg-blue-100 text-blue-800'
+                                                            ? 'bg-purple-100 text-purple-800'
+                                                            : 'bg-blue-100 text-blue-800'
                                                             }`}>
                                                             {user.role === 'admin' ? 'Quản trị viên' : 'Người dùng'}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.isActive
-                                                                ? 'bg-green-100 text-green-800'
-                                                                : 'bg-red-100 text-red-800'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : 'bg-red-100 text-red-800'
                                                             }`}>
                                                             {user.isActive ? 'Hoạt động' : 'Bị khóa'}
                                                         </span>
@@ -262,8 +265,8 @@ export default function UsersManagementPage() {
                                                             <button
                                                                 onClick={() => toggleUserStatus(user._id!, user.isActive || false)}
                                                                 className={`px-3 py-1 rounded text-sm font-medium transition-colors ${user.isActive
-                                                                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                                                        : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                                                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                                                    : 'bg-green-100 text-green-700 hover:bg-green-200'
                                                                     }`}
                                                             >
                                                                 {user.isActive ? 'Khóa' : 'Mở khóa'}
@@ -302,8 +305,8 @@ export default function UsersManagementPage() {
                                                             key={page}
                                                             onClick={() => handlePageChange(page)}
                                                             className={`px-3 py-1 text-sm rounded ${currentPage === page
-                                                                    ? 'bg-blue-600 text-white'
-                                                                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                                                ? 'bg-blue-600 text-white'
+                                                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                                                                 }`}
                                                         >
                                                             {page}
@@ -317,8 +320,8 @@ export default function UsersManagementPage() {
                                                         <button
                                                             onClick={() => handlePageChange(totalPages)}
                                                             className={`px-3 py-1 text-sm rounded ${currentPage === totalPages
-                                                                    ? 'bg-blue-600 text-white'
-                                                                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                                                ? 'bg-blue-600 text-white'
+                                                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                                                                 }`}
                                                         >
                                                             {totalPages}
@@ -351,3 +354,5 @@ export default function UsersManagementPage() {
         </AdminGuard>
     );
 }
+
+export default memo(UsersManagementPage);

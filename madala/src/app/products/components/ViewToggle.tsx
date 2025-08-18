@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useMemo, memo } from 'react';
 import { FaThLarge, FaList } from 'react-icons/fa';
 
 interface ViewToggleProps {
@@ -7,8 +7,9 @@ interface ViewToggleProps {
   onViewChange: (mode: 'grid' | 'list') => void;
 }
 
-const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
-  const tabs = [
+const ViewToggle = memo(function ViewToggle({ viewMode, onViewChange }: ViewToggleProps) {
+  // Memoize tabs configuration
+  const tabs = useMemo(() => [
     {
       id: 'grid' as const,
       label: 'Grid View',
@@ -16,10 +17,10 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
     },
     {
       id: 'list' as const,
-      label: 'List View', 
+      label: 'List View',
       icon: <FaList className="text-sm" />
     }
-  ];
+  ], []);
 
   return (
     <div className="flex items-center bg-gray-100 p-1 rounded-lg">
@@ -27,11 +28,10 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
         <button
           key={tab.id}
           onClick={() => onViewChange(tab.id)}
-          className={`p-2 rounded-md transition-colors ${
-            viewMode === tab.id
+          className={`p-2 rounded-md transition-colors ${viewMode === tab.id
               ? 'bg-white text-[#8ba63a] shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
-          }`}
+            }`}
           title={tab.label}
         >
           {tab.icon}
@@ -39,6 +39,6 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
       ))}
     </div>
   );
-};
+});
 
 export default ViewToggle;

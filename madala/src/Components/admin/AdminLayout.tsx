@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -19,26 +19,28 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-export function AdminLayout({ children }: AdminLayoutProps) {
+function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
   const { data: session } = useSession();
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-  const toggleSidebarCollapse = () => setSidebarCollapsed(!sidebarCollapsed);
+  const toggleSidebar = useCallback(() => setSidebarOpen(prev => !prev), []);
+  const toggleSidebarCollapse = useCallback(() => setSidebarCollapsed(prev => !prev), []);
 
-  const handleLogout = async () => {
+  const handleSidebarClose = useCallback(() => setSidebarOpen(false), []);
+
+  const handleLogout = useCallback(async () => {
     await signOut({ callbackUrl: '/' });
-  };
+  }, []);
 
   return (
-  <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+          onClick={handleSidebarClose}
         />
       )}
 
@@ -166,7 +168,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </div>
 
       {/* Main content area */}
-  <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex flex-col flex-1 min-h-0">
         {/* Top bar */}
         <header className="bg-white shadow-sm border-b px-4 py-3 lg:px-6 flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -206,7 +208,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </header>
 
         {/* Page content */}
-  <main className="flex-1 p-4 lg:p-6">
+        <main className="flex-1 p-4 lg:p-6">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
@@ -216,4 +218,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   );
 }
 
-export default AdminLayout;
+const MemoizedAdminLayout = memo(AdminLayout);
+export { MemoizedAdminLayout as AdminLayout };
+export default MemoizedAdminLayout;

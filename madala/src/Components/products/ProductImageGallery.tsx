@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useCallback, memo, useMemo } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
@@ -13,31 +13,38 @@ interface ProductImageGalleryProps {
   shortDescription?: string;
 }
 
-export default function ProductImageGallery({ 
-  images, 
-  productName, 
-  description, 
-  shortDescription 
-}: ProductImageGalleryProps) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const safeImages = images && Array.isArray(images) ? images : []
+const ProductImageGallery = memo(({
+  images,
+  productName,
+  description,
+  shortDescription
+}: ProductImageGalleryProps) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const handleThumbnailClick = (index: number) => {
-    setCurrentImageIndex(index)
-  }
+  // Memoize safe images
+  const safeImages = useMemo(() => {
+    return images && Array.isArray(images) ? images : [];
+  }, [images]);
 
-  const handlePreviousImage = () => {
-    setCurrentImageIndex((prev) => 
+  // Memoize thumbnail click handler
+  const handleThumbnailClick = useCallback((index: number) => {
+    setCurrentImageIndex(index);
+  }, []);
+
+  // Memoize previous image handler
+  const handlePreviousImage = useCallback(() => {
+    setCurrentImageIndex((prev) =>
       prev === 0 ? safeImages.length - 1 : prev - 1
-    )
-  }
+    );
+  }, [safeImages.length]);
 
-  const handleNextImage = () => {
-    setCurrentImageIndex((prev) => 
+  // Memoize next image handler
+  const handleNextImage = useCallback(() => {
+    setCurrentImageIndex((prev) =>
       prev === safeImages.length - 1 ? 0 : prev + 1
-    )
-  }
-  
+    );
+  }, [safeImages.length]);
+
   if (safeImages.length === 0) {
     return (
       <div className="aspect-square bg-secondary rounded-lg overflow-hidden flex items-center justify-center">
@@ -58,13 +65,12 @@ export default function ProductImageGallery({
       {safeImages.length > 1 && (
         <div className="flex flex-col gap-2 w-20">
           {safeImages.slice(0, 4).map((image, index) => (
-            <div 
-              key={index} 
-              className={`aspect-square bg-secondary rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-all duration-200 ${
-                currentImageIndex === index 
-                  ? 'ring-2 ring-primary ring-offset-2' 
+            <div
+              key={index}
+              className={`aspect-square bg-secondary rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-all duration-200 ${currentImageIndex === index
+                  ? 'ring-2 ring-primary ring-offset-2'
                   : ''
-              }`}
+                }`}
               onClick={() => handleThumbnailClick(index)}
             >
               <Image
@@ -89,7 +95,7 @@ export default function ProductImageGallery({
             className="w-full h-full object-cover transition-all duration-300"
             priority
           />
-          
+
           {safeImages.length > 1 && (
             <>
               <Button
@@ -100,7 +106,7 @@ export default function ProductImageGallery({
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -120,5 +126,9 @@ export default function ProductImageGallery({
         )}
       </div>
     </div>
-  )
-}
+  );
+});
+
+ProductImageGallery.displayName = 'ProductImageGallery';
+
+export default ProductImageGallery;

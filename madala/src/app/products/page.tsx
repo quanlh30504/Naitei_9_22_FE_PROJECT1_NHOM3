@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo, useCallback, useMemo } from 'react';
 import ProductGrid from '@/app/products/components/ProductGrid';
 import ProductList from '@/app/products/components/ProductList';
 import CategorySidebar from '@/app/products/components/CategorySidebar';
@@ -13,7 +13,7 @@ import { ICategory } from '@/models/Category';
 import { productService } from '@/services/productService';
 import { categoryService } from '@/services/categoryService';
 
-const ProductPage = () => {
+const ProductPage = memo(() => {
     const [products, setProducts] = useState<IProduct[]>([]);
     const [categories, setCategories] = useState<ICategory[]>([]);
     const [filteredProducts, setFilteredProducts] = useState<IProduct[]>([]);
@@ -25,14 +25,14 @@ const ProductPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
 
     // MAX prod được hiển thị
-    const getProductsPerPage = () => {
+    const getProductsPerPage = useCallback(() => {
         return viewMode === 'list' ? 3 : 6; // max 3 prod cho list mode, 6 prod cho grid mode
-    };
+    }, [viewMode]);
 
     // gộp tags từ sản phẩm, loại bỏ trùng hợp và chuyển thành mảng
-    const tags = Array.from(new Set(
+    const tags = useMemo(() => Array.from(new Set(
         Array.isArray(products) ? products.flatMap(p => p.tags || []) : []
-    ));
+    )), [products]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -121,31 +121,28 @@ const ProductPage = () => {
     }, [selectedCategory, selectedTags]);
 
 
-    const handleCategorySelect = (category: string) => {
+    const handleCategorySelect = useCallback(async (category: string) => {
         setSelectedCategory(category);
 
         // nếu không có tags được lựa chọn sẽ tự lấy tất cả sản phẩm
         if (category === '' && selectedTags.length === 0) {
-            const fetchAllProducts = async () => {
-                try {
-                    setLoading(true);
-                    // Sử dụng productService
-                    const products = await productService.getAllProducts();
+            try {
+                setLoading(true);
+                // Sử dụng productService
+                const products = await productService.getAllProducts();
 
-                    setProducts(products);
-                    setFilteredProducts(products);
-                    setCurrentPage(1);
-                } catch (err) {
-                    setError(err instanceof Error ? err.message : 'An error occurred');
-                } finally {
-                    setLoading(false);
-                }
-            };
-            fetchAllProducts();
+                setProducts(products);
+                setFilteredProducts(products);
+                setCurrentPage(1);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'An error occurred');
+            } finally {
+                setLoading(false);
+            }
         }
-    };
+    }, [selectedTags.length]);
 
-    const handleTagSelect = (tag: string) => {
+    const handleTagSelect = useCallback((tag: string) => {
         setSelectedTags(prevTags => {
             if (prevTags.includes(tag)) {
                 // Nếu tag được chọn sẽ xóa trong array không hiển thị nữa
@@ -155,27 +152,35 @@ const ProductPage = () => {
                 return [...prevTags, tag];
             }
         });
-    };
+    }, []);
 
-    const handleClearAllTags = () => {
+    const handleClearAllTags = useCallback(() => {
         setSelectedTags([]);
-    };
+    }, []);
 
     // Chức năng thêm vào giỏ hàng
-    const handleAddToCart = () => {
+    const handleAddToCart = useCallback(() => {
         // TODO: Implement cart functionality
-    };
+    }, []);
 
     // Chức năng yêu thích
-    const handleToggleFavorite = () => {
+    const handleToggleFavorite = useCallback(() => {
         // TODO: Implement favorite functionality
-    };
+    }, []);
 
     // Phân trang
-    const productsPerPage = getProductsPerPage();
-    const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-    const startIndex = (currentPage - 1) * productsPerPage;
-    const currentProducts = filteredProducts.slice(startIndex, startIndex + productsPerPage);
+    const paginationData = useMemo(() => {
+        const productsPerPage = getProductsPerPage();
+        const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+        const startIndex = (currentPage - 1) * productsPerPage;
+        const currentProducts = filteredProducts.slice(startIndex, startIndex + productsPerPage);
+
+        return {
+            productsPerPage,
+            totalPages,
+            currentProducts
+        };
+    }, [filteredProducts, currentPage, getProductsPerPage]);
 
     // reset về page 1 khi đổi view mode
     useEffect(() => {
@@ -232,7 +237,7 @@ const ProductPage = () => {
                             <div className="flex items-center">
                                 <PaginationWrapper
                                     currentPage={currentPage}
-                                    totalPages={totalPages}
+                                    totalPages={paginationData.totalPages}
                                     onPageChange={setCurrentPage}
                                     isCompact={true}
                                 />
@@ -241,13 +246,13 @@ const ProductPage = () => {
 
                         {viewMode === 'grid' ? (
                             <ProductGrid
-                                products={currentProducts}
+                                products={paginationData.currentProducts}
                                 onAddToCart={handleAddToCart}
                                 onToggleFavorite={handleToggleFavorite}
                             />
                         ) : (
                             <ProductList
-                                products={currentProducts}
+                                products={paginationData.currentProducts}
                                 onAddToCart={handleAddToCart}
                                 onToggleFavorite={handleToggleFavorite}
                             />
@@ -255,7 +260,7 @@ const ProductPage = () => {
 
                         <PaginationWrapper
                             currentPage={currentPage}
-                            totalPages={totalPages}
+                            totalPages={paginationData.totalPages}
                             onPageChange={setCurrentPage}
                             isCompact={false}
                         />
@@ -294,7 +299,7 @@ const ProductPage = () => {
                             <div className="flex items-center">
                                 <PaginationWrapper
                                     currentPage={currentPage}
-                                    totalPages={totalPages}
+                                    totalPages={paginationData.totalPages}
                                     onPageChange={setCurrentPage}
                                     isCompact={true}
                                 />
@@ -303,20 +308,20 @@ const ProductPage = () => {
 
                         {viewMode === 'grid' ? (
                             <ProductGrid
-                                products={currentProducts}
+                                products={paginationData.currentProducts}
                                 onAddToCart={handleAddToCart}
                                 onToggleFavorite={handleToggleFavorite}
                             />
                         ) : (
                             <ProductList
-                                products={currentProducts}
+                                products={paginationData.currentProducts}
                                 onAddToCart={handleAddToCart}
                                 onToggleFavorite={handleToggleFavorite}
                             />
                         )}
                         <PaginationWrapper
                             currentPage={currentPage}
-                            totalPages={totalPages}
+                            totalPages={paginationData.totalPages}
                             onPageChange={setCurrentPage}
                             isCompact={false}
                         />
@@ -325,6 +330,8 @@ const ProductPage = () => {
             </div>
         </div>
     );
-};
+});
+
+ProductPage.displayName = 'ProductPage';
 
 export default ProductPage;

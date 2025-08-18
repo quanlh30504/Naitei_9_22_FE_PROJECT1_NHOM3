@@ -1,7 +1,7 @@
 // components/SafeImage.tsx
 
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo, useMemo } from 'react';
 import Image from 'next/image';
 import { getValidImageUrl } from '@/lib/utils';
 
@@ -12,12 +12,12 @@ interface SafeImageProps {
     className?: string;
     fallbackClassName?: string;
     priority?: boolean;
-    fill?: boolean; 
-    width?: number; 
-    height?: number; 
+    fill?: boolean;
+    width?: number;
+    height?: number;
 }
 
-const SafeImage: React.FC<SafeImageProps> = ({
+const SafeImage = memo(function SafeImage({
     src,
     alt,
     className = '',
@@ -26,9 +26,30 @@ const SafeImage: React.FC<SafeImageProps> = ({
     fill = false,
     width,
     height
-}) => {
+}: SafeImageProps) {
     const [hasError, setHasError] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Memoize image URL
+    const imageUrl = useMemo(() => {
+        return src ? getValidImageUrl(src) : '';
+    }, [src]);
+
+    // Memoize error handler
+    const handleError = useCallback(() => {
+        setHasError(true);
+        setIsLoading(false);
+    }, []);
+
+    // Memoize load handler
+    const handleLoad = useCallback(() => {
+        setIsLoading(false);
+    }, []);
+
+    // Memoize image props
+    const imageProps = useMemo(() => {
+        return fill ? { fill: true } : { width: width!, height: height! };
+    }, [fill, width, height]);
 
     // Xác thực props: Nếu không fill thì phải có width/height
     if (!fill && (width === undefined || height === undefined)) {
@@ -39,15 +60,10 @@ const SafeImage: React.FC<SafeImageProps> = ({
         return <FallbackUI className={fallbackClassName || className} />;
     }
 
-    const imageUrl = src ? getValidImageUrl(src) : '';
-
     // Handle lỗi hoặc src không hợp lệ
     if (hasError || !imageUrl) {
         return <FallbackUI style={!fill ? { width, height } : {}} className={fallbackClassName || className} />;
     }
-
-    // Tạo props cho Image một cách linh hoạt
-    const imageProps = fill ? { fill: true } : { width: width!, height: height! };
 
     return (
         <>
@@ -70,14 +86,8 @@ const SafeImage: React.FC<SafeImageProps> = ({
                 {...imageProps}
                 className={className}
                 priority={priority}
-                onLoad={() => setIsLoading(false)}
-                onError={() => {
-                    if (process.env.NODE_ENV === 'development') {
-                        console.error('SafeImage - Lỗi tải ảnh:', imageUrl);
-                    }
-                    setHasError(true);
-                    setIsLoading(false);
-                }}
+                onLoad={handleLoad}
+                onError={handleError}
                 style={{
                     // Dùng className để kiểm soát object-fit (ví dụ: object-cover)
                     transition: 'opacity 0.3s ease-in-out',
@@ -86,19 +96,21 @@ const SafeImage: React.FC<SafeImageProps> = ({
             />
         </>
     );
-};
+});
 
 // Tách UI fallback ra để tái sử dụng
-const FallbackUI: React.FC<{ style?: React.CSSProperties, className?: string }> = ({ style, className }) => (
-    <div
-        className={`bg-gray-200 flex items-center justify-center ${className}`}
-        style={style}
-    >
-        <div className="text-center">
-            <div className="text-gray-400 text-2xl mb-2">📷</div>
-            <span className="text-gray-500 text-xs">No Image</span>
+const FallbackUI: React.FC<{ style?: React.CSSProperties, className?: string }> = memo(function FallbackUI({ style, className }) {
+    return (
+        <div
+            className={`bg-gray-200 flex items-center justify-center ${className}`}
+            style={style}
+        >
+            <div className="text-center">
+                <div className="text-gray-400 text-2xl mb-2">📷</div>
+                <span className="text-gray-500 text-xs">No Image</span>
+            </div>
         </div>
-    </div>
-);
+    );
+});
 
 export default SafeImage;

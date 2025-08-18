@@ -8,6 +8,7 @@ import {
   useEffect,
   useTransition,
   useMemo,
+  useCallback,
 } from "react";
 import { updateItemQuantity, removeItemsFromCart } from "@/lib/actions/cart";
 import { toast } from "react-hot-toast";
@@ -87,17 +88,18 @@ export function CartProvider({
     }
   }, [items, searchParams, selectedItemIds, pathname, router]);
 
-
-  const updateQuantity = (cartItemId: string, newQuantity: number) => {
+  // Memoize update quantity function
+  const updateQuantity = useCallback((cartItemId: string, newQuantity: number) => {
     startTransition(async () => {
       const result = await updateItemQuantity(cartItemId, newQuantity);
       if (!result.success) {
         toast.error(result.message);
       }
     });
-  };
+  }, [startTransition]);
 
-  const removeItems = (cartItemIds: string[]) => {
+  // Memoize remove items function
+  const removeItems = useCallback((cartItemIds: string[]) => {
     startTransition(async () => {
       const result = await removeItemsFromCart(cartItemIds);
       if (result.success) {
@@ -109,9 +111,10 @@ export function CartProvider({
         toast.error(result.message);
       }
     });
-  };
+  }, [startTransition]);
 
-  const clearOrderedItems = (orderedItemIds: string[]) => {
+  // Memoize clear ordered items function
+  const clearOrderedItems = useCallback((orderedItemIds: string[]) => {
     // Cập nhật lại state của items và selectedItemIds
     setItems((prev) =>
       prev.filter((item) => !orderedItemIds.includes(item._id))
@@ -119,23 +122,25 @@ export function CartProvider({
     setSelectedItemIds((prev) =>
       prev.filter((id) => !orderedItemIds.includes(id))
     );
-  };
+  }, []);
 
-  const toggleItemSelected = (cartItemId: string) => {
+  // Memoize toggle item selected function
+  const toggleItemSelected = useCallback((cartItemId: string) => {
     setSelectedItemIds((current) =>
       current.includes(cartItemId)
         ? current.filter((id) => id !== cartItemId)
         : [...current, cartItemId]
     );
-  };
+  }, []);
 
-  const toggleSelectAll = () => {
+  // Memoize toggle select all function
+  const toggleSelectAll = useCallback(() => {
     if (selectedItemIds.length === items.length) {
       setSelectedItemIds([]);
     } else {
       setSelectedItemIds(items.map((item) => item._id));
     }
-  };
+  }, [selectedItemIds.length, items]);
 
   const contextValue = useMemo(
     () => ({
@@ -149,7 +154,17 @@ export function CartProvider({
       toggleItemSelected,
       toggleSelectAll,
     }),
-    [items, totalItems, selectedItemIds, isPending]
+    [
+      items,
+      totalItems,
+      selectedItemIds,
+      isPending,
+      updateQuantity,
+      removeItems,
+      clearOrderedItems,
+      toggleItemSelected,
+      toggleSelectAll
+    ]
   );
 
   return (

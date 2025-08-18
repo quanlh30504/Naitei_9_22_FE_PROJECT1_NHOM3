@@ -5,10 +5,9 @@ import type { IUser } from "@/models/User";
 import { useRouter } from "next/navigation";
 import { User, Calendar as CalendarIcon } from "lucide-react";
 import SubmitButton from "@/Components/Buttons/SubmitButton";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState, useCallback, memo } from "react";
 import { toast } from "react-hot-toast";
 import { updateProfile } from "@/lib/actions/user";
-import { useState } from "react";
 import { countries } from "@/lib/data";
 import { cn } from "@/lib/utils"; // Tiện ích của shadcn
 import { format } from "date-fns"; // Thư viện để định dạng ngày
@@ -37,21 +36,39 @@ interface UserInfoFormProps {
   user: IUser;
 }
 
-export default function UserInfoForm({ user }: UserInfoFormProps) {
+const UserInfoForm = memo(({ user }: UserInfoFormProps) => {
   const router = useRouter();
   const [state, dispatch] = useFormState(updateProfile, undefined);
 
-  const genderOptions = [
+  // Memoize gender options
+  const genderOptions = useMemo(() => [
     { value: "male", label: "Nam" },
     { value: "female", label: "Nữ" },
     { value: "other", label: "Khác" },
-  ];
+  ], []);
+
   // --- State cho DatePicker ---
   const [birthDate, setBirthDate] = useState<Date | undefined>(
     user.birthDate ? new Date(user.birthDate) : undefined
   );
   const [selectedCountry, setSelectedCountry] = useState(user.country || "");
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false); 
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // Memoize calendar select handler
+  const handleCalendarSelect = useCallback((date: Date | undefined) => {
+    setBirthDate(date);
+    setIsCalendarOpen(false); // Tự động đóng sau khi chọn
+  }, []);
+
+  // Memoize formatted birth date
+  const formattedBirthDate = useMemo(() => {
+    return birthDate ? format(birthDate, "dd/MM/yyyy") : null;
+  }, [birthDate]);
+
+  // Memoize birth date ISO string
+  const birthDateISO = useMemo(() => {
+    return birthDate?.toISOString() || "";
+  }, [birthDate]);
 
   useEffect(() => {
     // Đồng bộ state khi prop user thay đổi
@@ -73,7 +90,7 @@ export default function UserInfoForm({ user }: UserInfoFormProps) {
       <input
         type="hidden"
         name="birthDate"
-        value={birthDate?.toISOString() || ""}
+        value={birthDateISO}
       />
 
       {/* --- Phần thông tin cá nhân --- */}
@@ -122,8 +139,8 @@ export default function UserInfoForm({ user }: UserInfoFormProps) {
                 !birthDate && "text-muted-foreground"
               )}
             >
-              {birthDate ? (
-                format(birthDate, "dd/MM/yyyy")
+              {formattedBirthDate ? (
+                formattedBirthDate
               ) : (
                 <span>Chọn ngày sinh</span>
               )}
@@ -134,10 +151,7 @@ export default function UserInfoForm({ user }: UserInfoFormProps) {
             <Calendar
               mode="single"
               selected={birthDate}
-              onSelect={(date) => {
-                setBirthDate(date);
-                setIsCalendarOpen(false); // Tự động đóng sau khi chọn
-              }}
+              onSelect={handleCalendarSelect}
               captionLayout="dropdown" // Thay đổi layout
               fromYear={1900}
               toYear={new Date().getFullYear()}
@@ -167,7 +181,6 @@ export default function UserInfoForm({ user }: UserInfoFormProps) {
       <div className="space-y-2">
         <Label htmlFor="country">Quốc tịch</Label>
         <Select
-          id="country"
           name="country"
           value={selectedCountry}
           onValueChange={setSelectedCountry}
@@ -190,4 +203,8 @@ export default function UserInfoForm({ user }: UserInfoFormProps) {
       </div>
     </form>
   );
-}
+});
+
+UserInfoForm.displayName = 'UserInfoForm';
+
+export default UserInfoForm;

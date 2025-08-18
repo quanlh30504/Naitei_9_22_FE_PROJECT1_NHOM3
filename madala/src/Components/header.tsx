@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo, memo } from "react";
 import { Input } from "@/Components/ui/input";
 import { Button } from "@/Components/ui/button";
 import {
@@ -35,7 +35,7 @@ import { getUserForHeader, UserHeaderData } from "@/lib/actions/user";
 import { useCart } from "@/app/cart/context/CartContext";
 import { formatCurrency } from "@/lib/utils";
 
-export default function Header({
+function Header({
   initialUserData,
 }: {
   initialUserData: UserHeaderData | null;
@@ -52,9 +52,42 @@ export default function Header({
   // dữ liệu giỏ hàng
   const { totalItems } = useCart();
 
+  // Memoize current menu items to prevent unnecessary re-calculations
+  const currentMenuItems = useMemo(() =>
+    session?.user ? userMenuItems : guestMenuItems,
+    [session?.user]
+  );
+
+  // Memoize display text calculation
+  const displayText = useMemo(() => {
+    if (userData) {
+      return userData.name || userData.email || "User";
+    }
+    return "Tài khoản";
+  }, [userData]);
+
+  // Memoize logout handler
+  const handleLogout = useCallback(() => {
+    signOut({ callbackUrl: "/" });
+  }, []);
+
+  // Memoize search handler
+  const handleSearch = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (search.trim()) {
+      router.push(`/search?query=${encodeURIComponent(search.trim())}`);
+    }
+  }, [search, router]);
+
+  // Memoize search input change handler
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  }, []);
+
   useEffect(() => {
     setUserData(initialUserData);
   }, [initialUserData]);
+
   // useEffect này chỉ để xử lý khi người dùng logout trên client
   useEffect(() => {
     if (status === "authenticated") {
@@ -67,19 +100,6 @@ export default function Header({
       setUserData(null);
     }
   }, [status]); // Phụ thuộc duy nhất vào 'status'
-
-  const currentMenuItems = session?.user ? userMenuItems : guestMenuItems;
-
-  const getDisplayText = () => {
-    if (userData) {
-      return userData.name || userData.email || "User";
-    }
-    return "Tài khoản";
-  };
-
-  const handleLogout = () => {
-    signOut({ callbackUrl: "/" });
-  };
 
   useEffect(() => {
     setSearch("");
@@ -96,13 +116,6 @@ export default function Header({
       window.removeEventListener("loginSuccess", handleLoginSuccess);
     };
   }, [update]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (search.trim()) {
-      router.push(`/search?query=${encodeURIComponent(search.trim())}`);
-    }
-  };
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -133,7 +146,7 @@ export default function Header({
                 type="text"
                 placeholder="Tìm kiếm sản phẩm, thương hiệu..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={handleSearchChange}
                 className="rounded-r-none border-r-0 focus:border-primary pr-4"
               />
               <Button
@@ -155,7 +168,7 @@ export default function Header({
                 >
                   <User className="h-7 w-7" />
                   <span className="text-sm mt-1 font-medium max-w-20 truncate">
-                    {getDisplayText()}
+                    {displayText}
                   </span>
                 </Button>
               </DropdownMenuTrigger>
@@ -262,3 +275,5 @@ export default function Header({
     </header>
   );
 }
+
+export default memo(Header);

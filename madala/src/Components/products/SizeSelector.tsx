@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 
 interface SizeSelectorProps {
   sizes: string[] | string | Record<string, string>;
 }
 
-export default function SizeSelector({ sizes }: SizeSelectorProps) {
+function SizeSelector({ sizes }: SizeSelectorProps) {
   const [selectedSize, setSelectedSize] = useState<string>('');
 
-  const getSizeOptions = () => {
+  // Memoize size options calculation
+  const sizeOptions = useMemo(() => {
     if (Array.isArray(sizes)) {
       return sizes;
     } else if (typeof sizes === 'string') {
@@ -17,9 +18,12 @@ export default function SizeSelector({ sizes }: SizeSelectorProps) {
     } else {
       return Object.values(sizes);
     }
-  };
+  }, [sizes]);
 
-  const sizeOptions = getSizeOptions();
+  // Memoize size selection handler
+  const handleSizeSelect = useCallback((size: string) => {
+    setSelectedSize(size);
+  }, []);
 
   return (
     <div className="space-y-3">
@@ -28,12 +32,11 @@ export default function SizeSelector({ sizes }: SizeSelectorProps) {
         {sizeOptions.map((size, index) => (
           <button
             key={index}
-            onClick={() => setSelectedSize(size)}
-            className={`px-4 py-2 border rounded-md transition-colors text-sm font-medium ${
-              selectedSize === size
+            onClick={() => handleSizeSelect(size)}
+            className={`px-4 py-2 border rounded-md transition-colors text-sm font-medium ${selectedSize === size
                 ? 'border-[#8BC34A] bg-[#8BC34A] text-white'
                 : 'border-gray-300 hover:border-[#8BC34A] hover:bg-[#8BC34A]/5'
-            }`}
+              }`}
           >
             {size}
           </button>
@@ -47,3 +50,5 @@ export default function SizeSelector({ sizes }: SizeSelectorProps) {
     </div>
   );
 }
+
+export default memo(SizeSelector);

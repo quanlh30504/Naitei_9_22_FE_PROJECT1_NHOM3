@@ -1,12 +1,19 @@
 "use client";
 
+import { useCallback, memo } from "react";
 import { FaPaperPlane } from "react-icons/fa";
 import { Input } from "@/Components/ui/input";
 import { Button } from "@/Components/ui/button";
 import { Label } from "@/Components/ui/label";
 import SectionTitle from "./SectionTitle";
 
-export default function SubscribeForm() {
+function SubscribeForm() {
+  const handleSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // Add form submission logic here
+    console.log("Form submitted");
+  }, []);
+
   return (
     <div>
       <SectionTitle title="GỬI EMAIL CHO CHÚNG TÔI" />
@@ -19,17 +26,17 @@ export default function SubscribeForm() {
           để nhận những ưu đãi mới nhất
         </p>
 
-        <form className="space-y-3 flex flex-col items-center">
+        <form onSubmit={handleSubmit} className="space-y-3 flex flex-col items-center">
           <div className="w-full space-y-1">
             <Label htmlFor="fullName">Họ tên*</Label>
             <Input id="fullName" type="text" placeholder="Nhập họ tên của bạn" required />
           </div>
-          
+
           <div className="w-full space-y-1">
             <Label htmlFor="phone">Số điện thoại*</Label>
             <Input id="phone" type="tel" placeholder="Nhập số điện thoại" required />
           </div>
-          
+
           <div className="w-full space-y-1">
             <Label htmlFor="email">Email*</Label>
             <Input id="email" type="email" placeholder="Nhập địa chỉ email" required />
@@ -48,3 +55,5 @@ export default function SubscribeForm() {
     </div>
   );
 }
+
+export default memo(SubscribeForm);

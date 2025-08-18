@@ -1,12 +1,12 @@
 'use client';
-import { useMemo, useTransition } from "react";
+import { useMemo, useTransition, useCallback, memo } from "react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/Components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { useCart } from "@/app/cart/context/CartContext";
 import { Loader2, MapPin } from "lucide-react";
 import type { AddressType } from "@/types/address";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 
 interface OrderSummaryProps {
@@ -14,8 +14,8 @@ interface OrderSummaryProps {
     onOpenAddressModal: () => void;
 }
 
-export default function OrderSummary({ selectedAddress, onOpenAddressModal }: OrderSummaryProps) {
-       const router = useRouter(); 
+function OrderSummary({ selectedAddress, onOpenAddressModal }: OrderSummaryProps) {
+    const router = useRouter();
     const { items, selectedItemIds } = useCart();
     const [isPending, startTransition] = useTransition();
 
@@ -31,7 +31,12 @@ export default function OrderSummary({ selectedAddress, onOpenAddressModal }: Or
         };
     }, [items, selectedItemIds]);
 
-    const handleProceedToCheckout = () => {
+    // Memoize formatted currency values
+    const formattedTotalOriginal = useMemo(() => formatCurrency(totalOriginal), [totalOriginal]);
+    const formattedTotalDiscount = useMemo(() => formatCurrency(totalDiscount), [totalDiscount]);
+    const formattedTotalFinal = useMemo(() => formatCurrency(totalFinal), [totalFinal]);
+
+    const handleProceedToCheckout = useCallback(() => {
         if (selectedCount === 0) {
             toast.error("Vui lòng chọn sản phẩm để thanh toán.");
             return;
@@ -50,7 +55,7 @@ export default function OrderSummary({ selectedAddress, onOpenAddressModal }: Or
             }).toString();
             router.push(`/checkout?${query}`);
         });
-    };
+    }, [selectedCount, selectedAddress, onOpenAddressModal, selectedItemIds, router]);
 
     return (
         <div className="w-full lg:w-1/3 sticky top-6 space-y-4">
@@ -74,7 +79,7 @@ export default function OrderSummary({ selectedAddress, onOpenAddressModal }: Or
                             </p>
                         </>
                     ) : (
-                         <div className="flex items-center text-muted-foreground text-sm py-2">
+                        <div className="flex items-center text-muted-foreground text-sm py-2">
                             <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
                             <p>Chưa có địa chỉ giao hàng.</p>
                         </div>
@@ -85,11 +90,11 @@ export default function OrderSummary({ selectedAddress, onOpenAddressModal }: Or
             <Card>
                 <CardContent className="p-6">
                     <div className="space-y-4">
-                        <div className="flex justify-between text-sm"><p>Tạm tính</p><p>{formatCurrency(totalOriginal)}</p></div>
-                        <div className="flex justify-between text-sm"><p>Giảm giá</p><p className="text-red-500">-{formatCurrency(totalDiscount)}</p></div>
+                        <div className="flex justify-between text-sm"><p>Tạm tính</p><p>{formattedTotalOriginal}</p></div>
+                        <div className="flex justify-between text-sm"><p>Giảm giá</p><p className="text-red-500">-{formattedTotalDiscount}</p></div>
                     </div>
                     <div className="border-t my-4"></div>
-                    <div className="flex justify-between font-semibold"><p>Tổng tiền</p><p className="text-red-600 text-lg">{formatCurrency(totalFinal)}</p></div>
+                    <div className="flex justify-between font-semibold"><p>Tổng tiền</p><p className="text-red-600 text-lg">{formattedTotalFinal}</p></div>
                     <p className="text-xs text-gray-500 text-right mt-1">(Đã bao gồm VAT nếu có)</p>
                     <Button
                         className="w-full mt-6 bg-red-600 hover:bg-red-700 text-lg h-12"
@@ -103,3 +108,5 @@ export default function OrderSummary({ selectedAddress, onOpenAddressModal }: Or
         </div>
     );
 }
+
+export default memo(OrderSummary);

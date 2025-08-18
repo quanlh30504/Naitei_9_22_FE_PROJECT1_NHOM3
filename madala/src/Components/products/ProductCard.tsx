@@ -6,10 +6,11 @@ import { Star, ShoppingCart, Heart } from "lucide-react";
 import { Button } from "@/Components/ui/button";
 import { Badge } from "@/Components/ui/badge";
 import { Card, CardContent } from "@/Components/ui/card";
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useCallback, useMemo, memo } from "react";
 import { formatCurrency } from "@/lib/utils";
 import { buyNowAndRedirect } from "@/lib/actions/cart";
-import { Toast } from "react-hot-toast";
+import toast from "react-hot-toast";
+
 interface ProductCardProps {
   id: string;
   name: string;
@@ -39,9 +40,35 @@ const ProductCard = ({
 
   const [isPending, startTransition] = useTransition();
 
-  console
+  // Memoize currency formatting
+  const formattedPrice = useMemo(() => formatCurrency(price), [price]);
+  const formattedSalePrice = useMemo(() =>
+    salePrice ? formatCurrency(salePrice) : null,
+    [salePrice]
+  );
 
-  const handleBuyNow = () => {
+  // Memoize discount calculation
+  const discountPercentage = useMemo(() => {
+    if (salePrice && salePrice < price) {
+      return Math.round(((price - salePrice) / price) * 100);
+    }
+    return 0;
+  }, [price, salePrice]);
+
+  // Memoize star rendering
+  const starRating = useMemo(() => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`w-4 h-4 ${i < Math.floor(rating.average)
+            ? "fill-yellow-400 text-yellow-400"
+            : "text-gray-300"
+          }`}
+      />
+    ));
+  }, [rating.average]);
+
+  const handleBuyNow = useCallback(() => {
     startTransition(async () => {
       try {
         const result = await buyNowAndRedirect(id, 1);
@@ -52,11 +79,7 @@ const ProductCard = ({
         // toast.error(error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.");
       }
     });
-  };
-
-  const discountPercentage = salePrice
-    ? Math.round(((price - salePrice) / price) * 100)
-    : 0;
+  }, [id]);
 
   return (
     <Card className="group hover:shadow-medium transition-all duration-300 overflow-hidden">
@@ -118,16 +141,7 @@ const ProductCard = ({
 
         {/* Rating */}
         <div className="flex items-center gap-1 mb-3">
-          {[...Array(5)].map((_, i) => (
-            <Star
-              key={i}
-              className={`h-3 w-3 ${
-                i < Math.floor(rating.average)
-                  ? "fill-yellow-400 text-yellow-400"
-                  : "text-gray-300"
-              }`}
-            />
-          ))}
+          {starRating}
           <span className="text-xs text-muted-foreground ml-1">
             ({rating.count || 0})
           </span>
@@ -138,15 +152,15 @@ const ProductCard = ({
           {salePrice ? (
             <>
               <span className="font-bold text-[#8BC34A]">
-                {formatCurrency(salePrice)}
+                {formattedSalePrice}
               </span>
               <span className="text-sm text-muted-foreground line-through">
-                {formatCurrency(price)}
+                {formattedPrice}
               </span>
             </>
           ) : (
             <span className="font-bold text-foreground">
-              {formatCurrency(price)}
+              {formattedPrice}
             </span>
           )}
         </div>
@@ -155,4 +169,4 @@ const ProductCard = ({
   );
 };
 
-export default ProductCard;
+export default memo(ProductCard);

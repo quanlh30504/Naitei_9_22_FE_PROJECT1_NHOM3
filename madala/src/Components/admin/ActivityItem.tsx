@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { LucideIcon } from 'lucide-react';
 
 interface ActivityItemProps {
@@ -11,7 +11,7 @@ interface ActivityItemProps {
   };
 }
 
-export function ActivityItem({ title, time, icon: Icon, iconColor }: ActivityItemProps) {
+function ActivityItem({ title, time, icon: Icon, iconColor }: ActivityItemProps) {
   return (
     <div className="flex items-center space-x-3">
       <div className={`w-8 h-8 ${iconColor.bg} rounded-full flex items-center justify-center`}>
@@ -24,3 +24,6 @@ export function ActivityItem({ title, time, icon: Icon, iconColor }: ActivityIte
     </div>
   );
 }
+
+export const MemoizedActivityItem = memo(ActivityItem);
+export { MemoizedActivityItem as ActivityItem };

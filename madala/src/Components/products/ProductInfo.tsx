@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useCallback, useMemo, memo } from "react";
 import { Card } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
 import { Badge } from "@/Components/ui/badge";
@@ -60,24 +60,44 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   discountPercentage,
 }) => {
   const [quantity, setQuantity] = useState(1);
-
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const renderStars = (rating: number) => {
+  // Memoize star rendering for better performance
+  const starRating = useMemo(() => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-4 h-4 ${
-          i < Math.floor(rating)
+        className={`w-4 h-4 ${i < Math.floor(rating.average)
             ? "fill-yellow-400 text-yellow-400"
             : "text-gray-300"
-        }`}
+          }`}
       />
     ));
-  };
+  }, [rating.average]);
 
-  const handleAddToCart = () => {
+  // Memoize formatted currency values
+  const formattedPrice = useMemo(() => formatCurrency(price), [price]);
+  const formattedSalePrice = useMemo(() =>
+    salePrice ? formatCurrency(salePrice) : null,
+    [salePrice]
+  );
+
+  // Memoize quantity handlers
+  const increaseQuantity = useCallback(() => {
+    setQuantity(prev => Math.min(prev + 1, stock));
+  }, [stock]);
+
+  const decreaseQuantity = useCallback(() => {
+    setQuantity(prev => Math.max(prev - 1, 1));
+  }, []);
+
+  const handleQuantityChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Math.max(1, Math.min(parseInt(e.target.value) || 1, stock));
+    setQuantity(value);
+  }, [stock]);
+
+  const handleAddToCart = useCallback(() => {
     startTransition(async () => {
       const result = await addItemToCart(productId, quantity);
       if (result.success) {
@@ -86,9 +106,9 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         toast.error(result.message);
       }
     });
-  };
+  }, [productId, quantity]);
 
-  const handleBuyNow = () => {
+  const handleBuyNow = useCallback(() => {
     startTransition(async () => {
       try {
         const result = await buyNowAndRedirect(productId, quantity);
@@ -99,19 +119,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         // toast.error(error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.");
       }
     });
-  };
-
-  const increaseQuantity = () => {
-    if (quantity < stock) {
-      setQuantity(quantity + 1);
-    }
-  };
-
-  const decreaseQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
-    }
-  };
+  }, [productId, quantity]);
 
   return (
     <div className="space-y-6">
@@ -128,7 +136,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
 
       {/* Rating */}
       <div className="flex items-center space-x-2">
-        <div className="flex items-center">{renderStars(rating.average)}</div>
+        <div className="flex items-center">{starRating}</div>
         <span className="text-sm text-muted-foreground">
           {rating.average.toFixed(1)} ({rating.count} đánh giá)
         </span>
@@ -140,10 +148,10 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
           {salePrice && salePrice < price ? (
             <>
               <span className="text-2xl font-bold text-[#8BC34A]">
-                {formatCurrency(salePrice)}
+                {formattedSalePrice}
               </span>
               <span className="text-lg text-muted-foreground line-through">
-                {formatCurrency(price)}
+                {formattedPrice}
               </span>
               {discountPercentage && (
                 <Badge variant="destructive">-{discountPercentage}%</Badge>
@@ -151,7 +159,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             </>
           ) : (
             <span className="text-2xl font-bold text-[#8BC34A]">
-              {formatCurrency(price)}
+              {formattedPrice}
             </span>
           )}
         </div>
@@ -222,12 +230,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             <input
               type="number"
               value={quantity}
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
-                if (val >= 1 && val <= stock) {
-                  setQuantity(val);
-                }
-              }}
+              onChange={handleQuantityChange}
               className="w-12 text-center border-0 focus:outline-none text-sm"
               min="1"
               max={stock}
@@ -293,4 +296,4 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   );
 };
 
-export default ProductInfo;
+export default memo(ProductInfo);

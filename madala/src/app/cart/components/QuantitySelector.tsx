@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { Minus, Plus } from "lucide-react";
@@ -14,7 +14,7 @@ interface QuantitySelectorProps {
   onQuantityChange: (newQuantity: number) => void;
 }
 
-export default function QuantitySelector({
+function QuantitySelector({
   cartItemId,
   initialQuantity,
   stock,
@@ -23,6 +23,7 @@ export default function QuantitySelector({
   const { isPending } = useCart();
   const [quantity, setQuantity] = useState(initialQuantity);
 
+  // Memoize debounced callback
   const debouncedOnQuantityChange = useDebouncedCallback(
     (newQuantity: number) => {
       onQuantityChange(newQuantity);
@@ -35,17 +36,19 @@ export default function QuantitySelector({
     setQuantity(initialQuantity);
   }, [initialQuantity]);
 
-  const handleDecrement = () => {
-        const newQuantity = Math.max(1, quantity - 1);
-        setQuantity(newQuantity); // Cập nhật UI ngay lập tức
-        debouncedOnQuantityChange(newQuantity); // Gọi hàm debounced
-    };
+  // Memoize decrement handler
+  const handleDecrement = useCallback(() => {
+    const newQuantity = Math.max(1, quantity - 1);
+    setQuantity(newQuantity); // Cập nhật UI ngay lập tức
+    debouncedOnQuantityChange(newQuantity); // Gọi hàm debounced
+  }, [quantity, debouncedOnQuantityChange]);
 
-    const handleIncrement = () => {
-        const newQuantity = Math.min(stock, quantity + 1);
-        setQuantity(newQuantity); // Cập nhật UI ngay lập tức
-        debouncedOnQuantityChange(newQuantity); // Gọi hàm debounced
-    };
+  // Memoize increment handler
+  const handleIncrement = useCallback(() => {
+    const newQuantity = Math.min(stock, quantity + 1);
+    setQuantity(newQuantity); // Cập nhật UI ngay lập tức
+    debouncedOnQuantityChange(newQuantity); // Gọi hàm debounced
+  }, [quantity, stock, debouncedOnQuantityChange]);
 
   return (
     <div className="flex items-center">
@@ -76,3 +79,5 @@ export default function QuantitySelector({
     </div>
   );
 }
+
+export default memo(QuantitySelector);

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, memo } from "react"
 import { AdminLayout } from "@/Components/admin/AdminLayout"
 import { Button } from "@/Components/ui/button"
 import { PaginationWrapper } from "@/Components/PaginationWrapper";
@@ -31,7 +31,7 @@ interface ProductsResponse {
   }
 }
 
-export default function ProductManagement() {
+const ProductManagement = memo(function ProductManagement() {
   const [searchTerm, setSearchTerm] = useState("")
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,7 +39,8 @@ export default function ProductManagement() {
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
 
-  const fetchProducts = async (page = 1, search = "") => {
+  // Memoize fetch products function
+  const fetchProducts = useCallback(async (page = 1, search = "") => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
@@ -47,10 +48,10 @@ export default function ProductManagement() {
         limit: '12',
         ...(search && { search })
       })
-      
+
       const response = await fetch(`/api/admin/products?${params}`)
       const data: ProductsResponse = await response.json()
-      
+
       if (data.success) {
         setProducts(data.data.products)
         setCurrentPage(data.data.pagination.page)
@@ -65,7 +66,7 @@ export default function ProductManagement() {
     } finally {
       setLoading(false)
     }
-  }
+  }, []);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -73,22 +74,23 @@ export default function ProductManagement() {
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [searchTerm])
+  }, [searchTerm, fetchProducts])
 
   useEffect(() => {
     fetchProducts()
-  }, [])
+  }, [fetchProducts])
 
-  const handleDelete = async (productId: string) => {
+  // Memoize delete handler
+  const handleDelete = useCallback(async (productId: string) => {
     if (!confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) return
 
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'DELETE'
       })
-      
+
       const data = await response.json()
-      
+
       if (data.success) {
         toast.success("Xóa sản phẩm thành công")
         fetchProducts(currentPage, searchTerm)
@@ -99,9 +101,10 @@ export default function ProductManagement() {
       console.error('Error deleting product:', error)
       toast.error("Lỗi khi xóa sản phẩm")
     }
-  }
+  }, [currentPage, searchTerm, fetchProducts]);
 
-  const handleToggleStatus = async (productId: string, currentStatus: boolean) => {
+  // Memoize toggle status handler
+  const handleToggleStatus = useCallback(async (productId: string, currentStatus: boolean) => {
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'PUT',
@@ -112,9 +115,9 @@ export default function ProductManagement() {
           isActive: !currentStatus
         })
       })
-      
+
       const data = await response.json()
-      
+
       if (data.success) {
         toast.success(`${!currentStatus ? 'Kích hoạt' : 'Vô hiệu hóa'} sản phẩm thành công`)
         fetchProducts(currentPage, searchTerm)
@@ -125,12 +128,18 @@ export default function ProductManagement() {
       console.error('Error updating product status:', error)
       toast.error("Lỗi khi cập nhật trạng thái sản phẩm")
     }
-  }
+  }, [currentPage, searchTerm, fetchProducts]);
 
-  const getStockDisplay = (stock: number) => {
+  // Memoize stock display function
+  const getStockDisplay = useCallback((stock: number) => {
     const stockClass = stock === 0 ? "text-red-500 font-semibold" : stock < 10 ? "text-orange-500" : ""
     return <span className={stockClass}>{stock}</span>
-  }
+  }, []);
+
+  // Memoize search handler
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  }, []);
 
   return (
     <AdminLayout>
@@ -159,7 +168,7 @@ export default function ProductManagement() {
                 <Input
                   placeholder="Tìm kiếm sản phẩm..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearchChange}
                   className="pl-8"
                 />
               </div>
@@ -254,9 +263,9 @@ export default function ProductManagement() {
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </Link>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               title="Xóa sản phẩm"
                               onClick={() => handleDelete(product._id)}
                               disabled={loading}
@@ -290,4 +299,6 @@ export default function ProductManagement() {
       </div>
     </AdminLayout>
   )
-}
+});
+
+export default ProductManagement;

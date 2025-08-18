@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo, useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/Components/ui/button";
 import { ChevronLeft, ChevronRight, Grid, List } from "lucide-react";
@@ -8,13 +8,13 @@ import { Badge } from "@/Components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/Components/ui/card";
 import {
   BlogService,
-  BlogPost,
   formatDate,
 } from "@/services/blogService";
+import { BlogPost } from "@/types/blog";
 import { BlogPostCard } from "@/Components/news/BlogPostCard";
 import { PaginationWrapper } from "@/Components/PaginationWrapper";
 
-export default function NewsPage() {
+function NewsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
@@ -24,11 +24,8 @@ export default function NewsPage() {
 
   const postsPerPage = 6;
 
-  useEffect(() => {
-    fetchBlogPosts(currentPage);
-  }, [currentPage]);
-
-  const fetchBlogPosts = async (page: number) => {
+  // Memoize fetch blog posts function
+  const fetchBlogPosts = useCallback(async (page: number) => {
     try {
       setLoading(true);
       setError(null);
@@ -41,7 +38,26 @@ export default function NewsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [postsPerPage]);
+
+  // Memoize view mode handlers
+  const handleViewModeChange = useCallback((mode: "grid" | "list") => {
+    setViewMode(mode);
+  }, []);
+
+  // Memoize page change handler
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
+
+  // Memoize grid columns class
+  const gridColumnsClass = useMemo(() => {
+    return viewMode === "grid" ? "md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1";
+  }, [viewMode]);
+
+  useEffect(() => {
+    fetchBlogPosts(currentPage);
+  }, [currentPage, fetchBlogPosts]);
 
   if (loading) {
     return (
@@ -83,14 +99,14 @@ export default function NewsPage() {
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}
             size="sm"
-            onClick={() => setViewMode("grid")}
+            onClick={() => handleViewModeChange("grid")}
           >
             <Grid className="h-4 w-4" />
           </Button>
           <Button
             variant={viewMode === "list" ? "default" : "outline"}
             size="sm"
-            onClick={() => setViewMode("list")}
+            onClick={() => handleViewModeChange("list")}
           >
             <List className="h-4 w-4" />
           </Button>
@@ -98,11 +114,7 @@ export default function NewsPage() {
       </div>
 
       {/* Blog Posts Grid */}
-      <div
-        className={`grid gap-6 mb-8 ${
-          viewMode === "grid" ? "md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
-        }`}
-      >
+      <div className={`grid gap-6 mb-8 ${gridColumnsClass}`}>
         {blogPosts.map((post) => (
           <BlogPostCard key={post._id} post={post} viewMode={viewMode} />
         ))}
@@ -112,8 +124,10 @@ export default function NewsPage() {
       <PaginationWrapper
         currentPage={currentPage}
         totalPages={totalPages}
-        onPageChange={setCurrentPage}
+        onPageChange={handlePageChange}
       />
     </div>
   );
 }
+
+export default memo(NewsPage);

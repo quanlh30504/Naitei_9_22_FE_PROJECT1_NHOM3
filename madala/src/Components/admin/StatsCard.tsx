@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { LucideIcon } from 'lucide-react';
 
 interface StatsCardProps {
@@ -15,7 +15,7 @@ interface StatsCardProps {
   };
 }
 
-export function StatsCard({ title, value, change, icon: Icon, iconColor }: StatsCardProps) {
+const StatsCard = memo(function StatsCard({ title, value, change, icon: Icon, iconColor }: StatsCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6">
       <div className="flex items-center justify-between">
@@ -35,4 +35,6 @@ export function StatsCard({ title, value, change, icon: Icon, iconColor }: Stats
       </div>
     </div>
   );
-}
+});
+
+export { StatsCard };

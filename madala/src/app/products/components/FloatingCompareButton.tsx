@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { useCompare } from '@/contexts/CompareContext';
 import { ICategory } from '@/models/Category';
 import { IProduct } from '@/models/Product';
@@ -11,9 +11,19 @@ interface FloatingCompareButtonProps {
     onAddToCart?: (product: IProduct) => void;
 }
 
-const FloatingCompareButton: React.FC<FloatingCompareButtonProps> = ({ categories, onAddToCart }) => {
+const FloatingCompareButton = memo(function FloatingCompareButton({ categories, onAddToCart }: FloatingCompareButtonProps) {
     const { compareProducts, compareCount, removeFromCompare } = useCompare();
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Memoize modal open handler
+    const handleOpenModal = useCallback(() => {
+        setIsModalOpen(true);
+    }, []);
+
+    // Memoize modal close handler
+    const handleCloseModal = useCallback(() => {
+        setIsModalOpen(false);
+    }, []);
 
     if (compareCount === 0) return null;
 
@@ -22,7 +32,7 @@ const FloatingCompareButton: React.FC<FloatingCompareButtonProps> = ({ categorie
             {/* Floating Compare Button */}
             <div className="fixed bottom-4 right-4 z-40">
                 <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleOpenModal}
                     className="bg-[#8ba63a] hover:bg-[#7a942c] text-white p-3 rounded-full shadow-lg transition-all duration-300 flex items-center gap-2"
                 >
                     <FaBalanceScale className="text-lg" />
@@ -35,7 +45,7 @@ const FloatingCompareButton: React.FC<FloatingCompareButtonProps> = ({ categorie
             {/* Compare Modal */}
             <CompareModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={handleCloseModal}
                 products={compareProducts}
                 categories={categories}
                 onRemoveProduct={removeFromCompare}
@@ -43,6 +53,6 @@ const FloatingCompareButton: React.FC<FloatingCompareButtonProps> = ({ categorie
             />
         </>
     );
-};
+});
 
 export default FloatingCompareButton;

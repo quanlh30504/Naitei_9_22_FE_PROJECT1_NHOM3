@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback, memo, useMemo } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
@@ -14,40 +14,55 @@ import SubmitButton from "@/Components/Buttons/SubmitButton";
 import ActionButton from "@/Components/Buttons/ActionButton";
 import { useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [state, dispatch] = useActionState(authenticateCredentials, undefined);
 
+  // Memoize toast configuration for banned accounts
+  const bannedAccountToastConfig = useMemo(() => ({
+    duration: 8000,
+    style: {
+      background: '#fee2e2',
+      color: '#991b1b',
+      border: '2px solid #fca5a5',
+      fontSize: '14px',
+      fontWeight: '600'
+    },
+    icon: '🚫'
+  }), []);
+
+  // Memoize login success handler
+  const handleLoginSuccess = useCallback(() => {
+    window.dispatchEvent(new CustomEvent("loginSuccess"));
+    router.push("/");
+  }, [router]);
+
+  // Memoize error handling logic
+  const handleError = useCallback((message: string) => {
+    if (message.includes("vô hiệu hóa") || message.includes("⚠️")) {
+      toast.error(message, bannedAccountToastConfig);
+    } else {
+      toast.error(message);
+    }
+  }, [bannedAccountToastConfig]);
+
+  // Memoize account banned check
+  const isAccountBanned = useMemo(() => {
+    return state && !state.success && state.message.includes("vô hiệu hóa");
+  }, [state]);
+
   useEffect(() => {
     if (state?.success) {
       toast.success(state.message);
-
-      window.dispatchEvent(new CustomEvent("loginSuccess"));
-
-      router.push("/");
+      handleLoginSuccess();
     }
 
     if (state && !state.success && !state.errors) {
-      // Kiểm tra nếu là thông báo tài khoản bị ban
-      if (state.message.includes("vô hiệu hóa") || state.message.includes("⚠️")) {
-        toast.error(state.message, {
-          duration: 8000, // Hiển thị lâu hơn cho thông báo quan trọng
-          style: {
-            background: '#fee2e2',
-            color: '#991b1b',
-            border: '2px solid #fca5a5',
-            fontSize: '14px',
-            fontWeight: '600'
-          },
-          icon: '🚫'
-        });
-      } else {
-        toast.error(state.message);
-      }
+      handleError(state.message);
     }
-  }, [state, router]);
+  }, [state, handleLoginSuccess, handleError]);
 
   useEffect(() => {
     const error = searchParams.get("error");
@@ -72,7 +87,7 @@ export default function LoginPage() {
 
         <div className="bg-gray-50 p-8 md:p-12">
           {/* Alert cho tài khoản bị ban */}
-          {state && !state.success && state.message.includes("vô hiệu hóa") && (
+          {isAccountBanned && (
             <div className="mb-6 p-4 border-l-4 border-red-500 bg-red-50 rounded-md">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -83,7 +98,7 @@ export default function LoginPage() {
                     Tài khoản đã bị vô hiệu hóa
                   </h3>
                   <div className="mt-1 text-sm text-red-700">
-                    <p>{state.message.replace("⚠️ ", "")}</p>
+                    <p>{state?.message?.replace("⚠️ ", "")}</p>
                   </div>
                   <div className="mt-2">
                     <div className="text-xs text-red-600">
@@ -137,3 +152,5 @@ export default function LoginPage() {
     </main>
   );
 }
+
+export default memo(LoginPage);

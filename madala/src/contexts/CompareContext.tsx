@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { IProduct } from '@/models/Product';
 
 interface CompareContextType {
@@ -34,12 +34,12 @@ export const CompareProvider: React.FC<CompareProviderProps> = ({ children }) =>
       if (prev.some(p => p._id === product._id)) {
         return prev;
       }
-      
+
       // Nếu chọn sản phẩm thứ 4 trở đi, giữ lại 3 sản phẩm cuối
       if (prev.length >= 3) {
         return [...prev.slice(1), product];
       }
-      
+
       return [...prev, product];
     });
   }, []);
@@ -58,14 +58,15 @@ export const CompareProvider: React.FC<CompareProviderProps> = ({ children }) =>
 
   const compareCount = compareProducts.length;
 
-  const value: CompareContextType = {
+  // Memoize context value to prevent unnecessary re-renders
+  const value: CompareContextType = useMemo(() => ({
     compareProducts,
     addToCompare,
     removeFromCompare,
     clearCompare,
     isInCompare,
     compareCount,
-  };
+  }), [compareProducts, addToCompare, removeFromCompare, clearCompare, isInCompare, compareCount]);
 
   return (
     <CompareContext.Provider value={value}>

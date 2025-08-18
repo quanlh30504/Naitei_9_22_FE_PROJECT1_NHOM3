@@ -1,12 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback, memo, useMemo } from "react";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import { Phone, Mail, MessageCircle } from "lucide-react";
 import Breadcrumb from "@/Components/Breadcrumb";
 
-export default function ContactUsPage() {
+function ContactUsPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -18,7 +18,8 @@ export default function ContactUsPage() {
     "phone" | "email" | "zalo"
   >("email");
 
-  const contactMethods = [
+  // Memoize contact methods to prevent recreation
+  const contactMethods = useMemo(() => [
     {
       id: "phone" as const,
       icon: Phone,
@@ -49,9 +50,10 @@ export default function ContactUsPage() {
       formBg: "bg-blue-50",
       contactInfo: "0901 234 567",
     },
-  ];
+  ], []);
 
-  const getFormContent = () => {
+  // Memoize form content getter
+  const getFormContent = useCallback(() => {
     switch (selectedMethod) {
       case "phone":
         return {
@@ -75,14 +77,18 @@ export default function ContactUsPage() {
           buttonIcon: MessageCircle,
         };
     }
-  };
+  }, [selectedMethod]);
 
-  const currentMethod = contactMethods.find(
-    (method) => method.id === selectedMethod
+  // Memoize current method and form content
+  const currentMethod = useMemo(() =>
+    contactMethods.find(method => method.id === selectedMethod),
+    [contactMethods, selectedMethod]
   );
-  const formContent = getFormContent();
 
-  const handleInputChange = (
+  const formContent = useMemo(() => getFormContent(), [getFormContent]);
+
+  // Memoize input change handler
+  const handleInputChange = useCallback((
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
@@ -90,9 +96,10 @@ export default function ContactUsPage() {
       ...prev,
       [name]: value,
     }));
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Memoize submit handler
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -105,7 +112,12 @@ export default function ContactUsPage() {
 
     // Gửi message thành công
     alert("Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.");
-  };
+  }, []);
+
+  // Memoize method selector handler
+  const handleMethodSelect = useCallback((methodId: "phone" | "email" | "zalo") => {
+    setSelectedMethod(methodId);
+  }, []);
 
   return (
     <main>
@@ -128,12 +140,11 @@ export default function ContactUsPage() {
             {contactMethods.map((method) => (
               <div
                 key={method.id}
-                onClick={() => setSelectedMethod(method.id)}
-                className={`p-6 rounded-lg border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
-                  selectedMethod === method.id
+                onClick={() => handleMethodSelect(method.id)}
+                className={`p-6 rounded-lg border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 ${selectedMethod === method.id
                     ? `${method.activeColor} shadow-lg`
                     : `${method.color} hover:shadow-md`
-                }`}
+                  }`}
               >
                 <div className="text-center">
                   <div className="mb-3 flex justify-center">
@@ -175,10 +186,10 @@ export default function ContactUsPage() {
               <div className="flex justify-center mt-2">
                 <div
                   className={`w-24 h-1 rounded-full ${selectedMethod === "phone"
-                      ? "bg-green-400"
-                      : selectedMethod === "email"
-                        ? "bg-red-400"
-                        : "bg-blue-400"
+                    ? "bg-green-400"
+                    : selectedMethod === "email"
+                      ? "bg-red-400"
+                      : "bg-blue-400"
                     }`}
                 ></div>
               </div>
@@ -246,10 +257,10 @@ export default function ContactUsPage() {
                   onChange={handleInputChange}
                   rows={6}
                   className={`w-full min-h-[120px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 resize-vertical transition-all duration-300 ${selectedMethod === "phone"
-                      ? "focus:ring-green-400 focus:border-green-400"
-                      : selectedMethod === "email"
-                        ? "focus:ring-red-400 focus:border-red-400"
-                        : "focus:ring-blue-400 focus:border-blue-400"
+                    ? "focus:ring-green-400 focus:border-green-400"
+                    : selectedMethod === "email"
+                      ? "focus:ring-red-400 focus:border-red-400"
+                      : "focus:ring-blue-400 focus:border-blue-400"
                     }`}
                   placeholder={formContent?.placeholder}
                 />
@@ -261,10 +272,10 @@ export default function ContactUsPage() {
                   type="submit"
                   disabled={isSubmitting}
                   className={`px-8 py-2 font-medium text-white transition-all duration-300 transform hover:scale-105 ${selectedMethod === "phone"
-                      ? "bg-green-600 hover:bg-green-700"
-                      : selectedMethod === "email"
-                        ? "bg-red-600 hover:bg-red-700"
-                        : "bg-blue-600 hover:bg-blue-700"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : selectedMethod === "email"
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-blue-600 hover:bg-blue-700"
                     }`}
                 >
                   <span className="flex items-center gap-2">
@@ -289,3 +300,5 @@ export default function ContactUsPage() {
     </main>
   );
 }
+
+export default memo(ContactUsPage);

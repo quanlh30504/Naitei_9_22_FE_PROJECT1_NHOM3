@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback, memo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
@@ -30,12 +30,13 @@ interface AddressListProps {
   initialAddresses: AddressType[];
 }
 
-export default function AddressList({ initialAddresses }: AddressListProps) {
+const AddressList = memo(({ initialAddresses }: AddressListProps) => {
   const [addresses, setAddresses] = useState<AddressType[]>(initialAddresses);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const handleSetDefault = (addressId: string) => {
+  // Memoize set default handler
+  const handleSetDefault = useCallback((addressId: string) => {
     startTransition(async () => {
       const result = await setDefaultAddress(addressId);
       if (result.success) {
@@ -50,9 +51,10 @@ export default function AddressList({ initialAddresses }: AddressListProps) {
         toast.error(result.message);
       }
     });
-  };
+  }, []);
 
-  const handleDelete = (addressId: string) => {
+  // Memoize delete handler
+  const handleDelete = useCallback((addressId: string) => {
     if (confirm("Bạn có chắc chắn muốn xóa địa chỉ này?")) {
       startTransition(async () => {
         const result = await deleteAddress(addressId);
@@ -66,7 +68,7 @@ export default function AddressList({ initialAddresses }: AddressListProps) {
         }
       });
     }
-  };
+  }, []);
 
   if (addresses.length === 0) {
     return (
@@ -138,4 +140,8 @@ export default function AddressList({ initialAddresses }: AddressListProps) {
       )}
     </RadioGroup>
   );
-}
+});
+
+AddressList.displayName = 'AddressList';
+
+export default AddressList;

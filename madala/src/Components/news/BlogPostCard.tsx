@@ -1,34 +1,43 @@
 import Link from 'next/link';
 import { Badge } from '@/Components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/Components/ui/card';
-import { BlogService, BlogPost, formatDate } from '@/services/blogService';
+import { BlogService, formatDate } from '@/services/blogService';
+import { BlogPost } from '@/types/blog';
 import { Button } from "@/Components/ui/button"
 import Image from 'next/image';
+import { memo, useMemo } from 'react';
 
 interface BlogPostCardProps {
   post: BlogPost;
   viewMode: 'grid' | 'list';
 }
 
-export const BlogPostCard = ({ post, viewMode }: BlogPostCardProps) => {
- const isListView = viewMode === 'list';
+const BlogPostCard = memo(function BlogPostCard({ post, viewMode }: BlogPostCardProps) {
+  // Memoize layout calculation
+  const isListView = useMemo(() => viewMode === 'list', [viewMode]);
+
+  // Memoize formatted date
+  const formattedDate = useMemo(() => {
+    const dateStr = typeof post.publishedAt === 'string' ? post.publishedAt : post.publishedAt.$date;
+    return formatDate(dateStr);
+  }, [post.publishedAt]);
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group flex flex-col h-full">
       <div className={isListView ? 'flex flex-row' : 'flex flex-col'}>
         {/* Phần ảnh */}
         <div className={isListView ? 'w-1/3 flex-shrink-0' : ''}>
-            <Link 
-              href={`/news/${post.slug}`} 
-              className="block overflow-hidden relative h-48"
-            >
-                <Image
-                    src={post.featuredImage}
-                    alt={post.title}
-                    fill 
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-            </Link>
+          <Link
+            href={`/news/${post.slug}`}
+            className="block overflow-hidden relative h-48"
+          >
+            <Image
+              src={post.featuredImage}
+              alt={post.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          </Link>
         </div>
 
         {/* Phần nội dung */}
@@ -53,7 +62,7 @@ export const BlogPostCard = ({ post, viewMode }: BlogPostCardProps) => {
               {post.excerpt}
             </p>
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-              <span>{formatDate(post.publishedAt)}</span>
+              <span>{formattedDate}</span>
               <div className="flex items-center space-x-4">
                 <span>{post.viewCount} xem</span>
                 <span>{post.commentsCount} bình luận</span>
@@ -63,19 +72,21 @@ export const BlogPostCard = ({ post, viewMode }: BlogPostCardProps) => {
 
           {/* Các nút hành động */}
           <div className="flex items-center justify-end space-x-2 text-xs mt-auto pt-2 border-t">
-              <Button variant="link" size="sm" asChild className="text-primary p-0 h-auto">
-                <Link href={`/news/${post.slug}`}>
-                  Đọc thêm
-                </Link>
-              </Button>
-              <Button variant="link" size="sm" asChild className="text-muted-foreground p-0 h-auto">
-                <Link href={`/news/${post.slug}#comments`}>
-                  Bình luận
-                </Link>
-              </Button>
+            <Button variant="link" size="sm" asChild className="text-primary p-0 h-auto">
+              <Link href={`/news/${post.slug}`}>
+                Đọc thêm
+              </Link>
+            </Button>
+            <Button variant="link" size="sm" asChild className="text-muted-foreground p-0 h-auto">
+              <Link href={`/news/${post.slug}#comments`}>
+                Bình luận
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
     </Card>
   );
-};
+});
+
+export { BlogPostCard };

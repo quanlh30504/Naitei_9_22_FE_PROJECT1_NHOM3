@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useCallback, useMemo, memo } from "react";
 import { useRouter } from "next/navigation";
 import { IProduct } from "@/models/Product";
 import { FaHeart, FaShoppingCart, FaBalanceScale } from "react-icons/fa";
@@ -11,24 +11,31 @@ interface ProductListItemProps {
   product: IProduct;
   onAddToCart?: (product: IProduct) => void;
   onToggleFavorite?: (product: IProduct) => void;
+  onAddToCompare?: (product: IProduct) => void;
 }
 
-const ProductListItem: React.FC<ProductListItemProps> = ({
+const ProductListItem = memo(function ProductListItem({
   product,
   onAddToCompare,
   onAddToCart,
   onToggleFavorite,
-}) => {
+}: ProductListItemProps) {
   const router = useRouter();
   const { isInCompare, addToCompare, removeFromCompare } = useCompare();
-  const hasDiscount = product.salePrice < product.price;
-  const discountPercent = hasDiscount
-    ? Math.round(((product.price - product.salePrice) / product.price) * 100)
-    : 0;
+
+  // Memoize discount calculations
+  const { hasDiscount, discountPercent } = useMemo(() => {
+    const hasDisc = product.salePrice < product.price;
+    const discPercent = hasDisc
+      ? Math.round(((product.price - product.salePrice) / product.price) * 100)
+      : 0;
+    return { hasDiscount: hasDisc, discountPercent: discPercent };
+  }, [product.price, product.salePrice]);
 
   const isProductInCompare = isInCompare(String(product._id));
 
-  const handleCompareClick = (e: React.MouseEvent) => {
+  // Memoize compare click handler
+  const handleCompareClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     const productId = String(product._id) || product.productId || product.id;
 
@@ -39,20 +46,32 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
       // Nếu chưa có, thêm vào danh sách so sánh
       addToCompare(product);
     }
-  };
+  }, [isProductInCompare, product, removeFromCompare, addToCompare]);
 
-  const handleProductClick = () => {
+  // Memoize product click handler
+  const handleProductClick = useCallback(() => {
     // Navigate to product detail page using slug
     if (product.slug) {
       router.push(`/products/${product.slug}`);
     }
-  };
+  }, [product.slug, router]);
+
+  // Memoize cart handler
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAddToCart?.(product);
+  }, [onAddToCart, product]);
+
+  // Memoize favorite handler
+  const handleToggleFavorite = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleFavorite?.(product);
+  }, [onToggleFavorite, product]);
 
   return (
     <div
-      className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden p-4 mb-4 ${
-        isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
-      }`}
+      className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden p-4 mb-4 ${isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
+        }`}
       onClick={handleProductClick}
     >
       <div className="flex flex-col md:flex-row gap-4">
@@ -80,11 +99,10 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
           {/* Button So sánh ở góc trên bên phải */}
           <button
             onClick={handleCompareClick}
-            className={`absolute top-2 right-2 p-1 rounded-full transition-all duration-300 ${
-              isProductInCompare
+            className={`absolute top-2 right-2 p-1 rounded-full transition-all duration-300 ${isProductInCompare
                 ? "bg-[#8ba63a] text-white hover:bg-red-500"
                 : "bg-white bg-opacity-90 text-gray-600 hover:bg-[#8ba63a] hover:text-white"
-            }`}
+              }`}
             title={
               isProductInCompare
                 ? "Bỏ khỏi danh sách so sánh"
@@ -97,7 +115,6 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
 
         {/* Product Info */}
         <div className="flex-1 flex flex-col">
-          {/* Product Details */}
           <div className="flex-1">
             {/* Brand */}
             <p className="text-sm text-gray-500 uppercase tracking-wide mb-1">
@@ -145,10 +162,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
           {/* Action Buttons - Now at bottom */}
           <div className="flex gap-2 mt-auto">
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddToCart?.(product);
-              }}
+              onClick={handleAddToCart}
               className="flex-1 bg-[#8ba63a] hover:bg-[#7a942c] text-white py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1"
             >
               <FaShoppingCart className="text-xs" />
@@ -156,10 +170,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
             </button>
 
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorite?.(product);
-              }}
+              onClick={handleToggleFavorite}
               className="p-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors flex items-center justify-center"
             >
               <FaHeart className="text-gray-400 hover:text-red-500 transition-colors" />
@@ -169,6 +180,6 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default ProductListItem;

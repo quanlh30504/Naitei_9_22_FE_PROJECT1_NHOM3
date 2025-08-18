@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback, memo } from "react";
 import { useFormState } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
@@ -12,27 +12,32 @@ import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import { FormLabel } from "@/Components/FormLabel";
 
-export default function RegisterPage() {
+function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [state, dispatch] = useFormState(registerUser, undefined);
 
+  // Memoize navigation handler
+  const handleSuccessNavigation = useCallback((callbackUrl: string | null) => {
+    if (callbackUrl) {
+      router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+    } else {
+      router.push("/login");
+    }
+  }, [router]);
+
   useEffect(() => {
     if (state?.success) {
       toast.success(state.message);
       const callbackUrl = searchParams.get("callbackUrl");
-      if (callbackUrl) {
-        router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
-      } else {
-        router.push("/login");
-      }
+      handleSuccessNavigation(callbackUrl);
     }
 
     if (state && !state.success) {
       toast.error(state.message);
     }
-  }, [state, router, searchParams]);
+  }, [state, searchParams, handleSuccessNavigation]);
 
   return (
     <main className="bg-white text-gray-800 min-h-screen">
@@ -170,3 +175,5 @@ export default function RegisterPage() {
     </main>
   );
 }
+
+export default memo(RegisterPage);

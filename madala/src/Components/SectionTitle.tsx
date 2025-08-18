@@ -1,8 +1,10 @@
+import { memo } from "react";
+
 interface SectionTitleProps {
     title: string;
 }
 
-export default function SectionTitle({ title }: SectionTitleProps) {
+function SectionTitle({ title }: SectionTitleProps) {
     return (
         <>
             <h2 className="text-lg font-semibold mb-2 text-gray-800 text-center">
@@ -20,3 +22,5 @@ export default function SectionTitle({ title }: SectionTitleProps) {
         </>
     );
 }
+
+export default memo(SectionTitle);

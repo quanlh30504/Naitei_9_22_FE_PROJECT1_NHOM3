@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo, useMemo } from "react";
 import { AdminLayout } from "@/Components/admin/AdminLayout";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
@@ -15,7 +15,7 @@ import { BlogPost, BlogStats } from "@/types/blog";
 import { BlogService } from "@/services/blogService";
 import BlogStatsCards from "@/Components/admin/blog/BlogStatsCards";
 
-export default function BlogManagement() {
+function BlogManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [stats, setStats] = useState<BlogStats>({
@@ -27,8 +27,8 @@ export default function BlogManagement() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-
-  const fetchBlogPosts = async () => {
+  // Memoize fetch blog posts function
+  const fetchBlogPosts = useCallback(async () => {
     try {
       setLoading(true);
       const result = await BlogService.getBlogPosts(1, 100, true); // limit=100, includeUnpublished=true
@@ -50,9 +50,10 @@ export default function BlogManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleDelete = async (slug: string, title: string) => {
+  // Memoize delete handler
+  const handleDelete = useCallback(async (slug: string, title: string) => {
     if (!confirm(`Bạn có chắc chắn muốn xóa bài viết "${title}"?`)) return;
     try {
       setDeleting(slug);
@@ -64,9 +65,10 @@ export default function BlogManagement() {
     } finally {
       setDeleting(null);
     }
-  };
+  }, [fetchBlogPosts]);
 
-  const togglePublishStatus = async (slug: string, currentStatus: boolean) => {
+  // Memoize toggle publish handler
+  const togglePublishStatus = useCallback(async (slug: string, currentStatus: boolean) => {
     try {
       await BlogService.updateBlogPost(slug, {
         isPublished: !currentStatus
@@ -76,17 +78,25 @@ export default function BlogManagement() {
     } catch (error) {
       toast.error('Lỗi khi cập nhật trạng thái');
     }
-  };
+  }, [fetchBlogPosts]);
+
+  // Memoize search handler
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  }, []);
+
+  // Memoize filtered posts
+  const filteredPosts = useMemo(() => {
+    return blogPosts.filter(post =>
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [blogPosts, searchTerm]);
 
   useEffect(() => {
     fetchBlogPosts();
   }, []);
-
-  const filteredPosts = blogPosts.filter(post =>
-    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const getStatusBadge = (isPublished: boolean) => (
     <Badge variant={isPublished ? "default" : "secondary"}>
@@ -148,7 +158,7 @@ export default function BlogManagement() {
                 <Input
                   placeholder="Tìm kiếm bài viết..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearchChange}
                   className="pl-8"
                 />
               </div>
@@ -234,3 +244,5 @@ export default function BlogManagement() {
     </AdminLayout>
   );
 }
+
+export default memo(BlogManagement);
