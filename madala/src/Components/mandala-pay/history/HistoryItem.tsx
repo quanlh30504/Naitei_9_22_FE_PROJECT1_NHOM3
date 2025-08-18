@@ -80,6 +80,15 @@ export default function HistoryItem({ req }: { req: ITopUpRequest }) {
   // LẤY THÔNG TIN TỪ OBJECT MAP
   const details = transactionDetailsMap[req.payment.method] || transactionDetailsMap.default;
 
+  let href = "";
+  if (isPendingAndActive) {
+      // Nếu đang chờ -> link đến trang quét lại QR
+      href = `/mandala-pay/history/${req._id}`;
+  } else if (req.status === "COMPLETED" && req.transactionId) {
+      // Nếu đã thành công và có transactionId -> link đến chi tiết giao dịch
+      href = `/mandala-pay/transactions/${req.transactionId}`;
+  }
+  
   const cardContent = (
     <Card
       className={cn(
@@ -127,9 +136,9 @@ export default function HistoryItem({ req }: { req: ITopUpRequest }) {
     </Card>
   );
 
-  if (isPendingAndActive) {
+  if (href) {
     return (
-      <Link href={`/mandala-pay/history/${req._id}`} className="block">
+      <Link href={href} className="block">
         {cardContent}
       </Link>
     );

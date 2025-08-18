@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import mongoose from "mongoose";
 import crypto from "crypto";
+import { createAndPublishNotification } from "@/lib/ably";
 
 import connectToDB from "@/lib/db";
 import TopUpRequest from "@/models/TopUpRequest";
@@ -9,16 +10,17 @@ import Wallet from "@/models/Wallet";
 import Transaction from "@/models/Transaction";
 import PromoCode from "@/models/PromoCode";
 import PromoCodeUsage from "@/models/PromoCodeUsage";
-import { extractRequestCode } from "@/lib/utils";
+import { extractRequestCode, formatCurrency } from "@/lib/utils";
+import { NotificationEntity } from "@/models/Notification";
 
-// Vô hiệu hóa body parser mặc định của Next.js để đảm bảo tính toàn vẹn của body
+// disable body parser mặc định của Next.js -> đảm bảo tính toàn vẹn của body
 export const config = {
   api: {
     bodyParser: false,
   },
 };
 
-// Hàm tiện ích để đọc request body dưới dạng buffer thô
+// request body dưới dạng buffer thô
 async function buffer(readable: any) {
   const chunks = [];
   for await (const chunk of readable) {
@@ -29,7 +31,6 @@ async function buffer(readable: any) {
 
 /**
  * Hàm tiện ích để sắp xếp các key của một object theo alphabet (đệ quy).
- * Bắt buộc phải có để chữ ký khớp với Casso.
  */
 function sortObjectKeys(data: any): any {
   if (typeof data !== "object" || data === null) {
@@ -140,6 +141,7 @@ export async function POST(req: Request) {
   const requestCode = extractRequestCode(rawDescription);
   const amountReceived = transactionData.amount;
   const bankTransactionId = transactionData.tid || transactionData.reference;
+  const transactionDateTime = transactionData.transactionDateTime;
 
   if (!requestCode) {
     return NextResponse.json({ message: "OK" }, { status: 200 });
@@ -163,11 +165,38 @@ export async function POST(req: Request) {
       if (!topUpRequest) {
         return;
       }
+
+      const user = topUpRequest.userId as any;
       if (topUpRequest.amount.base !== amountReceived) {
-        console.warn(
-          `- Amount mismatch for ${requestCode}. Expected: ${topUpRequest.amount.base}, Received: ${amountReceived}. Skipping.`
-        );
-        return;
+        console.warn(`- Amount mismatch for ${requestCode}.`);
+        topUpRequest.status = "FAILED"; // Cập nhật trạng thái thất bại
+        if (topUpRequest.payment)
+          topUpRequest.payment.bankTransactionId = bankTransactionId;
+        await topUpRequest.save({ session });
+
+        // 1. Thông báo cho người dùng
+        await createAndPublishNotification({
+          recipient: user._id.toString(),
+          channel: "user",
+          event: "topup.failed",
+          // Actor là hệ thống vì đây là lỗi do hệ thống phát hiện
+          actor: { id: user._id.toString(), model: NotificationEntity.User }, // Hoặc tạo một actor "System" riêng
+          // Entity vẫn là yêu cầu nạp tiền này
+          entity: {
+            id: topUpRequest._id.toString(),
+            model: NotificationEntity.Transaction,
+          },
+          data: {
+            amountSent: amountReceived,
+            amountExpected: topUpRequest.amount.base,
+            requestCode: requestCode,
+          },
+          message: `Nạp tiền thất bại: Số tiền bạn chuyển (${formatCurrency(
+            amountReceived
+          )}) không khớp với yêu cầu.`,
+          link: `/mandala-pay/history/${topUpRequest._id}`, // Dẫn đến trang chi tiết để họ xem lại
+        });
+        return; // Dừng xử lý cho giao dịch này
       }
 
       // 1. CỘNG TIỀN VÀO VÍ
@@ -181,7 +210,7 @@ export async function POST(req: Request) {
         throw new Error(`Wallet not found for userId: ${topUpRequest.userId}`);
 
       // 2. TẠO LỊCH SỬ GIAO DỊCH
-      await Transaction.create(
+      const newTransactions = await Transaction.create(
         [
           {
             walletId: updatedWallet._id,
@@ -192,16 +221,20 @@ export async function POST(req: Request) {
             status: "COMPLETED",
             description: `Nạp tiền qua VietQR. Mã: ${requestCode}`,
             metadata: { topUpRequestId: topUpRequest._id, bankTransactionId },
+            transactionTimestamp: new Date(transactionDateTime),
           },
         ],
         { session }
       );
+
+      const newTransaction = newTransactions[0];
 
       // 3. CẬP NHẬT TRẠNG THÁI YÊU CẦU NẠP TIỀN
       topUpRequest.status = "COMPLETED";
       if (topUpRequest.payment) {
         topUpRequest.payment.bankTransactionId = bankTransactionId;
       }
+      topUpRequest.transactionId = newTransaction._id;
       await topUpRequest.save({ session });
 
       // 4. GHI NHẬN VIỆC DÙNG MÃ KHUYẾN MÃI (NẾU CÓ)
@@ -224,11 +257,33 @@ export async function POST(req: Request) {
         );
       }
       processingResult = "Success";
-    });
+      if (processingResult === "Success") {
+        const user = topUpRequest.userId as any;
 
+        await createAndPublishNotification({
+          recipient: user._id.toString(),
+          channel: "user",
+          event: "topup.success",
+          actor: { id: user._id.toString(), model: NotificationEntity.User },
+          entity: {
+            id: newTransaction._id.toString(),
+            model: NotificationEntity.Transaction,
+          },
+          data: {
+            amount: topUpRequest.amount.total,
+            newBalance: updatedWallet.balance,
+            bankTimestamp: transactionDateTime,
+          },
+          message: `Bạn đã nạp thành công ${formatCurrency(
+            topUpRequest.amount.total
+          )}.`,
+          link: `/mandala-pay/transactions/${newTransaction._id}`,
+        });
+      }
+    });
   } catch (error) {
     console.error(`- Error processing transaction for ${requestCode}:`, error);
-    // Không cần trả về lỗi 500 ở đây vì lỗi của 1 giao dịch không nên làm cả webhook thất bại
+    // Không cần trả về lỗi 500 vì lỗi của 1 giao dịch không nên làm cả webhook thất bại
   } finally {
     await session.endSession();
   }
