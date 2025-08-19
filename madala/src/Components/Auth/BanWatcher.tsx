@@ -13,7 +13,7 @@ interface SessionUser {
 }
 
 export default function BanWatcher() {
-    const { data: session, status } = useSession();
+    const { data: session, status, update } = useSession();
     const router = useRouter();
     const pathname = usePathname();
 

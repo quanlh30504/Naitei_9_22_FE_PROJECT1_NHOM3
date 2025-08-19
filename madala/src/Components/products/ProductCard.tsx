@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Star, ShoppingCart, Heart } from "lucide-react";
+import { ShoppingCart, Heart } from "lucide-react";
+import StarRating from "@/Components/products/StarRating";
 import { Button } from "@/Components/ui/button";
 import { Badge } from "@/Components/ui/badge";
 import { Card, CardContent } from "@/Components/ui/card";
@@ -117,20 +118,14 @@ const ProductCard = ({
         </Link>
 
         {/* Rating */}
-        <div className="flex items-center gap-1 mb-3">
-          {[...Array(5)].map((_, i) => (
-            <Star
-              key={i}
-              className={`h-3 w-3 ${
-                i < Math.floor(rating.average)
-                  ? "fill-yellow-400 text-yellow-400"
-                  : "text-gray-300 dark:text-gray-600"
-              }`}
-            />
-          ))}
-          <span className="text-xs text-muted-foreground ml-1">
-            ({rating.count || 0})
-          </span>
+        <div className="mb-3">
+          <StarRating
+            rating={rating.average || 0}
+            size="sm"
+            showValue={true}
+            reviewCount={rating.count || 0}
+            className=""
+          />
         </div>
 
         {/* Price */}

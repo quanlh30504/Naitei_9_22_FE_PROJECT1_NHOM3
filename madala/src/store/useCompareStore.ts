@@ -18,7 +18,7 @@ const compareStateCreator: StateCreator<CompareState> = (set, get) => ({
   // --- ACTIONS ---
   addToCompare: (product) => {
     set((state) => {
-      if (get().isInCompare(product._id)) {
+      if (get().isInCompare(product.id)) {
         return {}; // Không làm gì nếu sản phẩm đã tồn tại
       }
       

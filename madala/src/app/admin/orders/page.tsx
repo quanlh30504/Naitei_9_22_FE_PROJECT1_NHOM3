@@ -7,7 +7,7 @@ import { IOrder, OrderStatus } from "@/models/Order";
 
 import OrderTabs from "@/Components/order/OrderTabs";
 import AdminOrderTable from "@/Components/admin/AdminOrderTable";
-import PaginationControls from "@/Components/admin/PaginationControls";
+import { PaginationWrapper } from "@/Components/PaginationWrapper";
 import { Input } from "@/Components/ui/input";
 import { Search, Loader2 } from "lucide-react";
 import { AdminLayout } from "@/Components/admin/AdminLayout";
@@ -102,7 +102,15 @@ function AdminOrdersPageContent() {
         ) : (
           <>
             <AdminOrderTable orders={orders} setOrders={setOrders} />
-            <PaginationControls currentPage={page} totalPages={totalPages} />
+            <PaginationWrapper
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={(newPage) => {
+                const params = new URLSearchParams(searchParams);
+                params.set('page', newPage.toString());
+                router.push(`${pathname}?${params.toString()}`);
+              }}
+            />
           </>
         )}
       </div>

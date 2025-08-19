@@ -1,7 +1,7 @@
 "use client";
 import React, { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { buyNowAndRedirect } from "@/lib/actions/cart";
+import { addItemToCart } from "@/lib/actions/cart";
 import toast from "react-hot-toast";
 import { IProduct } from "@/models/Product";
 import { Heart, ShoppingCart, Scale } from "lucide-react";
@@ -51,22 +51,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const [isPending, startTransition] = useTransition();
 
-  const handleBuyNow = (e: React.MouseEvent) => {
+  const handleBuyNow = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    startTransition(async () => {
-      try {
-        const result = await buyNowAndRedirect(String(product._id), 1);
-        if (result?.error) {
-          toast.error(result.error);
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          toast.error(error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.");
-        } else {
-          toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
-        }
+    try {
+      const result = await addItemToCart(String(product._id), 1);
+      if (result?.success) {
+        toast.success('Đã thêm sản phẩm vào giỏ hàng!');
+        router.push('/cart');
+      } else {
+        toast.error(result?.message || "Đã có lỗi xảy ra. Vui lòng thử lại.");
       }
-    });
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.");
+      } else {
+        toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
+      }
+    }
   };
 
   return (

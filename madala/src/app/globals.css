@@ -268,3 +268,45 @@
 .patriotic-text {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
+
+/* Scrollbar utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Pagination overflow fix */
+.pagination-container {
+  max-width: 100%;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.pagination-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pagination-container::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 2px;
+}
+
+.pagination-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Ensure consistent alignment across components */
+.pagination-compact {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
