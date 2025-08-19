@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { cn } from "@/lib/utils";
 import {
     Pagination,
@@ -36,91 +36,95 @@ interface PaginationWrapperProps {
     className?: string;
 }
 
-export const PaginationWrapper: React.FC<PaginationWrapperProps> = ({
+export const PaginationWrapper = React.memo(function PaginationWrapper({
     currentPage,
     totalPages,
     onPageChange,
     isCompact = false,
     className = ""
-}) => {
+}: PaginationWrapperProps) {
     if (totalPages <= 1) return null;
 
-    /**
-     * CẢI TIẾN: Logic được viết lại để dễ hiểu và đáng tin cậy hơn.
-     * 1. Xác định các trang cần hiển thị (trang đầu, cuối, và các trang lân cận trang hiện tại).
-     * 2. Thêm dấu "..." vào giữa các khoảng trống.
-     * 3. Responsive: Giảm số trang hiển thị trên mobile để tránh overflow.
-     */
-    const getVisiblePages = () => {
-        // Responsive delta: ít trang hơn trên mobile
-        const delta = isCompact ? 1 : (typeof window !== 'undefined' && window.innerWidth < 640) ? 1 : 2;
-        const range = [];
-        
-        // Nếu tổng số trang ít, hiển thị tất cả
-        if (totalPages <= 7) {
-            for (let i = 1; i <= totalPages; i++) {
-                range.push(i);
-            }
-            return range;
-        }
-
-        for (
-            let i = Math.max(2, currentPage - delta);
-            i <= Math.min(totalPages - 1, currentPage + delta);
-            i++
-        ) {
-            range.push(i);
-        }
-
-        const pages: (number | string)[] = [];
-        
-        // Luôn thêm trang 1
-        pages.push(1);
-
-        // Thêm dấu "..." bên trái nếu cần
-        if (currentPage - delta > 2) {
-            pages.push('...');
-        }
-
-        // Thêm các trang ở giữa (loại bỏ trùng lặp)
-        range.forEach(page => {
-            if (!pages.includes(page)) {
-                pages.push(page);
-            }
-        });
-
-        // Thêm dấu "..." bên phải nếu cần
-        if (currentPage + delta < totalPages - 1) {
-            pages.push('...');
-        }
-        
-        // Luôn thêm trang cuối (nếu nó chưa có)
-        if (!pages.includes(totalPages)) {
-            pages.push(totalPages);
-        }
-
-        return pages;
-    };
-
-    const handlePageClick = (page: number | string) => {
-        if (typeof page === 'number') {
-            onPageChange(page);
-        }
-    };
-
-    const handlePrevious = () => {
+    const handlePrevious = useCallback(() => {
         if (currentPage > 1) {
             onPageChange(currentPage - 1);
         }
-    };
+    }, [currentPage, onPageChange]);
 
-    const handleNext = () => {
+    const handleNext = useCallback(() => {
         if (currentPage < totalPages) {
             onPageChange(currentPage + 1);
         }
-    };
+    }, [currentPage, totalPages, onPageChange]);
 
-    const visiblePages = getVisiblePages();
+    const pageNumbers = useMemo(() => {
+        /**
+         * CẢI TIẾN: Logic được viết lại để dễ hiểu và đáng tin cậy hơn.
+         * 1. Xác định các trang cần hiển thị (trang đầu, cuối, và các trang lân cận trang hiện tại).
+         * 2. Thêm dấu "..." vào giữa các khoảng trống.
+         * 3. Responsive: Giảm số trang hiển thị trên mobile để tránh overflow.
+         */
+        const getVisiblePages = () => {
+            // Responsive delta: ít trang hơn trên mobile
+            const delta = isCompact ? 1 : (typeof window !== 'undefined' && window.innerWidth < 640) ? 1 : 2;
+            const range = [];
+
+            // Nếu tổng số trang ít, hiển thị tất cả
+            if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) {
+                    range.push(i);
+                }
+                return range;
+            }
+
+            for (
+                let i = Math.max(2, currentPage - delta);
+                i <= Math.min(totalPages - 1, currentPage + delta);
+                i++
+            ) {
+                range.push(i);
+            }
+
+            const pages: (number | string)[] = [];
+
+            // Luôn thêm trang 1
+            pages.push(1);
+
+            // Thêm dấu "..." bên trái nếu cần
+            if (currentPage - delta > 2) {
+                pages.push('...');
+            }
+
+            // Thêm các trang ở giữa (loại bỏ trùng lặp)
+            range.forEach(page => {
+                if (!pages.includes(page)) {
+                    pages.push(page);
+                }
+            });
+
+            // Thêm dấu "..." bên phải nếu cần
+            if (currentPage + delta < totalPages - 1) {
+                pages.push('...');
+            }
+
+            // Luôn thêm trang cuối (nếu nó chưa có)
+            if (!pages.includes(totalPages)) {
+                pages.push(totalPages);
+            }
+
+            return pages;
+        };
+
+        return getVisiblePages();
+    }, [currentPage, totalPages, isCompact]);
+
+    const handlePageClick = useCallback((page: number | string) => {
+        if (typeof page === 'number') {
+            onPageChange(page);
+        }
+    }, [onPageChange]);
+
+    const visiblePages = pageNumbers;
 
     return (
         <div className={`${isCompact ? "mt-0" : "mt-8"} ${className} flex justify-center`}>
@@ -195,4 +199,4 @@ export const PaginationWrapper: React.FC<PaginationWrapperProps> = ({
             </div>
         </div>
     );
-};
+});

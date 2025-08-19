@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Textarea } from '@/Components/ui/textarea';
@@ -16,10 +16,22 @@ interface CommentFormProps {
   formData: CommentFormData;
   onFormChange: (field: keyof CommentFormData, value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
-  isSubmitting?: boolean; 
+  isSubmitting?: boolean;
 }
 
 export const CommentForm = ({ formData, onFormChange, onSubmit, isSubmitting = false }: CommentFormProps) => {
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onFormChange('name', e.target.value);
+  }, [onFormChange]);
+
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onFormChange('email', e.target.value);
+  }, [onFormChange]);
+
+  const handleCommentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onFormChange('comment', e.target.value);
+  }, [onFormChange]);
+
   return (
     <Card>
       <CardHeader>
@@ -34,7 +46,7 @@ export const CommentForm = ({ formData, onFormChange, onSubmit, isSubmitting = f
                 id="name"
                 type="text"
                 value={formData.name}
-                onChange={(e) => onFormChange('name', e.target.value)}
+                onChange={handleNameChange}
                 required
                 placeholder="Nguyễn Văn A"
               />
@@ -45,7 +57,7 @@ export const CommentForm = ({ formData, onFormChange, onSubmit, isSubmitting = f
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => onFormChange('email', e.target.value)}
+                onChange={handleEmailChange}
                 required
                 placeholder="email@example.com"
               />
@@ -56,7 +68,7 @@ export const CommentForm = ({ formData, onFormChange, onSubmit, isSubmitting = f
             <Textarea
               id="comment"
               value={formData.comment}
-              onChange={(e) => onFormChange('comment', e.target.value)}
+              onChange={handleCommentChange}
               required
               rows={5}
               placeholder="Để lại bình luận của bạn tại đây..."
@@ -70,3 +82,5 @@ export const CommentForm = ({ formData, onFormChange, onSubmit, isSubmitting = f
     </Card>
   );
 };
+
+export default React.memo(CommentForm);

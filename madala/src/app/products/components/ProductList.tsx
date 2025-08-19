@@ -9,9 +9,9 @@ interface ProductListProps {
   onToggleFavorite?: (product: IProduct) => void;
 }
 
-const ProductList: React.FC<ProductListProps> = ({ 
-  products, 
-  onAddToCart, 
+const ProductList: React.FC<ProductListProps> = ({
+  products,
+  onAddToCart,
   onToggleFavorite
 }) => {
   return (
@@ -28,4 +28,4 @@ const ProductList: React.FC<ProductListProps> = ({
   );
 };
 
-export default ProductList;
+export default React.memo(ProductList);

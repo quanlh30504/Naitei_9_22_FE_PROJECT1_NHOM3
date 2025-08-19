@@ -6,7 +6,7 @@ interface ProgressBarProps {
   color: string;
 }
 
-export function ProgressBar({ label, percentage, color }: ProgressBarProps) {
+export const ProgressBar: React.FC<ProgressBarProps> = ({ label, percentage, color }) => {
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -14,11 +14,13 @@ export function ProgressBar({ label, percentage, color }: ProgressBarProps) {
         <span className="text-sm text-gray-500 dark:text-gray-400">{percentage}%</span>
       </div>
       <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2">
-        <div 
-          className={`${color} h-2 rounded-full`} 
+        <div
+          className={`${color} h-2 rounded-full`}
           style={{ width: `${percentage}%` }}
         />
       </div>
     </div>
   );
-}
+};
+
+export default React.memo(ProgressBar);

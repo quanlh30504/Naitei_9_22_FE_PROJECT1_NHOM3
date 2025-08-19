@@ -15,7 +15,7 @@ interface StatsCardProps {
   };
 }
 
-export function StatsCard({ title, value, change, icon: Icon, iconColor }: StatsCardProps) {
+export const StatsCard: React.FC<StatsCardProps> = ({ title, value, change, icon: Icon, iconColor }) => {
   return (
     <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between">
@@ -35,4 +35,6 @@ export function StatsCard({ title, value, change, icon: Icon, iconColor }: Stats
       </div>
     </div>
   );
-}
+};
+
+export default React.memo(StatsCard);

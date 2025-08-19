@@ -1,5 +1,5 @@
 "use client";
-import React, { useTransition } from "react";
+import React, { useTransition, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { addItemToCart } from "@/lib/actions/cart";
 import toast from "react-hot-toast";
@@ -19,17 +19,21 @@ interface ProductCardProps {
   onToggleFavorite?: (product: IProduct) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({
+const ProductCard = React.memo(function ProductCard({
   product,
   onAddToCart,
   onToggleFavorite,
-}) => {
+}: ProductCardProps) {
   const router = useRouter();
   const { isInCompare, addToCompare, removeFromCompare } = useCompareStore();
-  const { hasDiscount, discountPercent } = getProductDiscount(product);
-  const isProductInCompare = isInCompare(String(product._id));
+  const { hasDiscount, discountPercent } = useMemo(() =>
+    getProductDiscount(product), [product]
+  );
+  const isProductInCompare = useMemo(() =>
+    isInCompare(String(product._id)), [isInCompare, product._id]
+  );
 
-  const handleCompareClick = (e: React.MouseEvent) => {
+  const handleCompareClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     const productId = String(product._id) || product.productId || product.id;
 
@@ -40,14 +44,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
       // Nếu chưa có, thêm vào danh sách so sánh
       addToCompare(product);
     }
-  };
+  }, [isProductInCompare, removeFromCompare, addToCompare, product]);
 
-  const handleProductClick = () => {
+  const handleProductClick = useCallback(() => {
     // Chuyển hướng sang page details
     if (product.slug) {
       router.push(`/products/${product.slug}`);
     }
-  };
+  }, [product.slug, router]);
 
   const [isPending, startTransition] = useTransition();
 
@@ -72,9 +76,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.035] hover:border-2 hover:border-green-700 dark:hover:border-green-600 border border-transparent transition-all duration-300 overflow-hidden flex flex-col h-full min-h-[400px] cursor-pointer ${
-        isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
-      }`}
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.035] hover:border-2 hover:border-green-700 dark:hover:border-green-600 border border-transparent transition-all duration-300 overflow-hidden flex flex-col h-full min-h-[400px] cursor-pointer ${isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
+        }`}
       onClick={handleProductClick}
     >
       <div
@@ -103,11 +106,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
           size="icon"
           variant={isProductInCompare ? "default" : "secondary"}
           onClick={handleCompareClick}
-          className={`absolute top-2 right-2 w-10 h-10 rounded-full transition-all duration-300 ${
-            isProductInCompare
+          className={`absolute top-2 right-2 w-10 h-10 rounded-full transition-all duration-300 ${isProductInCompare
               ? "bg-[#8ba63a] text-white hover:bg-red-500"
               : "bg-white dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-90 text-gray-600 dark:text-gray-300 hover:bg-[#8ba63a] hover:text-white"
-          }`}
+            }`}
           title={
             isProductInCompare
               ? "Bỏ khỏi danh sách so sánh"
@@ -173,6 +175,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default ProductCard;

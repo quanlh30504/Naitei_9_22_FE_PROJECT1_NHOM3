@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { addItemToCart } from '@/lib/actions/cart';
 import { useCartStore } from '@/store/useCartStore';
 import { toast } from 'react-hot-toast';
@@ -19,20 +19,38 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
   const { compareProducts, removeFromCompare, clearCompare } = useCompareStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Chức năng thêm vào giỏ hàng
   const { syncCart } = useCartStore();
-  const handleAddToCart = async (product: IProduct) => {
+
+  const hasProducts = useMemo(() => compareProducts.length > 0, [compareProducts.length]);
+  const canCompare = useMemo(() => compareProducts.length >= 2, [compareProducts.length]);
+
+  const handleAddToCart = useCallback(async (product: IProduct) => {
     const res = await addItemToCart(String(product._id), 1);
     if (res.success) {
       toast.success('Đã thêm sản phẩm vào giỏ hàng!');
-      // Nếu server trả về cart mới, đồng bộ lại cart client (nếu cần)
       if (res.data && res.data.cart) {
         syncCart(res.data.cart);
       }
     } else {
       toast.error(res.message || 'Thêm vào giỏ hàng thất bại!');
     }
-  };
+  }, [syncCart]);
+
+  const handleClearCompare = useCallback(() => {
+    clearCompare();
+  }, [clearCompare]);
+
+  const handleRemoveFromCompare = useCallback((productId: string) => {
+    removeFromCompare(productId);
+  }, [removeFromCompare]);
+
+  const handleOpenModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
 
   return (
     <>
@@ -41,9 +59,9 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
           <h4 className="font-semibold text-gray-800 dark:text-gray-200 text-sm uppercase tracking-wide">
             SO SÁNH SẢN PHẨM ({compareProducts.length}/3)
           </h4>
-          {compareProducts.length > 0 && (
+          {hasProducts && (
             <button
-              onClick={clearCompare}
+              onClick={handleClearCompare}
               className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
             >
               Xóa tất cả
@@ -51,7 +69,7 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
           )}
         </div>
 
-        {compareProducts.length === 0 ? (
+        {!hasProducts ? (
           <div className="text-center py-8">
             <FaBalanceScale className="mx-auto text-gray-300 dark:text-gray-600 text-2xl mb-2" />
             <p className="text-gray-500 dark:text-gray-400 text-sm">
@@ -90,7 +108,7 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
                   </div>
 
                   <button
-                    onClick={() => removeFromCompare(String(product._id))}
+                    onClick={() => handleRemoveFromCompare(String(product._id))}
                     className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                   >
                     <FaTimes className="text-xs" />
@@ -101,14 +119,14 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
 
             <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-600">
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={handleOpenModal}
                 className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white py-2 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <FaBalanceScale className="text-xs" />
                 So sánh chi tiết
               </button>
 
-              {compareProducts.length >= 2 && (
+              {canCompare && (
                 <p className="text-xs text-center text-gray-500 dark:text-gray-400">
                   Tối đa 3 sản phẩm
                 </p>
@@ -121,14 +139,14 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
       {/* Compare Modal */}
       <CompareModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         products={compareProducts}
         categories={categories}
-        onRemoveProduct={removeFromCompare}
+        onRemoveProduct={handleRemoveFromCompare}
         onAddToCart={handleAddToCart}
       />
     </>
   );
 };
 
-export default CompareBox;
+export default React.memo(CompareBox);

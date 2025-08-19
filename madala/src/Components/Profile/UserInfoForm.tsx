@@ -1,11 +1,12 @@
 "use client";
 
+import React, { useCallback, useMemo } from "react";
 import { useActionState } from "react";
 import type { IUser } from "@/models/User";
 import { useRouter } from "next/navigation";
 import { User, Calendar as CalendarIcon } from "lucide-react";
 import SubmitButton from "@/Components/Buttons/SubmitButton";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { updateProfile } from "@/lib/actions/user";
 import { useState } from "react";
@@ -37,21 +38,35 @@ interface UserInfoFormProps {
   user: IUser;
 }
 
-export default function UserInfoForm({ user }: UserInfoFormProps) {
+const UserInfoForm: React.FC<UserInfoFormProps> = ({ user }) => {
   const router = useRouter();
   const [state, dispatch] = useActionState(updateProfile, undefined);
 
-  const genderOptions = [
+  const genderOptions = useMemo(() => [
     { value: "male", label: "Nam" },
     { value: "female", label: "Nữ" },
     { value: "other", label: "Khác" },
-  ];
+  ], []);
+
   // --- State cho DatePicker ---
   const [birthDate, setBirthDate] = useState<Date | undefined>(
     user.birthDate ? new Date(user.birthDate) : undefined
   );
   const [selectedCountry, setSelectedCountry] = useState(user.country || "");
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false); 
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const handleBirthDateSelect = useCallback((date: Date | undefined) => {
+    setBirthDate(date);
+    setIsCalendarOpen(false);
+  }, []);
+
+  const handleCountryChange = useCallback((value: string) => {
+    setSelectedCountry(value);
+  }, []);
+
+  const handleCalendarToggle = useCallback(() => {
+    setIsCalendarOpen(prev => !prev);
+  }, []);
 
   useEffect(() => {
     // Đồng bộ state khi prop user thay đổi
@@ -168,7 +183,7 @@ export default function UserInfoForm({ user }: UserInfoFormProps) {
         <Label htmlFor="country">Quốc tịch</Label>
         <Select
           value={selectedCountry}
-          onValueChange={setSelectedCountry}
+          onValueChange={handleCountryChange}
         >
           <SelectTrigger>
             <SelectValue placeholder="Chọn quốc tịch" />
@@ -188,4 +203,6 @@ export default function UserInfoForm({ user }: UserInfoFormProps) {
       </div>
     </form>
   );
-}
+};
+
+export default React.memo(UserInfoForm);

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -21,18 +21,24 @@ interface AdminLayoutProps {
 }
 
 
-export function AdminLayout({ children }: AdminLayoutProps) {
+
+const AdminLayout = React.memo(function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
   const { data: session } = useSession();
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-  const toggleSidebarCollapse = () => setSidebarCollapsed(!sidebarCollapsed);
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen((prev) => !prev);
+  }, []);
 
-  const handleLogout = async () => {
+  const toggleSidebarCollapse = useCallback(() => {
+    setSidebarCollapsed((prev) => !prev);
+  }, []);
+
+  const handleLogout = useCallback(async () => {
     await signOut({ callbackUrl: '/' });
-  };
+  }, []);
 
   return (
     <>
@@ -49,7 +55,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         )}>
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
-            <Link href="/admin" className={cn(sidebarCollapsed ? "lg:hidden" : "")}> 
+            <Link href="/admin" className={cn(sidebarCollapsed ? "lg:hidden" : "")}>
               <h1 className="text-xl font-bold text-gray-800 dark:text-white">
                 {sidebarCollapsed ? "AM" : "Admin Mandala"}
               </h1>
@@ -156,7 +162,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         style={{ paddingLeft: sidebarCollapsed ? '4rem' : '16rem' }}
       >
         {/* Top bar */}
-  <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800 px-4 py-3 lg:px-6 flex-shrink-0">
+        <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800 px-4 py-3 lg:px-6 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Button
@@ -201,6 +207,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </div>
     </>
   );
-}
+});
 
+export { AdminLayout };
 export default AdminLayout;

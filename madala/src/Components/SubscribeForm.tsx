@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import React from "react";
+import { useState, useCallback } from "react";
 import { Send } from "lucide-react";
 import { Input } from "@/Components/ui/input";
 import { Button } from "@/Components/ui/button";
@@ -10,7 +11,7 @@ import SectionTitle from "./SectionTitle";
 import SectionCard from "./SectionCard";
 import toast from "react-hot-toast";
 
-export default function SubscribeForm() {
+const SubscribeForm = React.memo(function SubscribeForm() {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -18,7 +19,7 @@ export default function SubscribeForm() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -32,12 +33,12 @@ export default function SubscribeForm() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
   return (
     <SectionCard>
@@ -70,7 +71,7 @@ export default function SubscribeForm() {
                 className="w-full"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="phone" className="text-sm font-medium">
                 Số điện thoại <span className="text-red-500">*</span>
@@ -86,7 +87,7 @@ export default function SubscribeForm() {
                 className="w-full"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
                 Email <span className="text-red-500">*</span>
@@ -127,4 +128,6 @@ export default function SubscribeForm() {
       </Card>
     </SectionCard>
   );
-}
+});
+
+export default SubscribeForm;

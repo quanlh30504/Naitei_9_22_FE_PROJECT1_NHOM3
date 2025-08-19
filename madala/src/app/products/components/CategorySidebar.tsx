@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import { ICategory } from '@/models/Category';
 import { Button } from "@/Components/ui/button";
@@ -28,28 +28,40 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
 }) => {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
-  const getCategoryId = (category: ICategory): string => {
+  const getCategoryId = useCallback((category: ICategory): string => {
     return category.categoryId || '';
-  };
+  }, []);
 
-  const level1Categories = categories.filter(cat => cat.level === 1).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+  const level1Categories = useMemo(() =>
+    categories.filter(cat => cat.level === 1).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+    , [categories]);
 
-  const getSubcategories = (parentCategoryId: string) => {
+  const getSubcategories = useCallback((parentCategoryId: string) => {
     return categories
       .filter(cat => cat.level === 2 && cat.parentId === parentCategoryId)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-  };
+  }, [categories]);
 
   // Toggle category expansion
-  const toggleCategory = (categoryId: string) => {
-    const newExpanded = new Set(expandedCategories);
-    if (newExpanded.has(categoryId)) {
-      newExpanded.delete(categoryId);
-    } else {
-      newExpanded.add(categoryId);
-    }
-    setExpandedCategories(newExpanded);
-  };
+  const toggleCategory = useCallback((categoryId: string) => {
+    setExpandedCategories(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(categoryId)) {
+        newExpanded.delete(categoryId);
+      } else {
+        newExpanded.add(categoryId);
+      }
+      return newExpanded;
+    });
+  }, []);
+
+  const handleSelectAllProducts = useCallback(() => {
+    onSelectCategory('');
+  }, [onSelectCategory]);
+
+  const handleSelectCategory = useCallback((categoryId: string) => {
+    onSelectCategory(categoryId);
+  }, [onSelectCategory]);
 
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
@@ -63,7 +75,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
         {/* Show All Products Button */}
         <Button
           variant="ghost"
-          onClick={() => onSelectCategory('')}
+          onClick={handleSelectAllProducts}
           className={
             `${ALL_BTN_BASE} ${selectedCategory === '' ? ALL_BTN_SELECTED : ALL_BTN_UNSELECTED}`
           }
@@ -85,7 +97,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
               <div className="flex items-center justify-between group">
                 <Button
                   variant="ghost"
-                  onClick={() => onSelectCategory(categoryId)}
+                  onClick={() => handleSelectCategory(categoryId)}
                   className={
                     `${MAIN_BTN_BASE} ${isSelected ? MAIN_BTN_SELECTED : MAIN_BTN_UNSELECTED}`
                   }
@@ -121,7 +133,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
                       <Button
                         key={subcategoryId}
                         variant="ghost"
-                        onClick={() => onSelectCategory(subcategoryId)}
+                        onClick={() => handleSelectCategory(subcategoryId)}
                         className={
                           `${SUB_BTN_BASE} ${isSubcategorySelected ? SUB_BTN_SELECTED : SUB_BTN_UNSELECTED}`
                         }
@@ -139,4 +151,5 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
     </div>
   );
 };
-export default CategorySidebar;
+
+export default React.memo(CategorySidebar);
