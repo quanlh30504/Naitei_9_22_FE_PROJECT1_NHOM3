@@ -29,6 +29,7 @@ import {
 import { getUserForHeader, UserHeaderData } from "@/lib/actions/user";
 import { useCartStore } from "@/store/useCartStore";
 import { formatCurrency } from "@/lib/utils";
+import { ThemeToggle } from "@/Components/ui/ThemeToggle";
 
 export default function Header({
   initialUserData,
@@ -100,7 +101,7 @@ export default function Header({
   };
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-700">
       {/* Main Header */}
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
@@ -115,7 +116,7 @@ export default function Header({
                   M
                 </span>
               </span>
-              <span className="ml-2 text-3xl text-black font-[cursive] italic font-bold tracking-tight">
+              <span className="ml-2 text-3xl text-black dark:text-white font-[cursive] italic font-bold tracking-tight">
                 andala
               </span>
             </div>
@@ -142,11 +143,14 @@ export default function Header({
 
           {/* Action Icons */}
           <div className="flex items-center gap-4">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="flex flex-col items-center text-gray-700 hover:text-gray-900 hover:bg-gray-50 focus:outline-none transition-colors h-auto p-2"
+                  className="flex flex-col items-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none transition-colors h-auto p-2"
                 >
                   <User className="h-7 w-7" />
                   <span className="text-sm mt-1 font-medium max-w-20 truncate">
@@ -156,13 +160,13 @@ export default function Header({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-48 rounded-xl shadow-lg border border-gray-100 p-2 bg-white"
+                className="w-48 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-2 bg-white dark:bg-gray-800"
               >
                 {currentMenuItems.map((item, index) => (
                   <DropdownMenuItem
                     key={index}
                     asChild={!item.action}
-                    className="rounded-lg px-4 py-2 text-base text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors font-medium"
+                    className="rounded-lg px-4 py-2 text-base text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition-colors font-medium"
                   >
                     {item.action === "logout" ? (
                       <button
@@ -182,10 +186,10 @@ export default function Header({
             </DropdownMenu>
 
             {session?.user && userData && (
-              <div className="flex items-center gap-2 text-gray-700 p-2">
+              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 p-2">
                 <Wallet className="h-7 w-7 text-primary" />
                 <div className="flex flex-col text-left">
-                  <span className="text-xs text-gray-500">Ví Mandala</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Ví Mandala</span>
                   <span className="text-sm font-bold">
                     {formatCurrency(userData.mandalaPayBalance ?? 0)}
                   </span>
@@ -195,7 +199,7 @@ export default function Header({
 
             <Link
               href="/cart"
-              className="flex flex-col items-center text-gray-600 hover:text-primary relative"
+              className="flex flex-col items-center text-gray-600 dark:text-gray-400 hover:text-primary relative"
             >
               <ShoppingCart className="h-6 w-6" />
               <span className="text-xs mt-1">Giỏ hàng</span>
@@ -210,7 +214,7 @@ export default function Header({
       </div>
 
       {/* Navigation Menu */}
-      <nav className="bg-primary text-primary-foreground">
+      <nav className="bg-primary dark:bg-primary text-primary-foreground">
         <div className="container mx-auto px-4">
           <div className="flex items-center">
             <div className="flex items-center">

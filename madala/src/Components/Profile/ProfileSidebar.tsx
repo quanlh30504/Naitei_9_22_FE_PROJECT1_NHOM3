@@ -38,8 +38,8 @@ export default function ProfileSidebar({ user }: ProfileSidebarProps) {
           />
         </div>
         <div>
-          <p className="text-sm text-gray-500">Tài khoản của</p>
-          <p className="font-semibold text-gray-800">{user.name}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Tài khoản của</p>
+          <p className="font-semibold text-gray-800 dark:text-gray-200">{user.name}</p>
         </div>
       </div>
       <nav>
@@ -52,8 +52,8 @@ export default function ProfileSidebar({ user }: ProfileSidebarProps) {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
-                      ? "bg-blue-100 text-blue-600 font-semibold"
-                      : "text-gray-600 hover:bg-gray-100"
+                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
                   <item.icon className="w-5 h-5" />

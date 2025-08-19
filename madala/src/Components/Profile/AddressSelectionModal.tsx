@@ -40,7 +40,7 @@ export default function AddressSelectionModal({
             startLoading(async () => {
                 const response = await getAddresses();
                 if (response.success) {
-                    setAddresses(response.data || []);
+                    setAddresses((response.data || []) as AddressType[]);
                 } else {
                     toast.error("Không thể tải danh sách địa chỉ.");
                 }
@@ -135,6 +135,8 @@ export default function AddressSelectionModal({
         <Dialog open={isOpen} onOpenChange={(open) => { if (!open) { onClose(); setTimeout(() => setView('LIST'), 200); } }}>
             {/* layout chính */}
             <DialogContent className="sm:max-w-3xl">
+                {/* Always render a DialogTitle for accessibility */}
+                <DialogTitle className="sr-only">Chọn hoặc chỉnh sửa địa chỉ</DialogTitle>
                 {view !== 'LIST' && (
                     <Button variant="ghost" size="sm" className="absolute left-4 top-4 px-2" onClick={() => setView('LIST')}>
                         <ArrowLeft className="mr-2 h-4 w-4" />

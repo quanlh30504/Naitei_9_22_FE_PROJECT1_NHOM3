@@ -83,7 +83,7 @@ class UserService {
       if (params.page) searchParams.append('page', params.page.toString());
       if (params.limit) searchParams.append('limit', params.limit.toString());
       if (params.search) searchParams.append('search', params.search);
-  if (params.role) searchParams.append('role', params.role);
+      if (params.role) searchParams.append('role', params.role);
       if (params.isActive !== undefined) searchParams.append('isActive', params.isActive.toString());
       
       const relativePath = `/api/users${searchParams.toString() ? '?' + searchParams.toString() : ''}`;

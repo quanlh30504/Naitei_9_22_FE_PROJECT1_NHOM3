@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react"
 import { AdminLayout } from "@/Components/admin/AdminLayout"
 import { Button } from "@/Components/ui/button"
-import { PaginationWrapper } from "@/Components/PaginationWrapper";
 import { Input } from "@/Components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card"
 import { Badge } from "@/Components/ui/badge"
 import { Search, Plus, Edit, Trash2, Eye, Image as ImageIcon } from "lucide-react"
+import { PaginationWrapper } from "@/Components/PaginationWrapper"
 import { Product } from "@/types/product"
 import toast from "react-hot-toast"
 import Link from "next/link"
@@ -137,8 +137,10 @@ export default function ProductManagement() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Quản lý sản phẩm</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Quản lý sản phẩm
+            </h1>
+            <p className="text-base font-medium text-gray-700 dark:text-gray-400">
               Quản lý kho sản phẩm và danh mục ({total} sản phẩm)
             </p>
           </div>
@@ -272,8 +274,8 @@ export default function ProductManagement() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <>
-                    <div className="text-sm text-muted-foreground py-2">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between py-4 gap-2">
+                    <div className="text-sm text-muted-foreground">
                       Hiển thị {products.length} trên {total} sản phẩm
                     </div>
                     <PaginationWrapper
@@ -281,7 +283,7 @@ export default function ProductManagement() {
                       totalPages={totalPages}
                       onPageChange={(page) => fetchProducts(page, searchTerm)}
                     />
-                  </>
+                  </div>
                 )}
               </>
             )}

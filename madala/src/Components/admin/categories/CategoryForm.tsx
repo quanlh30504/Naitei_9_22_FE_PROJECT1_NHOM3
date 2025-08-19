@@ -37,10 +37,10 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
 }) => (
         <form onSubmit={onSubmit}>
             <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="text-gray-900 dark:text-gray-100">
                     {editingCategory ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới'}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="text-gray-600 dark:text-gray-300">
                     {editingCategory ? 'Cập nhật thông tin danh mục' : 'Tạo danh mục mới cho cửa hàng'}
                 </DialogDescription>
             </DialogHeader>
@@ -120,11 +120,15 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                 <Button
                     type="button"
                     variant="outline"
+                    className="text-gray-700 dark:text-gray-100 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800"
                     onClick={() => setIsDialogOpen(false)}
                 >
                     Hủy
                 </Button>
-                <Button type="submit" className="bg-[#8ba63a] hover:bg-[#7a942c]">
+                <Button
+                    type="submit"
+                    className="bg-[#8ba63a] hover:bg-[#7a942c] text-white dark:bg-green-700 dark:hover:bg-green-800 dark:text-gray-100"
+                >
                     {editingCategory ? 'Cập nhật' : 'Tạo danh mục'}
                 </Button>
             </DialogFooter>

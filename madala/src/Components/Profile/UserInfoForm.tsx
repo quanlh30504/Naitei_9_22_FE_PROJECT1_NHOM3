@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import type { IUser } from "@/models/User";
 import { useRouter } from "next/navigation";
 import { User, Calendar as CalendarIcon } from "lucide-react";
@@ -39,7 +39,7 @@ interface UserInfoFormProps {
 
 export default function UserInfoForm({ user }: UserInfoFormProps) {
   const router = useRouter();
-  const [state, dispatch] = useFormState(updateProfile, undefined);
+  const [state, dispatch] = useActionState(updateProfile, undefined);
 
   const genderOptions = [
     { value: "male", label: "Nam" },
@@ -167,8 +167,6 @@ export default function UserInfoForm({ user }: UserInfoFormProps) {
       <div className="space-y-2">
         <Label htmlFor="country">Quốc tịch</Label>
         <Select
-          id="country"
-          name="country"
           value={selectedCountry}
           onValueChange={setSelectedCountry}
         >

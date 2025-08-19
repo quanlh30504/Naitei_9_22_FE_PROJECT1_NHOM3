@@ -1,7 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Input } from "@/Components/ui/input";
-import { Textarea } from "@/Components/ui/textarea";
-import { Label } from "@/Components/ui/label";
 import { BlogFormData } from "@/types/blog";
 
 interface BlogBasicInfoProps {
@@ -24,9 +22,9 @@ export default function BlogBasicInfo({
             </CardHeader>
             <CardContent className="space-y-4">
                 <div>
-                        <Label className="text-sm font-medium">
-                            Tiêu đề <span className="text-red-500">*</span>
-                        </Label>
+                    <label className="text-sm font-medium">
+                        Tiêu đề <span className="text-red-500">*</span>
+                    </label>
                     <Input
                         placeholder="Nhập tiêu đề bài viết..."
                         value={formData.title}
@@ -36,7 +34,7 @@ export default function BlogBasicInfo({
                 </div>
 
                 <div>
-                        <Label className="text-sm font-medium">Slug</Label>
+                    <label className="text-sm font-medium">Slug</label>
                     <Input
                         placeholder="slug-bai-viet"
                         value={formData.slug}
@@ -46,14 +44,14 @@ export default function BlogBasicInfo({
                 </div>
 
                 <div>
-                        <Label className="text-sm font-medium">
-                            Mô tả ngắn <span className="text-red-500">*</span>
-                        </Label>
-                    <Textarea
+                    <label className="text-sm font-medium">
+                        Mô tả ngắn <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
                         placeholder="Nhập mô tả ngắn về bài viết..."
                         value={formData.excerpt}
                         onChange={onExcerptChange}
-                        className="mt-1"
+                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                         rows={3}
                         maxLength={500}
                     />

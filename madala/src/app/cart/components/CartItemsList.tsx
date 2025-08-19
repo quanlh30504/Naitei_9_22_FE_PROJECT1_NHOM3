@@ -22,7 +22,7 @@ export default function CartItemsList() {
 
   return (
     <div className="w-full lg:w-2/3 space-y-4">
-      <div className="bg-white p-4 rounded-lg shadow-sm grid grid-cols-12 items-center text-sm text-gray-600">
+      <div className="bg-card p-4 rounded-lg shadow-sm grid grid-cols-12 items-center text-sm text-muted-foreground dark:text-gray-300">
         <div className="col-span-6 flex items-center gap-4">
           <Checkbox
             id="select-all"
@@ -52,7 +52,7 @@ export default function CartItemsList() {
           <CartItem key={item._id} item={item} />
         ))}
         {items.length === 0 && (
-          <div className="bg-white p-8 text-center rounded-lg">
+          <div className="bg-card p-8 text-center rounded-lg border border-border text-muted-foreground">
             <p>Giỏ hàng của bạn đang trống.</p>
           </div>
         )}

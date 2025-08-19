@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
       weeklyUsers
     ] = await Promise.all([
       User.countDocuments(),
-      User.countDocuments({ roles: 'admin' }),
-      User.countDocuments({ roles: { $ne: 'admin' } }),
+  User.countDocuments({ role: 'admin' }),
+  User.countDocuments({ role: { $ne: 'admin' } }),
       User.countDocuments({ isActive: true }),
       User.countDocuments({ isActive: false }),
       User.countDocuments({

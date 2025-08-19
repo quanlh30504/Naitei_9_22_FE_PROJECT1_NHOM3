@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-import { Checkbox } from "@/Components/ui/checkbox";
 
 interface BlogSettingsProps {
     isFeatured: boolean;
@@ -23,10 +22,12 @@ export default function BlogSettings({
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex items-center space-x-2">
-                    <Checkbox
+                    <input
+                        type="checkbox"
                         id="isFeatured"
                         checked={isFeatured}
-                        onCheckedChange={onFeaturedChange}
+                        onChange={(e) => onFeaturedChange(e.target.checked)}
+                        className="rounded border-gray-300"
                     />
                     <label htmlFor="isFeatured" className="text-sm font-medium">
                         Bài viết nổi bật
@@ -35,10 +36,12 @@ export default function BlogSettings({
 
                 {showPublishedToggle && onPublishedChange && (
                     <div className="flex items-center space-x-2">
-                        <Checkbox
+                        <input
+                            type="checkbox"
                             id="isPublished"
                             checked={isPublished}
-                            onCheckedChange={onPublishedChange}
+                            onChange={(e) => onPublishedChange(e.target.checked)}
+                            className="rounded border-gray-300"
                         />
                         <label htmlFor="isPublished" className="text-sm font-medium">
                             Đã xuất bản

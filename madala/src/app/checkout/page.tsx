@@ -46,12 +46,12 @@ async function CheckoutContent({ searchParams }: { searchParams: { items?: strin
 }
 
 // component trang chính được bọc logic trong Suspense
-export default function CheckoutPage({ searchParams }: { searchParams: { items?: string } }) {
+export default async function CheckoutPage(props: any) {
+    const { searchParams } = await props;
     return (
         <div className="bg-gray-50 min-h-screen">
             <div className="container mx-auto px-4 py-8">
                 <h1 className="text-2xl font-bold mb-6">THANH TOÁN</h1>
-                
                 <Suspense fallback={
                     <div className="flex justify-center items-center h-96">
                         <Loader2 className="h-12 w-12 animate-spin text-blue-600"/>

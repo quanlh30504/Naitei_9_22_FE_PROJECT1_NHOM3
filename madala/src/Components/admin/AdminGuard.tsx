@@ -39,15 +39,13 @@ export function AdminGuard({ children }: AdminGuardProps) {
         if (status === 'loading') return; // Still loading
 
         if (!session) {
-            const callbackUrl = encodeURIComponent(window.location.pathname + window.location.search);
-            router.push(`/login?callbackUrl=${callbackUrl}`);
+            router.push('/login');
             return;
         }
 
         // Check if user has admin role
         if (session.user?.role !== 'admin') {
-            const callbackUrl = encodeURIComponent(window.location.pathname + window.location.search);
-            router.push(`/?callbackUrl=${callbackUrl}`); // Redirect to home with callbackUrl
+            router.push('/'); // Redirect to home if not admin
             return;
         }
     }, [session, status, router]);

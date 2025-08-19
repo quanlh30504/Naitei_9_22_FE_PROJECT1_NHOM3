@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { registerUser } from "@/lib/actions";
@@ -17,7 +17,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [state, dispatch] = useFormState(registerUser, undefined);
+  const [state, dispatch] = useActionState(registerUser, undefined);
 
   useEffect(() => {
     if (state?.success) {
@@ -36,12 +36,12 @@ export default function RegisterPage() {
   }, [state, router, searchParams]);
 
   return (
-    <main className="bg-white text-gray-800 min-h-screen">
+    <main className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen">
       <div className="container mx-auto px-4 py-10 md:py-16 max-w-4xl">
         <h1 className="text-xl md:text-2xl font-semibold tracking-widest uppercase mb-10">
           Tạo tài khoản
         </h1>
-        <div className="bg-gray-50 p-8 md:p-12">
+        <div className="bg-gray-50 dark:bg-gray-800 p-8 md:p-12">
           <form action={dispatch} className="space-y-8">
             <div>
               <h2 className="text-lg font-semibold mb-6 uppercase">
@@ -60,7 +60,7 @@ export default function RegisterPage() {
                     required
                   />
                   {state?.errors?.firstName && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-red-500 dark:text-red-400">
                       {state.errors.firstName[0]}
                     </p>
                   )}
@@ -78,7 +78,7 @@ export default function RegisterPage() {
                     required
                   />
                   {state?.errors?.lastName && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-red-500 dark:text-red-400">
                       {state.errors.lastName[0]}
                     </p>
                   )}
@@ -117,7 +117,7 @@ export default function RegisterPage() {
                     required
                   />
                   {state?.errors?.email && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-red-500 dark:text-red-400">
                       {state.errors.email[0]}
                     </p>
                   )}
@@ -134,7 +134,7 @@ export default function RegisterPage() {
                     required
                   />
                   {state?.errors?.password && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-red-500 dark:text-red-400">
                       {state.errors.password[0]}
                     </p>
                   )}
@@ -151,7 +151,7 @@ export default function RegisterPage() {
                     required
                   />
                   {state?.errors?.confirmPassword && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-red-500 dark:text-red-400">
                       {state.errors.confirmPassword[0]}
                     </p>
                   )}

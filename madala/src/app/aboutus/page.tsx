@@ -25,10 +25,10 @@ export default function AboutUsPage() {
   };
   return (
     <main>
-      <div className="px-4 md:px-20 py-10 bg-white">
+      <div className="px-4 md:px-20 py-10 bg-white dark:bg-gray-900">
         <Breadcrumb items={[{ label: "Về chúng tôi" }]} />
 
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">VỀ CHÚNG TÔI</h1>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">VỀ CHÚNG TÔI</h1>
 
         <div className="flex flex-col md:flex-row items-start gap-6">
           <div className="flex-shrink-0 w-full md:w-1/2">
@@ -41,18 +41,18 @@ export default function AboutUsPage() {
           </div>
 
           <div className="w-full md:w-1/2">
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">
+            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
               GIỚI THIỆU CHUNG VỀ MỸ PHẨM HANDMADE MANDALA
             </h2>
 
-            <p className="text-gray-600 text-justify leading-relaxed whitespace-pre-line">
+            <p className="text-gray-600 dark:text-gray-400 text-justify leading-relaxed whitespace-pre-line">
               {isExpanded ? fullContent : shortContent}
             </p>
 
             <Button
               onClick={toggleContent}
               variant="link"
-              className="mt-4 text-green-600 hover:text-green-700 p-0 h-auto font-medium"
+              className="mt-4 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 p-0 h-auto font-medium"
             >
               {isExpanded ? "Thu gọn" : "Xem thêm"}
             </Button>

@@ -9,16 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card"
 import { Label } from "@/Components/ui/label"
 import { Switch } from "@/Components/ui/switch"
 import { ArrowLeft, Upload, X, Plus } from "lucide-react"
-import PriceStockSection from "@/Components/admin/products/PriceStockSection";
-import ProductImagesSection from "@/Components/admin/products/ProductImagesSection";
-import CategoryTagsSection from "@/Components/admin/products/CategoryTagsSection";
-import ProductAttributesSection from "@/Components/admin/products/ProductAttributesSection";
-import ProductSettingsSection from "@/Components/admin/products/ProductSettingsSection";
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { validateProductForm, uploadImagesToCloudinary } from "@/lib/utils/productUtils"
+import PriceStockSection from '@/Components/admin/products/PriceStockSection';
+import ProductImagesSection from '@/Components/admin/products/ProductImagesSection';
+import ProductCategoriesTagsSection from '@/Components/admin/products/ProductCategoriesTagsSection';
+import ProductAttributesSection from '@/Components/admin/products/ProductAttributesSection';
+import ProductSettingsSection from '@/Components/admin/products/ProductSettingsSection';
+import ProductBasicInfoSection from '@/Components/admin/products/ProductBasicInfoSection';
 
 interface ProductFormData {
   name: string
@@ -195,71 +196,31 @@ export default function CreateProduct() {
       <div className="space-y-6 max-w-4xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Link href="/admin/products">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Quay lại
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Thêm sản phẩm mới</h1>
-              <p className="text-muted-foreground">Tạo sản phẩm mới trong hệ thống</p>
-            </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-black dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700 dark:hover:text-yellow-300"
+                  onClick={() => router.push('/admin/products')}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Quay lại
+                </Button>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-800">
+                  Thêm sản phẩm mới
+                </h1>
+                <p className="text-base font-medium text-gray-700 dark:text-gray-300">Tạo sản phẩm mới trong hệ thống</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Thông tin cơ bản */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Thông tin cơ bản</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Tên sản phẩm *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="Nhập tên sản phẩm"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sku">Mã SKU *</Label>
-                  <Input
-                    id="sku"
-                    value={formData.sku}
-                    onChange={(e) => handleInputChange('sku', e.target.value)}
-                    placeholder="Ví dụ: MYPHAM-001"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="shortDescription">Mô tả ngắn</Label>
-                <Input
-                  id="shortDescription"
-                  value={formData.shortDescription}
-                  onChange={(e) => handleInputChange('shortDescription', e.target.value)}
-                  placeholder="Mô tả ngắn về sản phẩm"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Mô tả chi tiết</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Mô tả chi tiết về sản phẩm"
-                  rows={4}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <ProductBasicInfoSection
+            name={formData.name}
+            sku={formData.sku}
+            shortDescription={formData.shortDescription}
+            description={formData.description}
+            handleInputChange={handleInputChange}
+          />
 
           {/* Giá và kho */}
           <PriceStockSection formData={formData} handleInputChange={handleInputChange} />
@@ -270,25 +231,27 @@ export default function CreateProduct() {
             uploadingImage={uploadingImage}
             handleImageUpload={handleImageUpload}
             removeImage={removeImage}
-            getImageUrl={(url) => url}
           />
 
           {/* Danh mục và Tags */}
-          <CategoryTagsSection
+          <ProductCategoriesTagsSection
+            categoryIds={formData.categoryIds}
+            tags={formData.tags}
             newCategory={newCategory}
+            newTag={newTag}
             setNewCategory={setNewCategory}
+            setNewTag={setNewTag}
             addCategory={addCategory}
             removeCategory={removeCategory}
-            categoryIds={formData.categoryIds}
-            newTag={newTag}
-            setNewTag={setNewTag}
             addTag={addTag}
             removeTag={removeTag}
-            tags={formData.tags}
           />
 
           {/* Thuộc tính */}
-          <ProductAttributesSection attributes={formData.attributes} handleAttributeChange={handleAttributeChange} />
+          <ProductAttributesSection
+            attributes={formData.attributes}
+            handleAttributeChange={handleAttributeChange}
+          />
 
           {/* Cài đặt */}
           <ProductSettingsSection
@@ -300,11 +263,15 @@ export default function CreateProduct() {
 
           {/* Submit buttons */}
           <div className="flex justify-end space-x-4">
-            <Link href="/admin/products">
-              <Button type="button" variant="outline" disabled={loading}>
-                Hủy
-              </Button>
-            </Link>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={loading}
+                  className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-black dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700 dark:hover:text-yellow-300"
+                  onClick={() => router.push('/admin/products')}
+                >
+                  Hủy
+                </Button>
             <Button type="submit" disabled={loading}>
               {loading ? 'Đang tạo...' : 'Tạo sản phẩm'}
             </Button>

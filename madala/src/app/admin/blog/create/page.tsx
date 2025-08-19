@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AdminLayout } from "@/Components/admin/AdminLayout";
 import { Button } from "@/Components/ui/button";
-import { ArrowLeft, Save, Eye } from "lucide-react";
+import BlogFormHeader from "@/Components/admin/blog/BlogFormHeader";
 import toast from "react-hot-toast";
 import { useBlogForm } from "@/hooks/useBlogForm";
 import BlogBasicInfo from "@/Components/admin/blog/BlogBasicInfo";
@@ -70,35 +70,26 @@ export default function CreateBlog() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={() => window.history.back()}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Quay lại
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Tạo bài viết mới</h1>
-              <p className="text-muted-foreground">Viết và xuất bản bài viết mới</p>
-            </div>
-          </div>
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => handleSave(false)}
-              disabled={saving}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Lưu nháp
-            </Button>
-            <Button
-              onClick={() => handleSave(true)}
-              disabled={saving}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Xuất bản
-            </Button>
-          </div>
-        </div>
+        <BlogFormHeader
+          title="Tạo bài viết mới"
+          subtitle="Viết và xuất bản bài viết mới"
+          saving={saving}
+        >
+          <Button
+            variant="secondary"
+            className="text-gray-700 dark:text-gray-100 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700"
+            onClick={() => handleSave(false)}
+            disabled={saving}
+          >
+            Lưu nháp
+          </Button>
+          <Button
+            onClick={() => handleSave(true)}
+            disabled={saving}
+          >
+            Xuất bản
+          </Button>
+        </BlogFormHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
