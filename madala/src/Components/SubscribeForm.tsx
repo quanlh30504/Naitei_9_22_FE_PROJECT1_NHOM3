@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import React, { useTransition, useCallback } from "react";
 import { Send } from "lucide-react";
 import { Input } from "@/Components/ui/input";
 import { Button } from "@/Components/ui/button";
@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { subscribeSchema, type SubscribeFormData } from "@/lib/validations/forms";
 
-export default function SubscribeForm() {
+const SubscribeForm: React.FC = () => {
   const [isPending, startTransition] = useTransition();
   const form = useForm<SubscribeFormData>({
     resolver: zodResolver(subscribeSchema),
@@ -24,18 +24,18 @@ export default function SubscribeForm() {
     },
   });
 
-  const onSubmit = async (data: SubscribeFormData) => {
+  const onSubmit = useCallback(async (data: SubscribeFormData) => {
     startTransition(async () => {
       try {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
         toast.success("Đăng ký nhận email thành công!");
-  form.reset();
+        form.reset();
       } catch (error) {
         toast.error("Có lỗi xảy ra. Vui lòng thử lại!");
       }
     });
-  };
+  }, [form]);
 
   return (
     <SectionCard>
@@ -119,4 +119,6 @@ export default function SubscribeForm() {
       </Card>
     </SectionCard>
   );
-}
+};
+
+export default React.memo(SubscribeForm);

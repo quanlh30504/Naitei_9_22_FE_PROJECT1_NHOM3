@@ -15,4 +15,4 @@ const SectionCard: React.FC<SectionCardProps> = ({ children, className = "" }) =
     );
 };
 
-export default SectionCard;
+export default React.memo(SectionCard);

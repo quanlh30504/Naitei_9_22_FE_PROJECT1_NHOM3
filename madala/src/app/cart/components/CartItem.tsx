@@ -1,20 +1,22 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
 import { Checkbox } from "@/Components/ui/checkbox";
 import { Button } from "@/Components/ui/button";
-import QuantitySelector from "./QuantitySelector"; 
+import QuantitySelector from "./QuantitySelector";
 import { Trash2 } from "lucide-react";
-import { useCartStore, PopulatedCartItem } from "@/store/useCartStore"; 
+import { useCartStore, PopulatedCartItem } from "@/store/useCartStore";
 import { getImageUrl } from "@/lib/getImageUrl"
 import { formatCurrency } from "@/lib/utils";
+import { useCallback, useMemo } from "react";
 
 interface CartItemProps {
   item: PopulatedCartItem;
 }
 
-export default function CartItem({ item }: CartItemProps) {
-  
+const CartItem = React.memo(function CartItem({ item }: CartItemProps) {
+
   if (!item || !item.product) {
     console.error("CartItem received invalid data:", item);
     return (
@@ -24,22 +26,28 @@ export default function CartItem({ item }: CartItemProps) {
     );
   }
 
-  const { selectedItemIds, toggleItemSelected, removeItems, updateQuantity , isPending } = useCartStore();
-  
-  const isSelected = selectedItemIds.includes(item._id);
+  const { selectedItemIds, toggleItemSelected, removeItems, updateQuantity, isPending } = useCartStore();
 
-  const handleRemove = () => {
+  const isSelected = useMemo(() => {
+    return selectedItemIds.includes(item._id);
+  }, [selectedItemIds, item._id]);
+
+  const handleRemove = useCallback(() => {
     removeItems([item._id]);
-  };
+  }, [removeItems, item._id]);
+
+  const handleToggleSelected = useCallback(() => {
+    toggleItemSelected(item._id);
+  }, [toggleItemSelected, item._id]);
 
   return (
-  <div className="bg-card p-4 rounded-lg border border-border transition-colors">
-  <div className="grid grid-cols-12 items-center gap-4 pt-4">
+    <div className="bg-card p-4 rounded-lg border border-border transition-colors">
+      <div className="grid grid-cols-12 items-center gap-4 pt-4">
         <div className="col-span-1 flex justify-center">
           <Checkbox
-            id={`item-${item._id}`} 
+            id={`item-${item._id}`}
             checked={isSelected}
-            onCheckedChange={() => toggleItemSelected(item._id)}
+            onCheckedChange={handleToggleSelected}
           />
         </div>
         <div className="col-span-2">
@@ -89,4 +97,6 @@ export default function CartItem({ item }: CartItemProps) {
       </div>
     </div>
   );
-}
+});
+
+export default CartItem;

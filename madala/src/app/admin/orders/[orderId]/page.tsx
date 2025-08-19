@@ -22,7 +22,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import CancelOrderButton from "@/Components/order/CancelOrderButton";
 import SafeImage from "@/Components/SafeImage";
 import { formatCurrency } from "@/lib/utils";
-import AdminLayout from "@/Components/admin/AdminLayout";
+import { AdminLayout } from "@/Components/admin/AdminLayout";
 
 
 export default function AdminOrderDetailPage() {

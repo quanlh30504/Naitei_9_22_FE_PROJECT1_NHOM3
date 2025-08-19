@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import { Star } from "lucide-react";
 import { FaStar, FaStarHalfAlt } from "react-icons/fa";
 
@@ -24,7 +24,7 @@ const sizeClasses = {
     lg: 'w-8 h-8 text-lg',
 };
 
-const StarRating: React.FC<StarRatingProps> = ({
+const StarRating = React.memo(function StarRating({
     rating,
     maxStars = 5,
     size = 'sm',
@@ -35,9 +35,9 @@ const StarRating: React.FC<StarRatingProps> = ({
     hoverRating = 0,
     setHoverRating,
     className = '',
-}) => {
+}: StarRatingProps) {
     // Render star for display (with half star)
-    const renderDisplayStar = (index: number) => {
+    const renderDisplayStar = useCallback((index: number) => {
         const difference = rating - index;
         if (difference >= 1) {
             return <FaStar key={index} className={`${sizeClasses[size]} text-yellow-400`} />;
@@ -46,7 +46,7 @@ const StarRating: React.FC<StarRatingProps> = ({
         } else {
             return <FaStar key={index} className={`${sizeClasses[size]} text-gray-300`} />;
         }
-    };
+    }, [rating, size]);
 
     // Render star for interactive rating
     const renderInteractiveStar = (index: number) => {
@@ -88,6 +88,6 @@ const StarRating: React.FC<StarRatingProps> = ({
             )}
         </div>
     );
-};
+});
 
 export default StarRating;

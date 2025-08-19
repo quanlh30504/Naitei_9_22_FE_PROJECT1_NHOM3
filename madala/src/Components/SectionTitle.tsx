@@ -1,8 +1,10 @@
+import React from 'react';
+
 interface SectionTitleProps {
     title: string;
 }
 
-export default function SectionTitle({ title }: SectionTitleProps) {
+const SectionTitle: React.FC<SectionTitleProps> = ({ title }) => {
     return (
         <div className="mb-6">
             <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 text-center">
@@ -18,4 +20,6 @@ export default function SectionTitle({ title }: SectionTitleProps) {
             </div>
         </div>
     );
-}
+};
+
+export default React.memo(SectionTitle);

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { commentFormSchema, type CommentFormData } from '@/lib/validations/forms';
@@ -9,7 +9,12 @@ import { Input } from '@/Components/ui/input';
 import { Textarea } from '@/Components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 
-export const CommentForm = ({ onSubmit: onSubmitProp, isSubmitting = false }: { onSubmit?: (data: CommentFormData) => void; isSubmitting?: boolean }) => {
+interface CommentFormProps {
+  onSubmit?: (data: CommentFormData) => void;
+  isSubmitting?: boolean;
+}
+
+const CommentFormComponent: React.FC<CommentFormProps> = ({ onSubmit: onSubmitProp, isSubmitting = false }) => {
   const form = useForm<CommentFormData>({
     resolver: zodResolver(commentFormSchema),
     defaultValues: {
@@ -19,13 +24,13 @@ export const CommentForm = ({ onSubmit: onSubmitProp, isSubmitting = false }: { 
     },
   });
 
-  //Hàm onSubmitProp chỉ nhận data, không truyền event
-  const onSubmit = (data: CommentFormData) => {
+  // Hàm onSubmitProp chỉ nhận data, không truyền event
+  const onSubmit = useCallback((data: CommentFormData) => {
     if (typeof onSubmitProp === 'function') {
       onSubmitProp(data);
     }
     form.reset();
-  };
+  }, [onSubmitProp, form]);
 
   return (
     <Card>
@@ -83,3 +88,5 @@ export const CommentForm = ({ onSubmit: onSubmitProp, isSubmitting = false }: { 
     </Card>
   );
 };
+
+export const CommentForm = React.memo(CommentFormComponent);
