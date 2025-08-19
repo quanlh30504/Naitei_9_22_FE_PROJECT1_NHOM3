@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useTransition } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { bannerSchema, BannerFormValues } from '@/lib/validations/forms';
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
 import BannerTitleInput from "@/Components/admin/BannerTitleInput";
@@ -15,6 +18,8 @@ import { IBanner } from "@/models/Banner";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
+
+
 interface BannerFormProps {
     banner?: IBanner | null;
     mode: 'create' | 'edit';
@@ -28,61 +33,45 @@ const BANNER_TYPES = [
 export default function BannerForm({ banner, mode }: BannerFormProps) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
+    const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = React.useState<string | null>(banner?.imageUrl || null);
 
-    // Form state
-    const [formData, setFormData] = useState({
-        title: banner?.title || '',
-        description: banner?.description || '',
-        type: banner?.type || 'sale',
-        isActive: banner?.isActive ?? true,
-        displayOrder: banner?.displayOrder?.toString() || '0'
+    const {
+        register,
+        handleSubmit,
+        control,
+        setValue,
+        formState: { errors },
+    } = useForm<BannerFormValues>({
+        resolver: zodResolver(bannerSchema),
+        defaultValues: {
+            title: banner?.title || '',
+            description: banner?.description || '',
+            type: banner?.type || 'sale',
+            isActive: banner?.isActive ?? true,
+            displayOrder: banner?.displayOrder?.toString() || '0',
+        },
     });
 
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-    const handleInputChange = (field: string, value: string | boolean) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
-    const handleImageChange = (file: File | null, preview: string | null) => {
+    const onImageChange = (file: File | null, preview: string | null) => {
         setSelectedFile(file);
         setPreviewUrl(preview);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        // Validation
-        if (!formData.title.trim()) {
-            toast.error('Vui lòng nhập tiêu đề banner');
-            return;
-        }
-
-        if (!formData.type) {
-            toast.error('Vui lòng chọn loại banner');
-            return;
-        }
-
+    const onSubmit = async (data: BannerFormValues) => {
         if (mode === 'create' && !selectedFile) {
             toast.error('Vui lòng chọn ảnh banner');
             return;
         }
-
         const submitFormData = new FormData();
-        submitFormData.append('title', formData.title.trim());
-        submitFormData.append('description', formData.description.trim());
-        submitFormData.append('type', formData.type);
-        submitFormData.append('isActive', formData.isActive.toString());
-        submitFormData.append('displayOrder', formData.displayOrder);
-
+        submitFormData.append('title', data.title.trim());
+        submitFormData.append('description', data.description?.trim() || '');
+        submitFormData.append('type', data.type);
+        submitFormData.append('isActive', data.isActive.toString());
+        submitFormData.append('displayOrder', data.displayOrder);
         if (selectedFile) {
             submitFormData.append('image', selectedFile);
         }
-
         startTransition(async () => {
             try {
                 let result;
@@ -94,7 +83,6 @@ export default function BannerForm({ banner, mode }: BannerFormProps) {
                     toast.error('Banner không tồn tại');
                     return;
                 }
-
                 if (result.success) {
                     toast.success(result.message);
                     router.push('/admin/banners');
@@ -110,7 +98,7 @@ export default function BannerForm({ banner, mode }: BannerFormProps) {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Column - Form Fields */}
                 <div className="space-y-6">
@@ -121,14 +109,14 @@ export default function BannerForm({ banner, mode }: BannerFormProps) {
                         <CardContent className="space-y-4">
                             {/* Title */}
                             <BannerTitleInput
-                                value={formData.title}
-                                onChange={value => handleInputChange('title', value)}
+                                {...register('title')}
+                                error={errors.title?.message}
                             />
 
                             {/* Description */}
                             <BannerDescriptionInput
-                                value={formData.description}
-                                onChange={value => handleInputChange('description', value)}
+                                {...register('description')}
+                                error={errors.description?.message}
                             />
                         </CardContent>
                     </Card>
@@ -141,21 +129,25 @@ export default function BannerForm({ banner, mode }: BannerFormProps) {
                             {/* Type */}
                             <div className="space-y-2">
                                 <Label htmlFor="type">Loại Banner *</Label>
-                                <Select
-                                    value={formData.type}
-                                    onValueChange={(value) => handleInputChange('type', value)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Chọn loại banner" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {BANNER_TYPES.map((type) => (
-                                            <SelectItem key={type.value} value={type.value}>
-                                                {type.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Controller
+                                    control={control}
+                                    name="type"
+                                    render={({ field }) => (
+                                        <Select value={field.value} onValueChange={field.onChange}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Chọn loại banner" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {BANNER_TYPES.map((type) => (
+                                                    <SelectItem key={type.value} value={type.value}>
+                                                        {type.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                                {errors.type && <p className="text-xs text-red-500">{errors.type.message}</p>}
                             </div>
 
                             {/* Display Order */}
@@ -165,12 +157,11 @@ export default function BannerForm({ banner, mode }: BannerFormProps) {
                                     id="displayOrder"
                                     type="number"
                                     min="0"
-                                    value={formData.displayOrder}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('displayOrder', e.target.value)}
+                                    {...register('displayOrder')}
                                     placeholder="0"
-                                    required
                                 />
-                                <p className="text-xs text-gray-500">
+                                {errors.displayOrder && <p className="text-xs text-red-500">{errors.displayOrder.message}</p>}
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
                                     Số nhỏ sẽ hiển thị trước (phải duy nhất cho mỗi loại banner)
                                 </p>
                             </div>
@@ -178,10 +169,16 @@ export default function BannerForm({ banner, mode }: BannerFormProps) {
                             {/* Active Status */}
                             <div className="space-y-3">
                                 <div className="flex items-center space-x-2">
-                                    <Switch
-                                        id="isActive"
-                                        checked={formData.isActive}
-                                        onCheckedChange={(checked) => handleInputChange('isActive', checked)}
+                                    <Controller
+                                        control={control}
+                                        name="isActive"
+                                        render={({ field }) => (
+                                            <Switch
+                                                id="isActive"
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        )}
                                     />
                                     <Label htmlFor="isActive">Kích hoạt banner</Label>
                                 </div>
@@ -195,7 +192,7 @@ export default function BannerForm({ banner, mode }: BannerFormProps) {
                     <ImageUploader
                         title="Ảnh Banner"
                         currentImageUrl={banner?.imageUrl}
-                        onImageChange={handleImageChange}
+                        onImageChange={onImageChange}
                         maxSizeInMB={5}
                         acceptedTypes={['image/jpeg', 'image/png', 'image/webp']}
                         aspectRatio="16/9"

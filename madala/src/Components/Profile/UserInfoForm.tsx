@@ -3,15 +3,16 @@
 import { useActionState } from "react";
 import type { IUser } from "@/models/User";
 import { useRouter } from "next/navigation";
-import { User, Calendar as CalendarIcon } from "lucide-react";
-import SubmitButton from "@/Components/Buttons/SubmitButton";
-import { useEffect, useMemo } from "react";
+import { User, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { useEffect, useTransition } from "react";
 import { toast } from "react-hot-toast";
 import { updateProfile } from "@/lib/actions/user";
-import { useState } from "react";
 import { countries } from "@/lib/data";
-import { cn } from "@/lib/utils"; // Tiện ích của shadcn
-import { format } from "date-fns"; // Thư viện để định dạng ngày
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { userInfoSchema, type UserInfoFormData } from "@/lib/validations/forms";
 
 // --- shadcn ui ---
 import { Input } from "@/Components/ui/input";
@@ -32,6 +33,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/Components/ui/popover";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/Components/ui/form";
 
 interface UserInfoFormProps {
   user: IUser;
@@ -39,153 +48,218 @@ interface UserInfoFormProps {
 
 export default function UserInfoForm({ user }: UserInfoFormProps) {
   const router = useRouter();
-  const [state, dispatch] = useActionState(updateProfile, undefined);
+  const [isPending, startTransition] = useTransition();
 
   const genderOptions = [
     { value: "male", label: "Nam" },
     { value: "female", label: "Nữ" },
     { value: "other", label: "Khác" },
   ];
-  // --- State cho DatePicker ---
-  const [birthDate, setBirthDate] = useState<Date | undefined>(
-    user.birthDate ? new Date(user.birthDate) : undefined
-  );
-  const [selectedCountry, setSelectedCountry] = useState(user.country || "");
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false); 
 
-  useEffect(() => {
-    // Đồng bộ state khi prop user thay đổi
-    setBirthDate(user.birthDate ? new Date(user.birthDate) : undefined);
-    setSelectedCountry(user.country || "");
-  }, [user]);
+  const form = useForm<UserInfoFormData>({
+    resolver: zodResolver(userInfoSchema),
+    defaultValues: {
+      fullName: user.name || "",
+      nickname: user.nickname || "",
+      birthDate: user.birthDate ? new Date(user.birthDate) : undefined,
+      gender: (user.gender as "male" | "female" | "other") || undefined,
+      country: user.country || "",
+    },
+  });
 
-  useEffect(() => {
-    if (state?.success) {
-      toast.success(state.message);
-      router.refresh();
-    } else if (state?.message) {
-      toast.error(state.message);
-    }
-  }, [state, router]);
+  const onSubmit = (data: UserInfoFormData) => {
+    startTransition(async () => {
+      try {
+        // Tạo FormData để gửi đến server action
+        const formData = new FormData();
+        formData.append("fullName", data.fullName);
+        if (data.nickname) formData.append("nickname", data.nickname);
+        if (data.birthDate)
+          formData.append("birthDate", data.birthDate.toISOString());
+        if (data.gender) formData.append("gender", data.gender);
+        if (data.country) formData.append("country", data.country);
+
+        const result = await updateProfile(undefined, formData);
+
+        if (result?.success) {
+          toast.success(result.message);
+          router.refresh();
+        } else if (result?.message) {
+          toast.error(result.message);
+        }
+      } catch (error) {
+        console.error("Form submission error:", error);
+        toast.error("Có lỗi xảy ra. Vui lòng thử lại!");
+      }
+    });
+  };
 
   return (
-    <form action={dispatch} className="space-y-8">
-      <input
-        type="hidden"
-        name="birthDate"
-        value={birthDate?.toISOString() || ""}
-      />
-
-      {/* --- Phần thông tin cá nhân --- */}
-      <div className="flex flex-col sm:flex-row items-center gap-6">
-        <Avatar className="h-24 w-24">
-          <AvatarImage
-            src={user.image || ""}
-            alt={user.name || "User Avatar"}
-          />
-          <AvatarFallback className="bg-blue-100">
-            <User className="w-12 h-12 text-blue-500" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-grow space-y-4 w-full">
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Họ & Tên</Label>
-            <Input
-              id="fullName"
-              name="fullName"
-              defaultValue={user.name || ""}
-              required
-              placeholder="Nhập họ và tên của bạn"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* --- Phần thông tin cá nhân --- */}
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          <Avatar className="h-24 w-24">
+            <AvatarImage
+              src={user.image || ""}
+              alt={user.name || "User Avatar"}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="nickname">Nickname</Label>
-            <Input
-              id="nickname"
+            <AvatarFallback className="bg-blue-100">
+              <User className="w-12 h-12 text-blue-500" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-grow space-y-4 w-full">
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Họ & Tên</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Nhập họ và tên của bạn"
+                      disabled={isPending}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="nickname"
-              defaultValue={user.nickname || ""}
-              placeholder="Thêm nickname (tùy chọn)"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nickname</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Thêm nickname (tùy chọn)"
+                      disabled={isPending}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
         </div>
-      </div>
 
-      {/* --- Ngày sinh --- */}
-      <div className="space-y-2">
-        <Label>Ngày sinh</Label>
-        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-full justify-between text-left font-normal", // Căn chỉnh justify-between
-                !birthDate && "text-muted-foreground"
-              )}
-            >
-              {birthDate ? (
-                format(birthDate, "dd/MM/yyyy")
-              ) : (
-                <span>Chọn ngày sinh</span>
-              )}
-              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={birthDate}
-              onSelect={(date) => {
-                setBirthDate(date);
-                setIsCalendarOpen(false); // Tự động đóng sau khi chọn
-              }}
-              captionLayout="dropdown" // Thay đổi layout
-              fromYear={1900}
-              toYear={new Date().getFullYear()}
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
+        {/* --- Ngày sinh --- */}
+        <FormField
+          control={form.control}
+          name="birthDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ngày sinh</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-between text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={isPending}
+                    >
+                      {field.value ? (
+                        format(field.value, "dd/MM/yyyy")
+                      ) : (
+                        <span>Chọn ngày sinh</span>
+                      )}
+                      <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    captionLayout="dropdown"
+                    fromYear={1900}
+                    toYear={new Date().getFullYear()}
+                    disabled={isPending}
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      {/* --- Giới tính --- */}
-      <div className="space-y-2">
-        <Label>Giới tính</Label>
-        <RadioGroup
+        {/* --- Giới tính --- */}
+        <FormField
+          control={form.control}
           name="gender"
-          defaultValue={user.gender}
-          className="flex items-center gap-6 pt-2"
-        >
-          {genderOptions.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
-              <RadioGroupItem value={option.value} id={option.value} />
-              <Label htmlFor={option.value}>{option.label}</Label>
-            </div>
-          ))}
-        </RadioGroup>
-      </div>
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Giới tính</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex items-center gap-6 pt-2"
+                  disabled={isPending}
+                >
+                  {genderOptions.map((option) => (
+                    <div key={option.value} className="flex items-center space-x-2">
+                      <RadioGroupItem value={option.value} id={option.value} />
+                      <Label htmlFor={option.value}>{option.label}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      {/* --- Quốc tịch --- */}
-      <div className="space-y-2">
-        <Label htmlFor="country">Quốc tịch</Label>
-        <Select
-          value={selectedCountry}
-          onValueChange={setSelectedCountry}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Chọn quốc tịch" />
-          </SelectTrigger>
-          <SelectContent>
-            {countries.map((country) => (
-              <SelectItem key={country} value={country}>
-                {country}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+        {/* --- Quốc tịch --- */}
+        <FormField
+          control={form.control}
+          name="country"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Quốc tịch</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isPending}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn quốc tịch" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country} value={country}>
+                      {country}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <div className="pt-4">
-        <SubmitButton content="Lưu thay đổi" />
-      </div>
-    </form>
+        <div className="pt-4">
+          <Button type="submit" disabled={isPending} className="w-full">
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Đang xử lý...
+              </>
+            ) : (
+              "Lưu thay đổi"
+            )}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

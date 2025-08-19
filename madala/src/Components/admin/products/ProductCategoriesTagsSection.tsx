@@ -5,102 +5,67 @@ import { Input } from '@/Components/ui/input';
 import { Button } from '@/Components/ui/button';
 import { Plus, X } from 'lucide-react';
 
+
 interface ProductCategoriesTagsSectionProps {
-    categoryIds: string[];
-    tags: string[];
-    newCategory: string;
-    newTag: string;
-    setNewCategory: (val: string) => void;
-    setNewTag: (val: string) => void;
-    addCategory: () => void;
-    removeCategory: (cat: string) => void;
-    addTag: () => void;
-    removeTag: (tag: string) => void;
+    value: string[];
+    onChange: (value: string[]) => void;
+    errors?: any;
+    name: string;
+    label: string;
 }
 
-const ProductCategoriesTagsSection: React.FC<ProductCategoriesTagsSectionProps> = ({
-    categoryIds,
-    tags,
-    newCategory,
-    newTag,
-    setNewCategory,
-    setNewTag,
-    addCategory,
-    removeCategory,
-    addTag,
-    removeTag,
-}) => (
-    <Card>
-        <CardHeader>
-            <CardTitle>Danh mục và Tags</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <div className="space-y-2">
-                <Label>Danh mục *</Label>
-                <div className="flex space-x-2">
-                    <Input
-                        value={newCategory}
-                        onChange={(e) => setNewCategory(e.target.value)}
-                        placeholder="Nhập ID danh mục (ví dụ: cat-1)"
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCategory())}
-                    />
-                    <Button type="button" onClick={addCategory} size="sm">
-                        <Plus className="h-4 w-4" />
-                    </Button>
-                </div>
-                {categoryIds.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                        {categoryIds.map((category, index) => (
-                            <div key={index} className="flex items-center bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm">
-                                {category}
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="ml-1 h-auto p-0"
-                                    onClick={() => removeCategory(category)}
-                                >
-                                    <X className="h-3 w-3" />
-                                </Button>
-                            </div>
-                        ))}
+const ProductCategoriesTagsSection: React.FC<ProductCategoriesTagsSectionProps> = ({ value = [], onChange, errors, name, label }) => {
+    const [input, setInput] = React.useState('');
+    const addItem = () => {
+        if (input.trim() && !value.includes(input.trim())) {
+            onChange([...value, input.trim()]);
+            setInput('');
+        }
+    };
+    const removeItem = (item: string) => {
+        onChange(value.filter((v) => v !== item));
+    };
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>{label}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="space-y-2">
+                    <div className="flex space-x-2">
+                        <Input
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder={name === 'categoryIds' ? 'Nhập ID danh mục (ví dụ: cat-1)' : 'Nhập tag'}
+                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem())}
+                        />
+                        <Button type="button" onClick={addItem} size="sm">
+                            <Plus className="h-4 w-4" />
+                        </Button>
                     </div>
-                )}
-            </div>
-            <div className="space-y-2">
-                <Label>Tags</Label>
-                <div className="flex space-x-2">
-                    <Input
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        placeholder="Nhập tag"
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                    />
-                    <Button type="button" onClick={addTag} size="sm">
-                        <Plus className="h-4 w-4" />
-                    </Button>
+                    {value.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                            {value.map((item, index) => (
+                                <div key={index} className="flex items-center bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm">
+                                    {item}
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="ml-1 h-auto p-0"
+                                        onClick={() => removeItem(item)}
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {errors && errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name].message}</p>}
                 </div>
-                {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                        {tags.map((tag, index) => (
-                            <div key={index} className="flex items-center bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm">
-                                {tag}
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="ml-1 h-auto p-0"
-                                    onClick={() => removeTag(tag)}
-                                >
-                                    <X className="h-3 w-3" />
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </CardContent>
-    </Card>
-);
+            </CardContent>
+        </Card>
+    );
+};
 
 export default ProductCategoriesTagsSection;

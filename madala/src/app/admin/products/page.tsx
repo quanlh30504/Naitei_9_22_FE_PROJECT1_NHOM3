@@ -192,7 +192,7 @@ export default function ProductManagement() {
                     {products.map((product) => (
                       <TableRow key={product._id}>
                         <TableCell>
-                          <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center overflow-hidden">
+                          <div className="w-12 bg-muted rounded-md flex items-center justify-center">
                             {product.images && product.images.length > 0 ? (
                               <ProductImage
                                 src={getImageUrl(product.images[0])}

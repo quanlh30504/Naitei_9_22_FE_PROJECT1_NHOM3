@@ -20,7 +20,7 @@ export default function EmptyBannerState({
         <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
                 <div className="text-center space-y-4">
-                    <div className="text-gray-500 text-lg">{message}</div>
+                    <div className="text-gray-500 dark:text-gray-400 text-lg">{message}</div>
                     <Link href={createUrl}>
                         <Button className="flex items-center gap-2">
                             <Plus className="h-4 w-4" />

@@ -22,16 +22,13 @@ export default function EditBlog() {
   const [dataLoaded, setDataLoaded] = useState(false);
 
   const {
-    formData,
-    handleTitleChange,
-    handleSlugChange,
-    handleExcerptChange,
-    handleContentChange,
-    handleImageChange,
-    handleTagsChange,
-    handleFeaturedChange,
-    handlePublishedChange,
-    updateFormData
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    watch,
+    getValues,
+    reset
   } = useBlogForm();
 
   // Fetch blog post data
@@ -46,7 +43,7 @@ export default function EditBlog() {
 
         if (result.success) {
           const post = result.data.post;
-          updateFormData({
+          reset({
             title: post.title,
             slug: post.slug,
             content: post.content,
@@ -73,28 +70,20 @@ export default function EditBlog() {
     fetchBlogPost();
   }, [slug]); // ← Chỉ dependency slug
 
-  const handleSave = async (publish?: boolean) => {
-    if (!formData.title.trim() || !formData.content.trim() || !formData.excerpt.trim()) {
-      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
-      return;
-    }
-
-    if (!formData.featuredImage) {
+  const onSubmit = async (data: any, publish?: boolean) => {
+    if (!data.featuredImage) {
       toast.error('Vui lòng chọn ảnh đại diện');
       return;
     }
-
     try {
       setSaving(true);
-      const updateData: any = { ...formData };
-
+      const updateData: any = { ...data };
       if (publish !== undefined) {
         updateData.isPublished = publish;
         if (publish) {
           updateData.publishedAt = new Date().toISOString();
         }
       }
-
       const response = await fetch(`/api/blog/${slug}`, {
         method: 'PUT',
         headers: {
@@ -102,9 +91,7 @@ export default function EditBlog() {
         },
         body: JSON.stringify(updateData),
       });
-
       const result = await response.json();
-
       if (result.success) {
         toast.success('Cập nhật bài viết thành công');
         if (result.data.slug !== slug) {
@@ -138,78 +125,58 @@ export default function EditBlog() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <BlogFormHeader
-          title="Chỉnh sửa bài viết"
-          subtitle="Cập nhật nội dung bài viết"
-          onBack={() => { window.location.href = '/admin/blog'; }}
-        >
-          <Button
-            variant="secondary"
-            className="text-gray-700 dark:text-gray-100 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700"
-            onClick={() => handleSave()}
-            disabled={saving}
+        <form onSubmit={handleSubmit((data) => onSubmit(data))}>
+          <BlogFormHeader
+            title="Chỉnh sửa bài viết"
+            subtitle="Cập nhật nội dung bài viết"
+            onBack={() => { window.location.href = '/admin/blog'; }}
           >
-            <Save className="h-4 w-4 mr-2" />
-            Lưu thay đổi
-          </Button>
-          {!formData.isPublished && (
-            <Button
-              onClick={() => handleSave(true)}
-              disabled={saving}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Xuất bản
-            </Button>
-          )}
-          {formData.isPublished && (
             <Button
               variant="secondary"
-              onClick={() => handleSave(false)}
+              className="text-gray-700 dark:text-gray-100 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700"
+              type="submit"
               disabled={saving}
             >
-              Hủy xuất bản
+              <Save className="h-4 w-4 mr-2" />
+              Lưu thay đổi
             </Button>
-          )}
-        </BlogFormHeader>
+            {!watch("isPublished") && (
+              <Button
+                type="button"
+                disabled={saving}
+                onClick={() => handleSubmit((data) => onSubmit(data, true))()}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Xuất bản
+              </Button>
+            )}
+            {watch("isPublished") && (
+              <Button
+                variant="secondary"
+                type="button"
+                disabled={saving}
+                onClick={() => handleSubmit((data) => onSubmit(data, false))()}
+              >
+                Hủy xuất bản
+              </Button>
+            )}
+          </BlogFormHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            <BlogBasicInfo
-              formData={formData}
-              onTitleChange={handleTitleChange}
-              onSlugChange={handleSlugChange}
-              onExcerptChange={handleExcerptChange}
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              <BlogBasicInfo register={register} errors={errors} watch={watch} />
+              <BlogContentEditor register={register} errors={errors} />
+            </div>
 
-            <BlogContentEditor
-              content={formData.content}
-              onChange={handleContentChange}
-            />
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <BlogImageUpload control={control} />
+              <BlogTagsManager control={control} />
+              <BlogSettings control={control} showPublishedToggle={true} />
+            </div>
           </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <BlogImageUpload
-              featuredImage={formData.featuredImage}
-              onImageChange={handleImageChange}
-              showChangeButton={true}
-            />
-
-            <BlogTagsManager
-              tags={formData.tags}
-              onTagsChange={handleTagsChange}
-            />
-
-            <BlogSettings
-              isFeatured={formData.isFeatured}
-              isPublished={formData.isPublished}
-              onFeaturedChange={handleFeaturedChange}
-              onPublishedChange={handlePublishedChange}
-              showPublishedToggle={true}
-            />
-          </div>
-        </div>
+        </form>
       </div>
     </AdminLayout>
   );

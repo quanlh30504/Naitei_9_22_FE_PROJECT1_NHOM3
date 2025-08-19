@@ -35,8 +35,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <>
-      {/* Sidebar - fixed and outside main content */}
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
       <div className={cn(
         `fixed top-0 left-0 z-50 h-screen bg-white dark:bg-gray-900 shadow-lg transition-all duration-300 ease-in-out overflow-y-auto flex flex-col border-r border-gray-200 dark:border-gray-800`,
         sidebarOpen ? "translate-x-0" : "-translate-x-full",
@@ -54,6 +62,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 {sidebarCollapsed ? "AM" : "Admin Mandala"}
               </h1>
             </Link>
+
+            {/* Desktop collapse button */}
             <Button
               variant="ghost"
               size="sm"
@@ -99,6 +109,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     )}>
                       {item.title}
                     </span>
+                    {/* Tooltip for collapsed state */}
                     {sidebarCollapsed && (
                       <div className="hidden lg:group-hover:block absolute left-16 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap z-50">
                         {item.title}
@@ -152,11 +163,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </div>
       {/* Main content area with left padding for sidebar */}
       <div
-        className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-all duration-300"
+        className="flex flex-col h-screen min-h-0 flex-1 bg-gray-50 dark:bg-gray-950 transition-all duration-300"
         style={{ paddingLeft: sidebarCollapsed ? '4rem' : '16rem' }}
       >
         {/* Top bar */}
-  <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800 px-4 py-3 lg:px-6 flex-shrink-0">
+        <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800 px-4 py-3 lg:px-6 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Button
@@ -193,13 +204,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         </header>
         {/* Page content */}
-        <main className="flex-1 p-4 lg:p-6">
+        <main className="flex-1 min-h-0 p-4 lg:p-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
       </div>
-    </>
+    </div>
   );
 }
 
