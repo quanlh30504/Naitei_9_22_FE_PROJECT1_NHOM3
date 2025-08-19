@@ -1,30 +1,31 @@
 "use client";
 
+import React, { useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { User as UserType } from "next-auth";
 import { User, MapPin, CreditCard, Star, Eye, Heart } from "lucide-react";
 import userImage from "@/assets/images/Users/user-image.jpg";
-import { Package } from 'lucide-react'; 
-import {IUser} from "@/models/User";
-
-const menuItems = [
-  { name: "Thông tin tài khoản", href: "/profile", icon: User },
-    { name: "Quản lý đơn hàng", href: "/profile/orders", icon: Package }, 
-  { name: "Danh sách địa chỉ", href: "/profile/addresses", icon: MapPin },
-  { name: "Thông tin thanh toán", href: "/profile/payment", icon: CreditCard },
-  { name: "Đánh giá sản phẩm", href: "/profile/reviews", icon: Star },
-  { name: "Sản phẩm bạn đã xem", href: "/profile/viewed", icon: Eye },
-  { name: "Sản phẩm yêu thích", href: "/profile/wishlist", icon: Heart },
-];
+import { Package } from 'lucide-react';
+import { IUser } from "@/models/User";
 
 interface ProfileSidebarProps {
   user: IUser;
 }
 
-export default function ProfileSidebar({ user }: ProfileSidebarProps) {
+const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ user }) => {
   const pathname = usePathname();
+
+  const menuItems = useMemo(() => [
+    { name: "Thông tin tài khoản", href: "/profile", icon: User },
+    { name: "Quản lý đơn hàng", href: "/profile/orders", icon: Package },
+    { name: "Danh sách địa chỉ", href: "/profile/addresses", icon: MapPin },
+    { name: "Thông tin thanh toán", href: "/profile/payment", icon: CreditCard },
+    { name: "Đánh giá sản phẩm", href: "/profile/reviews", icon: Star },
+    { name: "Sản phẩm bạn đã xem", href: "/profile/viewed", icon: Eye },
+    { name: "Sản phẩm yêu thích", href: "/profile/wishlist", icon: Heart },
+  ], []);
 
   return (
     <aside className="w-full md:w-1/4">
@@ -50,11 +51,10 @@ export default function ProfileSidebar({ user }: ProfileSidebarProps) {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
                 >
                   <item.icon className="w-5 h-5" />
                   <span>{item.name}</span>
@@ -66,4 +66,6 @@ export default function ProfileSidebar({ user }: ProfileSidebarProps) {
       </nav>
     </aside>
   );
-}
+};
+
+export default React.memo(ProfileSidebar);

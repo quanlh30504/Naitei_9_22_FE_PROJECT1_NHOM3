@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, Heart } from "lucide-react";
@@ -7,7 +8,7 @@ import StarRating from "@/Components/products/StarRating";
 import { Button } from "@/Components/ui/button";
 import { Badge } from "@/Components/ui/badge";
 import { Card, CardContent } from "@/Components/ui/card";
-import React, { useState, useTransition } from "react";
+import { useState, useTransition, useCallback, useMemo } from "react";
 import { formatCurrency } from "@/lib/utils";
 import { buyNowAndRedirect } from "@/lib/actions/cart";
 import toast from "react-hot-toast";
@@ -26,7 +27,7 @@ interface ProductCardProps {
   isFeatured?: boolean;
 }
 
-const ProductCard = ({
+const ProductCard = React.memo(function ProductCard({
   id,
   name,
   slug,
@@ -36,13 +37,11 @@ const ProductCard = ({
   rating,
   isHotTrend,
   isFeatured,
-}: ProductCardProps) => {
+}: ProductCardProps) {
 
   const [isPending, startTransition] = useTransition();
 
-  console
-
-  const handleBuyNow = () => {
+  const handleBuyNow = useCallback(() => {
     startTransition(async () => {
       try {
         const result = await buyNowAndRedirect(id, 1);
@@ -53,11 +52,11 @@ const ProductCard = ({
         // toast.error(error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.");
       }
     });
-  };
+  }, [id]);
 
-  const discountPercentage = salePrice
-    ? Math.round(((price - salePrice) / price) * 100)
-    : 0;
+  const discountPercentage = useMemo(() => {
+    return salePrice ? Math.round(((price - salePrice) / price) * 100) : 0;
+  }, [price, salePrice]);
 
   return (
     <Card className="group hover:shadow-medium transition-all duration-300 overflow-hidden h-full flex flex-col bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
@@ -148,6 +147,6 @@ const ProductCard = ({
       </CardContent>
     </Card>
   );
-};
+});
 
 export default ProductCard;

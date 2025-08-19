@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { Minus, Plus } from "lucide-react";
@@ -14,7 +15,7 @@ interface QuantitySelectorProps {
   onQuantityChange: (newQuantity: number) => void;
 }
 
-export default function QuantitySelector({
+const QuantitySelector = React.memo(function QuantitySelector({
   cartItemId,
   initialQuantity,
   stock,
@@ -35,17 +36,17 @@ export default function QuantitySelector({
     setQuantity(initialQuantity);
   }, [initialQuantity]);
 
-  const handleDecrement = () => {
-        const newQuantity = Math.max(1, quantity - 1);
-        setQuantity(newQuantity); // Cập nhật UI ngay lập tức
-        debouncedOnQuantityChange(newQuantity); // Gọi hàm debounced
-    };
+  const handleDecrement = useCallback(() => {
+    const newQuantity = Math.max(1, quantity - 1);
+    setQuantity(newQuantity); // Cập nhật UI ngay lập tức
+    debouncedOnQuantityChange(newQuantity); // Gọi hàm debounced
+  }, [quantity, debouncedOnQuantityChange]);
 
-    const handleIncrement = () => {
-        const newQuantity = Math.min(stock, quantity + 1);
-        setQuantity(newQuantity); // Cập nhật UI ngay lập tức
-        debouncedOnQuantityChange(newQuantity); // Gọi hàm debounced
-    };
+  const handleIncrement = useCallback(() => {
+    const newQuantity = Math.min(stock, quantity + 1);
+    setQuantity(newQuantity); // Cập nhật UI ngay lập tức
+    debouncedOnQuantityChange(newQuantity); // Gọi hàm debounced
+  }, [quantity, stock, debouncedOnQuantityChange]);
 
   return (
     <div className="flex items-center">
@@ -75,4 +76,6 @@ export default function QuantitySelector({
       </Button>
     </div>
   );
-}
+});
+
+export default QuantitySelector;

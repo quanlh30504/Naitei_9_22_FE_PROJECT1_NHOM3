@@ -1,3 +1,4 @@
+import React from "react";
 import Link from "next/link";
 
 interface BreadcrumbItem {
@@ -9,7 +10,7 @@ interface BreadcrumbProps {
   items?: BreadcrumbItem[];
 }
 
-export default function Breadcrumb({ items = [] }: BreadcrumbProps) {
+const Breadcrumb = React.memo(function Breadcrumb({ items = [] }: BreadcrumbProps) {
   return (
     <div className="text-sm text-gray-500 mb-4 border-b border-gray-300 pb-2">
       <Link href="/" className="hover:underline">
@@ -29,4 +30,6 @@ export default function Breadcrumb({ items = [] }: BreadcrumbProps) {
       ))}
     </div>
   );
-}
+});
+
+export default Breadcrumb;

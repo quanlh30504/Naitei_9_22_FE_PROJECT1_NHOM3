@@ -1,3 +1,4 @@
+import React from "react";
 import FooterLinkColumn from "./footers/FooterLinkColumn";
 import ContactItem from "./footers/ContactItem";
 import Image from "next/image";
@@ -10,7 +11,7 @@ import {
   paymentMethods
 } from "@/constants/footerLinks";
 
-export default function Footer() {
+const Footer = React.memo(function Footer() {
   const footerLinkColumns = [
     { title: "Chuyển hàng", links: shippingLinks },
     { title: "Hỗ trợ", links: supportLinks },
@@ -73,4 +74,6 @@ export default function Footer() {
       </div>
     </footer>
   );
-}
+});
+
+export default Footer;

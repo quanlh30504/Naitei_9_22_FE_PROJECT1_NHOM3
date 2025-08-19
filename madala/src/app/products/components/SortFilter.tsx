@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 
 export type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc' | 'default';
 
@@ -12,22 +12,32 @@ interface SortFilterProps {
 const SortFilter: React.FC<SortFilterProps> = ({ currentSort, onSortChange, isLoading = false }) => {
     const [isOpen, setIsOpen] = useState(false);
 
-    const sortOptions = [
+    const sortOptions = useMemo(() => [
         { value: 'default' as SortOption, label: 'Mặc định' },
-        { value: 'name-asc' as SortOption, label: 'Tên: A → Z'},
+        { value: 'name-asc' as SortOption, label: 'Tên: A → Z' },
         { value: 'name-desc' as SortOption, label: 'Tên: Z → A' },
         { value: 'price-asc' as SortOption, label: 'Giá: Thấp → Cao' },
         { value: 'price-desc' as SortOption, label: 'Giá: Cao → Thấp' },
-    ];
+    ], []);
 
-    const getCurrentOption = () => {
+    const getCurrentOption = useCallback(() => {
         return sortOptions.find(opt => opt.value === currentSort) || sortOptions[0];
-    };
+    }, [sortOptions, currentSort]);
 
-    const handleOptionSelect = (option: SortOption) => {
+    const handleOptionSelect = useCallback((option: SortOption) => {
         onSortChange(option);
         setIsOpen(false);
-    };
+    }, [onSortChange]);
+
+    const handleToggleOpen = useCallback(() => {
+        if (!isLoading) {
+            setIsOpen(prev => !prev);
+        }
+    }, [isLoading]);
+
+    const handleCloseDropdown = useCallback(() => {
+        setIsOpen(false);
+    }, []);
 
     return (
         <div className="relative inline-block text-left">
@@ -35,7 +45,7 @@ const SortFilter: React.FC<SortFilterProps> = ({ currentSort, onSortChange, isLo
                 <button
                     type="button"
                     className={`group inline-flex items-center justify-center w-full rounded-lg bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-lg border border-gray-300 dark:border-gray-600 hover:shadow-xl hover:from-blue-50 hover:to-indigo-50 dark:hover:from-gray-700 dark:hover:to-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 min-w-[180px] ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                    onClick={() => !isLoading && setIsOpen(!isOpen)}
+                    onClick={handleToggleOpen}
                     disabled={isLoading}
                 >
                     <span className="flex items-center">
@@ -49,9 +59,9 @@ const SortFilter: React.FC<SortFilterProps> = ({ currentSort, onSortChange, isLo
 
             {isOpen && (
                 <>
-                    <div 
-                        className="fixed inset-0 z-10" 
-                        onClick={() => setIsOpen(false)}
+                    <div
+                        className="fixed inset-0 z-10"
+                        onClick={handleCloseDropdown}
                     />
                     <div className="absolute right-0 z-20 mt-2 w-64 origin-top-right rounded-xl bg-white dark:bg-gray-800 shadow-2xl ring-1 ring-black ring-opacity-5 dark:ring-gray-600 focus:outline-none animate-in fade-in-0 zoom-in-95 duration-300 border border-gray-200 dark:border-gray-600">
                         <div className="py-2">
@@ -62,11 +72,10 @@ const SortFilter: React.FC<SortFilterProps> = ({ currentSort, onSortChange, isLo
                                 <button
                                     key={option.value}
                                     onClick={() => handleOptionSelect(option.value)}
-                                    className={`${
-                                        currentSort === option.value
+                                    className={`${currentSort === option.value
                                             ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-700 dark:text-blue-300 border-l-4 border-blue-500'
                                             : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 dark:hover:from-gray-700 dark:hover:to-gray-600'
-                                    } group flex w-full items-center px-4 py-3 text-sm transition-all duration-300 hover:scale-105 transform relative overflow-hidden`}
+                                        } group flex w-full items-center px-4 py-3 text-sm transition-all duration-300 hover:scale-105 transform relative overflow-hidden`}
                                     style={{
                                         animationDelay: `${index * 50}ms`
                                     }}
@@ -90,4 +99,4 @@ const SortFilter: React.FC<SortFilterProps> = ({ currentSort, onSortChange, isLo
     );
 };
 
-export default SortFilter;
+export default React.memo(SortFilter);

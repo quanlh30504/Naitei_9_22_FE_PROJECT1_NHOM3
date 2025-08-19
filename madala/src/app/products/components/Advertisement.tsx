@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import SimpleBanner from '@/Components/banner/SimpleBanner';
 
 const Advertisement = () => {
@@ -13,4 +14,4 @@ const Advertisement = () => {
     );
 };
 
-export default Advertisement;
+export default React.memo(Advertisement);
