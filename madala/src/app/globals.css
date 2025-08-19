@@ -310,3 +310,8 @@
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
+
+.pin-input-group [data-slot="input-otp-slot"] {
+  -webkit-text-security: disc;
+  text-security: disc;
+}
