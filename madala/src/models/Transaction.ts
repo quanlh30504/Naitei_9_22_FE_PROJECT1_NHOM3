@@ -24,6 +24,7 @@ export interface ITransaction extends Document {
   status: (typeof TRANSACTION_STATUSES)[number];
   description: string;
   metadata?: Record<string, any>; // Lưu các thông tin phụ
+  transactionTimestamp?: Date; // Thời gian giao dịch gốc từ ngân hàng
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +47,7 @@ const TransactionSchema: Schema = new Schema(
     },
     description: { type: String, required: true },
     metadata: { type: Schema.Types.Mixed }, // Cho phép lưu object với cấu trúc bất kỳ
+    transactionTimestamp: { type: Date },
   },
   {
     timestamps: true,

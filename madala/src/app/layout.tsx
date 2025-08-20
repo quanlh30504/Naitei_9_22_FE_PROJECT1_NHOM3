@@ -2,7 +2,6 @@ import AuthProvider from "@/Components/Auth/AuthProvider";
 import BanWatcher from "@/Components/Auth/BanWatcher";
 import ToastProvider from "@/Components/ToastProvider";
 import { ConditionalLayout } from "@/Components/ConditionalLayout";
-import CompareProvider from "@/contexts/CompareContext";
 import { ThemeProvider } from "@/Components/providers/ThemeProvider";
 
 import type { Metadata } from "next";
@@ -12,6 +11,7 @@ import Footer from "@/Components/footer";
 import SiteHeader from "@/Components/SiteHeader";
 import { getCart } from "@/lib/actions/cart";
 import CartStateSyncer from "@/Components/CartStateSyncer";
+import AblyClientProvider from "@/Components/providers/AblyClientProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,6 +54,7 @@ export default async function RootLayout({
           forcedTheme={undefined}
         >
           <AuthProvider>
+            <AblyClientProvider />
             <BanWatcher />
             <ToastProvider />
             <CartStateSyncer serverCart={plainInitialCart} />
