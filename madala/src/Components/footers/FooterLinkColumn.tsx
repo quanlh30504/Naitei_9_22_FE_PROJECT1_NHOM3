@@ -1,3 +1,4 @@
+import React from "react";
 import Link from "next/link";
 
 interface FooterLinkColumnProps {
@@ -5,7 +6,7 @@ interface FooterLinkColumnProps {
   links: { href: string; text: string }[];
 }
 
-export default function FooterLinkColumn({ title, links }: FooterLinkColumnProps) {
+const FooterLinkColumn = React.memo(function FooterLinkColumn({ title, links }: FooterLinkColumnProps) {
   return (
     <div>
       <h3 className="text-lg font-semibold mb-6 text-[#8BC34A] uppercase">{title}</h3>
@@ -20,4 +21,6 @@ export default function FooterLinkColumn({ title, links }: FooterLinkColumnProps
       </ul>
     </div>
   );
-}
+});
+
+export default FooterLinkColumn;

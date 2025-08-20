@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useCallback, useMemo } from "react";
 import { useActionState } from "react";
 import type { IUser } from "@/models/User";
 import { useRouter } from "next/navigation";
@@ -46,15 +47,15 @@ interface UserInfoFormProps {
   user: IUser;
 }
 
-export default function UserInfoForm({ user }: UserInfoFormProps) {
+const UserInfoForm: React.FC<UserInfoFormProps> = ({ user }) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const genderOptions = [
+  const genderOptions = useMemo(() => [
     { value: "male", label: "Nam" },
     { value: "female", label: "Nữ" },
     { value: "other", label: "Khác" },
-  ];
+  ], []);
 
   const form = useForm<UserInfoFormData>({
     resolver: zodResolver(userInfoSchema),
@@ -67,7 +68,7 @@ export default function UserInfoForm({ user }: UserInfoFormProps) {
     },
   });
 
-  const onSubmit = (data: UserInfoFormData) => {
+  const onSubmit = useCallback((data: UserInfoFormData) => {
     startTransition(async () => {
       try {
         // Tạo FormData để gửi đến server action
@@ -92,7 +93,7 @@ export default function UserInfoForm({ user }: UserInfoFormProps) {
         toast.error("Có lỗi xảy ra. Vui lòng thử lại!");
       }
     });
-  };
+  }, [router, startTransition]);
 
   return (
     <Form {...form}>
@@ -262,4 +263,6 @@ export default function UserInfoForm({ user }: UserInfoFormProps) {
       </form>
     </Form>
   );
-}
+};
+
+export default React.memo(UserInfoForm);

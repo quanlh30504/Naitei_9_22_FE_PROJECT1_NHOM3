@@ -1,8 +1,9 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Input } from "@/Components/ui/input";
 import { Button } from "@/Components/ui/button";
 import {
@@ -28,14 +29,15 @@ import {
 import { getUserForHeader, UserHeaderData } from "@/lib/actions/user";
 import { useCartStore } from "@/store/useCartStore";
 import { ThemeToggle } from "@/Components/ui/ThemeToggle";
-import MandalaPayButton from '@/Components/mandala-pay/shared/MandalaPayButton'; 
+import MandalaPayButton from '@/Components/mandala-pay/shared/MandalaPayButton';
 
-
-export default function Header({
-  initialUserData,
-}: {
+interface HeaderProps {
   initialUserData: UserHeaderData | null;
-}) {
+}
+
+function HeaderComponent({
+  initialUserData,
+}: HeaderProps) {
   const [search, setSearch] = useState("");
   const pathname = usePathname();
   const router = useRouter();
@@ -64,18 +66,27 @@ export default function Header({
     }
   }, [status]); // Phụ thuộc duy nhất vào 'status'
 
-  const currentMenuItems = session?.user ? userMenuItems : guestMenuItems;
+  const currentMenuItems = useMemo(() => {
+    return session?.user ? userMenuItems : guestMenuItems;
+  }, [session?.user]);
 
-  const getDisplayText = () => {
+  const getDisplayText = useCallback(() => {
     if (userData) {
       return userData.name || userData.email || "User";
     }
     return "Tài khoản";
-  };
+  }, [userData]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     signOut({ callbackUrl: "/" });
-  };
+  }, []);
+
+  const handleSearch = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (search.trim()) {
+      router.push(`/search?query=${encodeURIComponent(search.trim())}`);
+    }
+  }, [search, router]);
 
   useEffect(() => {
     setSearch("");
@@ -92,13 +103,6 @@ export default function Header({
       window.removeEventListener("loginSuccess", handleLoginSuccess);
     };
   }, [update]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (search.trim()) {
-      router.push(`/search?query=${encodeURIComponent(search.trim())}`);
-    }
-  };
 
   return (
     <header className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-700">
@@ -145,7 +149,7 @@ export default function Header({
           <div className="flex items-center gap-4">
             {/* Theme Toggle */}
             <ThemeToggle />
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -251,3 +255,6 @@ export default function Header({
     </header>
   );
 }
+
+const Header = React.memo(HeaderComponent);
+export default Header;

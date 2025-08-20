@@ -1,18 +1,19 @@
 "use client";
 
+import React, { useMemo } from "react";
 import Link from "next/link";
 import { Facebook, Twitter, Instagram, Globe, Github, Linkedin } from "lucide-react";
 import { Button } from "@/Components/ui/button";
 
-export default function SocialLinks() {
-  const links = [
+const SocialLinks: React.FC = () => {
+  const links = useMemo(() => [
     { icon: <Facebook className="w-4 h-4" />, label: "FACEBOOK", href: "#" },
     { icon: <Twitter className="w-4 h-4" />, label: "TWITTER", href: "#" },
     { icon: <Instagram className="w-4 h-4" />, label: "INSTAGRAM", href: "#" },
     { icon: <Globe className="w-4 h-4" />, label: "GOOGLE +", href: "#" },
     { icon: <Github className="w-4 h-4" />, label: "GITHUB", href: "#" },
     { icon: <Linkedin className="w-4 h-4" />, label: "LINKEDIN", href: "#" },
-  ];
+  ], []);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-700/50 p-6 border border-gray-100 dark:border-gray-700 mb-8">
@@ -41,4 +42,6 @@ export default function SocialLinks() {
       </div>
     </div>
   );
-}
+};
+
+export default React.memo(SocialLinks);

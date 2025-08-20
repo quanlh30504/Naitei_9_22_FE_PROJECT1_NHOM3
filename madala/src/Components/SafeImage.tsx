@@ -1,7 +1,7 @@
 // components/SafeImage.tsx
 
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { getValidImageUrl } from '@/lib/utils';
 
@@ -12,12 +12,12 @@ interface SafeImageProps {
     className?: string;
     fallbackClassName?: string;
     priority?: boolean;
-    fill?: boolean; 
-    width?: number; 
-    height?: number; 
+    fill?: boolean;
+    width?: number;
+    height?: number;
 }
 
-const SafeImage: React.FC<SafeImageProps> = ({
+const SafeImage = React.memo(function SafeImage({
     src,
     alt,
     className = '',
@@ -26,9 +26,21 @@ const SafeImage: React.FC<SafeImageProps> = ({
     fill = false,
     width,
     height
-}) => {
+}: SafeImageProps) {
     const [hasError, setHasError] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+
+    const handleError = useCallback(() => {
+        if (process.env.NODE_ENV === 'development') {
+            console.error('SafeImage - Lỗi tải ảnh:', src);
+        }
+        setHasError(true);
+        setIsLoading(false);
+    }, [src]);
+
+    const handleLoad = useCallback(() => {
+        setIsLoading(false);
+    }, []);
 
     // Xác thực props: Nếu không fill thì phải có width/height
     if (!fill && (width === undefined || height === undefined)) {
@@ -70,14 +82,8 @@ const SafeImage: React.FC<SafeImageProps> = ({
                 {...imageProps}
                 className={className}
                 priority={priority}
-                onLoad={() => setIsLoading(false)}
-                onError={() => {
-                    if (process.env.NODE_ENV === 'development') {
-                        console.error('SafeImage - Lỗi tải ảnh:', imageUrl);
-                    }
-                    setHasError(true);
-                    setIsLoading(false);
-                }}
+                onLoad={handleLoad}
+                onError={handleError}
                 style={{
                     // Dùng className để kiểm soát object-fit (ví dụ: object-cover)
                     transition: 'opacity 0.3s ease-in-out',
@@ -86,7 +92,7 @@ const SafeImage: React.FC<SafeImageProps> = ({
             />
         </>
     );
-};
+});
 
 // Tách UI fallback ra để tái sử dụng
 const FallbackUI: React.FC<{ style?: React.CSSProperties, className?: string }> = ({ style, className }) => (

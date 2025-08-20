@@ -9,11 +9,11 @@ interface ProductGridProps {
   onToggleFavorite?: (product: IProduct) => void;
 }
 
-const ProductGrid: React.FC<ProductGridProps> = ({ 
-  products, 
-  onAddToCart, 
+const ProductGrid = React.memo(function ProductGrid({
+  products,
+  onAddToCart,
   onToggleFavorite
-}) => {
+}: ProductGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 auto-rows-fr">
       {products.map((product) => (
@@ -26,6 +26,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({
       ))}
     </div>
   );
-};
+});
 
 export default ProductGrid;

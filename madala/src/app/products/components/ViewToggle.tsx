@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { FaThLarge, FaList } from 'react-icons/fa';
 
 interface ViewToggleProps {
@@ -13,7 +13,7 @@ const VIEWTOGGLE_BTN_ACTIVE = "bg-white dark:bg-gray-800 text-blue-600 dark:text
 const VIEWTOGGLE_BTN_INACTIVE = "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-600/50";
 
 const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
-  const tabs = [
+  const tabs = useMemo(() => [
     {
       id: 'grid' as const,
       label: 'Grid View',
@@ -21,17 +21,21 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
     },
     {
       id: 'list' as const,
-      label: 'List View', 
+      label: 'List View',
       icon: <FaList className="text-sm" />
     }
-  ];
+  ], []);
+
+  const handleViewChange = useCallback((mode: 'grid' | 'list') => {
+    onViewChange(mode);
+  }, [onViewChange]);
 
   return (
     <div className={VIEWTOGGLE_CONTAINER}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
-          onClick={() => onViewChange(tab.id)}
+          onClick={() => handleViewChange(tab.id)}
           className={
             `${VIEWTOGGLE_BTN} ` +
             (viewMode === tab.id ? VIEWTOGGLE_BTN_ACTIVE : VIEWTOGGLE_BTN_INACTIVE)
@@ -45,4 +49,4 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
   );
 };
 
-export default ViewToggle;
+export default React.memo(ViewToggle);

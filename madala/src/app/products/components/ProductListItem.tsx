@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { IProduct } from "@/models/Product";
 import { Heart, ShoppingCart, Scale } from "lucide-react";
@@ -10,6 +10,7 @@ import SafeImage from "@/Components/SafeImage";
 import StarRating from "@/Components/products/StarRating";
 import { useCompareStore } from "@/store/useCompareStore";
 import { getProductDiscount } from "@/lib/utils";
+
 interface ProductListItemProps {
   product: IProduct;
   onAddToCart?: (product: IProduct) => void;
@@ -23,35 +24,45 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
 }) => {
   const router = useRouter();
   const { isInCompare, addToCompare, removeFromCompare } = useCompareStore();
-  const { hasDiscount, discountPercent } = getProductDiscount(product);
 
-  const isProductInCompare = isInCompare(String(product._id));
+  const discountInfo = useMemo(() => getProductDiscount(product), [product]);
+  const { hasDiscount, discountPercent } = discountInfo;
 
-  const handleCompareClick = (e: React.MouseEvent) => {
+  const isProductInCompare = useMemo(() =>
+    isInCompare(String(product._id))
+    , [isInCompare, product._id]);
+
+  const handleCompareClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     const productId = String(product._id) || product.productId || product.id;
 
     if (isProductInCompare) {
-      // Nếu đã có trong danh sách so sánh, loại bỏ
       removeFromCompare(productId);
     } else {
-      // Nếu chưa có, thêm vào danh sách so sánh
       addToCompare(product);
     }
-  };
+  }, [isProductInCompare, removeFromCompare, addToCompare, product]);
 
-  const handleProductClick = () => {
-    // Navigate to product detail page using slug
+  const handleProductClick = useCallback(() => {
     if (product.slug) {
       router.push(`/products/${product.slug}`);
     }
-  };
+  }, [product.slug, router]);
+
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAddToCart?.(product);
+  }, [onAddToCart, product]);
+
+  const handleToggleFavorite = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleFavorite?.(product);
+  }, [onToggleFavorite, product]);
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden p-4 mb-4 ${
-        isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
-      }`}
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden p-4 mb-4 ${isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
+        }`}
       onClick={handleProductClick}
     >
       <div className="flex flex-col md:flex-row gap-4">
@@ -81,11 +92,10 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
             size="icon"
             variant={isProductInCompare ? "default" : "secondary"}
             onClick={handleCompareClick}
-            className={`absolute top-2 right-2 w-8 h-8 rounded-full transition-all duration-300 ${
-              isProductInCompare
+            className={`absolute top-2 right-2 w-8 h-8 rounded-full transition-all duration-300 ${isProductInCompare
                 ? "bg-[#8ba63a] text-white hover:bg-red-500"
                 : "bg-white dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-90 text-gray-600 dark:text-gray-300 hover:bg-[#8ba63a] hover:text-white"
-            }`}
+              }`}
             title={
               isProductInCompare
                 ? "Bỏ khỏi danh sách so sánh"
@@ -146,10 +156,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
           {/* Action Buttons - Now at bottom */}
           <div className="flex gap-2 mt-auto">
             <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddToCart?.(product);
-              }}
+              onClick={handleAddToCart}
               className="flex-1 bg-[#8ba63a] hover:bg-[#7a942c] dark:bg-[#9CCC65] dark:hover:bg-[#8ba63a] text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
             >
               <ShoppingCart className="w-3 h-3 mr-1" />
@@ -159,10 +166,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
             <Button
               size="icon"
               variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorite?.(product);
-              }}
+              onClick={handleToggleFavorite}
               className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <Heart className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors" />
@@ -174,4 +178,4 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
   );
 };
 
-export default ProductListItem;
+export default React.memo(ProductListItem);
