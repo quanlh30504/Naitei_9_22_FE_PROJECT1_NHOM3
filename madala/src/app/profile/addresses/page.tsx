@@ -10,7 +10,7 @@ export default async function AddressesPage() {
     const response = await getAddresses();
 
     if (!response.success) {
-      throw new Error(response.error || "Đã xảy ra lỗi không xác định.");
+      throw new Error(response.message || "Đã xảy ra lỗi không xác định.");
     }
 
     const addresses = response.data || [];

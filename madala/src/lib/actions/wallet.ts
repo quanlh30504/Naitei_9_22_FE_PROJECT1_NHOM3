@@ -9,7 +9,7 @@ import { sendWalletActivationOtp } from "../email";
 import { generateOtpCode } from "../utils";
 
 // --- ACTION 1: GỬI MÃ OTP ---
-export async function sendActivationOtp(prevState: any, formData: FormData) {
+export async function sendActivationOtp(prevState: unknown, formData: FormData) {
   const session = await auth();
   if (!session?.user?.id || !session.user.email) {
     return { success: false, message: "Lỗi xác thực." };
@@ -65,7 +65,7 @@ export async function sendActivationOtp(prevState: any, formData: FormData) {
 }
 
 // --- ACTION 2: XÁC THỰC MÃ OTP ---
-export async function verifyActivationOtp(prevState: any, formData: FormData) {
+export async function verifyActivationOtp(prevState: unknown, formData: FormData) {
   const session = await auth();
   const userId = session?.user?.id;
   const otp = formData.get("otp") as string;
@@ -99,7 +99,7 @@ export async function verifyActivationOtp(prevState: any, formData: FormData) {
 }
 
 // --- ACTION 3: TẠO VÍ VỚI MÃ PIN ---
-export async function createWalletWithPin(prevState: any, formData: FormData) {
+export async function createWalletWithPin(prevState: unknown, formData: FormData) {
   const session = await auth();
   const userId = session?.user?.id;
   const pin = formData.get("pin") as string;

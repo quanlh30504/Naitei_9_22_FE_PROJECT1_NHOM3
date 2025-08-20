@@ -1,6 +1,5 @@
 import React, { useMemo, useCallback } from "react";
-import { Star } from "lucide-react";
-import { FaStar, FaStarHalfAlt } from "react-icons/fa";
+import { Star, StarHalf } from "lucide-react";
 
 export type StarRatingSize = 'xs' | 'sm' | 'md' | 'lg';
 
@@ -40,11 +39,11 @@ const StarRating = React.memo(function StarRating({
     const renderDisplayStar = useCallback((index: number) => {
         const difference = rating - index;
         if (difference >= 1) {
-            return <FaStar key={index} className={`${sizeClasses[size]} text-yellow-400`} />;
+            return <Star key={index} className={`${sizeClasses[size]} text-yellow-400`} />;
         } else if (difference >= 0.5) {
-            return <FaStarHalfAlt key={index} className={`${sizeClasses[size]} text-yellow-400`} />;
+            return <StarHalf key={index} className={`${sizeClasses[size]} text-yellow-400`} />;
         } else {
-            return <FaStar key={index} className={`${sizeClasses[size]} text-gray-300`} />;
+            return <Star key={index} className={`${sizeClasses[size]} text-gray-300`} />;
         }
     }, [rating, size]);
 

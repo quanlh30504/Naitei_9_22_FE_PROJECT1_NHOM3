@@ -20,11 +20,25 @@ export const config = {
   },
 };
 
-// request body dưới dạng buffer thô
-async function buffer(readable: any) {
-  const chunks = [];
-  for await (const chunk of readable) {
-    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+// Hàm tiện ích để đọc request body dưới dạng buffer thô
+async function buffer(readable: ReadableStream<unknown> | null) {
+  if (!readable) return Buffer.alloc(0);
+  const reader = readable.getReader();
+  const chunks: Buffer[] = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      // Nếu value là Uint8Array (thường là trường hợp stream binary), truyền trực tiếp
+      if (value instanceof Uint8Array) {
+        chunks.push(Buffer.from(value));
+      } else if (Array.isArray(value)) {
+        chunks.push(Buffer.from(Uint8Array.from(value)));
+      } else {
+        // fallback: bỏ qua chunk không hợp lệ
+        // hoặc có thể throw error nếu muốn strict
+      }
+    }
   }
   return Buffer.concat(chunks);
 }
@@ -32,23 +46,23 @@ async function buffer(readable: any) {
 /**
  * Hàm tiện ích để sắp xếp các key của một object theo alphabet (đệ quy).
  */
-function sortObjectKeys(data: any): any {
+function sortObjectKeys(data: unknown): unknown {
   if (typeof data !== "object" || data === null) {
     return data;
   }
   if (Array.isArray(data)) {
     return data.map(sortObjectKeys);
   }
-  const sortedObj: { [key: string]: any } = {};
-  Object.keys(data)
+  const sortedObj: Record<string, unknown> = {};
+  Object.keys(data as Record<string, unknown>)
     .sort()
     .forEach((key) => {
-      sortedObj[key] = sortObjectKeys(data[key]);
+      sortedObj[key] = sortObjectKeys((data as Record<string, unknown>)[key]);
     });
   return sortedObj;
 }
 
-async function verifyCassoWebhook(req: Request): Promise<any | null> {
+async function verifyCassoWebhook(req: Request): Promise<unknown | null> {
   const webhookSecret = process.env.CASSO_SECURE_TOKEN;
   if (!webhookSecret) {
     console.error("CASSO_SECURE_TOKEN is not set.");
@@ -56,7 +70,7 @@ async function verifyCassoWebhook(req: Request): Promise<any | null> {
   }
 
   try {
-    const cassoSignatureHeader = headers().get("x-casso-signature");
+    const cassoSignatureHeader = (await headers()).get("x-casso-signature");
     if (!cassoSignatureHeader) {
       console.error("Missing X-Casso-Signature header.");
       return null;
@@ -108,15 +122,15 @@ async function verifyCassoWebhook(req: Request): Promise<any | null> {
 // --- WEBHOOK ---
 export async function POST(req: Request) {
   // Bước 1: Xác thực Webhook
-  const payload = await verifyCassoWebhook(req.clone());
-
-  if (!payload) {
+  const payloadRaw = await verifyCassoWebhook(req.clone());
+  if (!payloadRaw || typeof payloadRaw !== 'object' || payloadRaw === null) {
     return NextResponse.json(
       { message: "Webhook verification failed" },
       { status: 403 }
     );
   }
-
+  // Ép kiểu payload để truy cập thuộc tính
+  const payload = payloadRaw as { error: number; data?: Record<string, unknown> };
   // Bước 2: Xử lý Payload
   if (payload.error !== 0) {
     console.warn(
@@ -124,8 +138,7 @@ export async function POST(req: Request) {
     );
     return NextResponse.json({ message: "OK" }, { status: 200 });
   }
-
-  const transactionData = payload.data;
+  const transactionData = payload.data as Record<string, unknown> | undefined;
   if (
     !transactionData ||
     typeof transactionData !== "object" ||
@@ -136,13 +149,11 @@ export async function POST(req: Request) {
     );
     return NextResponse.json({ message: "OK" }, { status: 200 });
   }
-
-  const rawDescription = transactionData.description;
+  const rawDescription = typeof transactionData?.description === 'string' ? transactionData.description : '';
   const requestCode = extractRequestCode(rawDescription);
-  const amountReceived = transactionData.amount;
-  const bankTransactionId = transactionData.tid || transactionData.reference;
-  const transactionDateTime = transactionData.transactionDateTime;
-
+  const amountReceived = typeof transactionData?.amount === 'number' ? transactionData.amount : 0;
+  const bankTransactionId = (typeof transactionData?.tid === 'string' ? transactionData.tid : undefined)
+    || (typeof transactionData?.reference === 'string' ? transactionData.reference : undefined);
   if (!requestCode) {
     return NextResponse.json({ message: "OK" }, { status: 200 });
   }

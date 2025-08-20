@@ -1,13 +1,11 @@
 "use client";
-import React, { useTransition, useCallback, useMemo } from "react";
+import React, { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { addItemToCart } from "@/lib/actions/cart";
+import { buyNowAndRedirect } from "@/lib/actions/cart";
 import toast from "react-hot-toast";
 import { IProduct } from "@/models/Product";
 import { Heart, ShoppingCart, Scale } from "lucide-react";
 import { Button } from "@/Components/ui/button";
-import { Card, CardContent } from "@/Components/ui/card";
-import { Badge } from "@/Components/ui/badge";
 import SafeImage from "@/Components/SafeImage";
 import StarRating from "@/Components/products/StarRating";
 import { useCompareStore } from "@/store/useCompareStore";
@@ -19,21 +17,17 @@ interface ProductCardProps {
   onToggleFavorite?: (product: IProduct) => void;
 }
 
-const ProductCard = React.memo(function ProductCard({
+const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onAddToCart,
   onToggleFavorite,
-}: ProductCardProps) {
+}) => {
   const router = useRouter();
   const { isInCompare, addToCompare, removeFromCompare } = useCompareStore();
-  const { hasDiscount, discountPercent } = useMemo(() =>
-    getProductDiscount(product), [product]
-  );
-  const isProductInCompare = useMemo(() =>
-    isInCompare(String(product._id)), [isInCompare, product._id]
-  );
+  const { hasDiscount, discountPercent } = getProductDiscount(product);
+  const isProductInCompare = isInCompare(String(product._id));
 
-  const handleCompareClick = useCallback((e: React.MouseEvent) => {
+  const handleCompareClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const productId = String(product._id) || product.productId || product.id;
 
@@ -44,40 +38,40 @@ const ProductCard = React.memo(function ProductCard({
       // Nếu chưa có, thêm vào danh sách so sánh
       addToCompare(product);
     }
-  }, [isProductInCompare, removeFromCompare, addToCompare, product]);
+  };
 
-  const handleProductClick = useCallback(() => {
+  const handleProductClick = () => {
     // Chuyển hướng sang page details
     if (product.slug) {
       router.push(`/products/${product.slug}`);
     }
-  }, [product.slug, router]);
+  };
 
   const [isPending, startTransition] = useTransition();
 
-  const handleBuyNow = async (e: React.MouseEvent) => {
+  const handleBuyNow = (e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      const result = await addItemToCart(String(product._id), 1);
-      if (result?.success) {
-        toast.success('Đã thêm sản phẩm vào giỏ hàng!');
-        router.push('/cart');
-      } else {
-        toast.error(result?.message || "Đã có lỗi xảy ra. Vui lòng thử lại.");
+    startTransition(async () => {
+      try {
+        const result = await buyNowAndRedirect(String(product._id), 1);
+        if (result?.error) {
+          toast.error(result.error);
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.");
+        } else {
+          toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
+        }
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.");
-      } else {
-        toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
-      }
-    }
+    });
   };
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.035] hover:border-2 hover:border-green-700 dark:hover:border-green-600 border border-transparent transition-all duration-300 overflow-hidden flex flex-col h-full min-h-[400px] cursor-pointer ${isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
-        }`}
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.035] hover:border-2 hover:border-green-700 dark:hover:border-green-600 border border-transparent transition-all duration-300 overflow-hidden flex flex-col h-full min-h-[400px] cursor-pointer ${
+        isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
+      }`}
       onClick={handleProductClick}
     >
       <div
@@ -101,14 +95,16 @@ const ProductCard = React.memo(function ProductCard({
         )}
 
         {/* Button So sánh ở góc trên bên phải */}
+
         <Button
           size="icon"
           variant={isProductInCompare ? "default" : "secondary"}
           onClick={handleCompareClick}
-          className={`absolute top-2 right-2 w-10 h-10 rounded-full transition-all duration-300 ${isProductInCompare
+          className={`absolute top-2 right-2 w-10 h-10 rounded-full transition-all duration-300 ${
+            isProductInCompare
               ? "bg-[#8ba63a] text-white hover:bg-red-500"
               : "bg-white dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-90 text-gray-600 dark:text-gray-300 hover:bg-[#8ba63a] hover:text-white"
-            }`}
+          }`}
           title={
             isProductInCompare
               ? "Bỏ khỏi danh sách so sánh"
@@ -117,13 +113,6 @@ const ProductCard = React.memo(function ProductCard({
         >
           <Scale className="w-4 h-4" />
         </Button>
-      </div>
-
-      {/* Product Information */}
-      <div className="p-4 flex flex-col h-full">
-        <p className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 h-4">
-          {product.attributes?.brand || "Brand"}
-        </p>
 
         <h3
           className="font-semibold text-gray-800 dark:text-gray-200 mb-2 line-clamp-2 cursor-pointer hover:text-[#8ba63a] dark:hover:text-[#9CCC65] transition-colors h-12 overflow-hidden leading-5"
@@ -181,6 +170,6 @@ const ProductCard = React.memo(function ProductCard({
       </div>
     </div>
   );
-});
+};
 
 export default ProductCard;

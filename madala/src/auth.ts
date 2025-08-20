@@ -28,7 +28,6 @@ import bcrypt from "bcrypt";
 import connectToDB from "@/lib/db";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
-import { PROVIDER_IDS } from "@/constants/auth";
 import type { User as NextAuthUser, Session } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 
@@ -37,7 +36,7 @@ interface DBUser {
   email: string;
   name?: string;
   password?: string;
-  role?: "user" | "admin" | undefined;
+  role?: "user" | "admin";
   isActive?: boolean;
 }
 
@@ -49,14 +48,7 @@ interface User extends NextAuthUser {
   isActive?: boolean;
 }
 
-interface AuthToken extends JWT {
-  id: string;
-  email?: string;
-  name?: string;
-  role?: "user" | "admin";
-  isActive?: boolean;
-  lastCheckedAt?: number;
-}
+
 
 export const authConfig = {
   providers: [
@@ -78,40 +70,40 @@ export const authConfig = {
       },
       async authorize(
         credentials: Partial<Record<"email" | "password", unknown>>
-      ): Promise<User & { error?: string } | null> {
+      ): Promise<(User & { error?: string }) | null> {
         try {
-          const email = typeof credentials?.email === 'string' ? credentials.email.toLowerCase().trim() : undefined;
+          const email = typeof credentials?.email === 'string' ? credentials.email.toLowerCase().trim() : '';
           const password = credentials?.password as string | undefined;
           if (!email || !password) {
-            return { id: "", email: email || "", error: "missing_credentials" } as any;
+            return { id: "", email, error: "missing_credentials" };
           }
           await connectToDB();
           const user = await User.findOne({ email }).lean<DBUser>();
           if (!user) {
-            return { id: "", email, error: "user_not_found" } as any;
+            return { id: "", email, error: "user_not_found" };
           }
           if (!user.password) {
-            return { id: user._id.toString(), email: user.email, error: "no_password" } as any;
+            return { id: user._id.toString(), email: user.email || '', error: "no_password" };
           }
           // Kiểm tra password
           const isValid = await bcrypt.compare(password, user.password);
           if (!isValid) {
-            return { id: user._id.toString(), email: user.email, error: "invalid_password" } as any;
+            return { id: user._id.toString(), email: user.email || '', error: "invalid_password" };
           }
           // Kiểm tra user có bị ban không (double check)
           if (user.isActive === false) {
-            return { id: user._id.toString(), email: user.email, error: "banned" } as any;
+            return { id: user._id.toString(), email: user.email || '', error: "banned" };
           }
           return {
             id: user._id.toString(),
-            email: user.email,
-            name: user.name,
+            email: user.email || '',
+            name: typeof user.name === 'string' ? user.name : undefined,
             role: user.role === "admin" ? "admin" : "user",
             isActive: user.isActive,
           };
         } catch (error) {
           console.error("Auth error:", error);
-          return { id: "", email: "", error: "server_error" } as any;
+          return { id: "", email: "", error: "server_error" };
         }
       },
     }),
@@ -122,45 +114,44 @@ export const authConfig = {
   },
 
   callbacks: {
-  async jwt(params: any) {
-    const { token, user, account } = params;
-    // Lần đầu sau login
-    if (user && account) {
-      token.id = (user as any).id;
-      token.email = typeof user.email === 'string' && user.email !== null ? user.email : undefined;
-      token.role = (user as any).role ?? 'user';
-      token.isActive = (user as any).isActive ?? true;
-      token.provider = account.provider;
-      token.lastCheckedAt = Date.now();
-      return token;
-    }
-
-    // Tuỳ chọn: refresh isActive tối đa mỗi 10 phút
-    const TEN_MIN = 10 * 60 * 1000;
-    if (!token.lastCheckedAt || Date.now() - (token.lastCheckedAt as number) > TEN_MIN) {
-      await connectToDB();
-      const email = typeof token.email === 'string' ? token.email : undefined;
-      if (email) {
-        const u = await User.findOne({ email }).select('isActive').lean();
-        // Nếu u là mảng (trường hợp bất thường), lấy phần tử đầu tiên
-        const userObj = Array.isArray(u) ? u[0] : u;
-        if (userObj && typeof userObj.isActive !== 'undefined') {
-          token.isActive = userObj.isActive !== false;
-        }
+    jwt: async ({ token, user, account }: { token: JWT; user?: User | null; account?: Record<string, unknown> }) => {
+      // Lần đầu sau login
+      if (user && account) {
+        token.id = (user as User).id;
+        token.email = user.email;
+        token.role = (user as User).role ?? 'user';
+        token.isActive = (user as User).isActive ?? true;
+        token.provider = account.provider;
+        token.lastCheckedAt = Date.now();
+        return token;
       }
-      token.lastCheckedAt = Date.now();
-    }
-    return token;
-  },
-  async session(params: any) {
-    const { session, token } = params;
-    if (session.user) {
-      (session.user as any).id = token.id as string;
-      (session.user as any).role = (token.role as string) ?? 'user';
-      (session.user as any).isActive = (token.isActive as boolean) ?? true;
-    }
-    return session;
-  },
+
+      // Tuỳ chọn: refresh isActive tối đa mỗi 10 phút
+      const TEN_MIN = 10 * 60 * 1000;
+      if (!token.lastCheckedAt || Date.now() - (token.lastCheckedAt as number) > TEN_MIN) {
+        await connectToDB();
+        const email = token.email;
+        if (email) {
+          const u = await User.findOne({ email }).select('isActive').lean();
+          // Nếu u là mảng (trường hợp bất thường), lấy phần tử đầu tiên
+          const userObj = Array.isArray(u) ? u[0] : u;
+          if (userObj && typeof (userObj as { isActive?: boolean }).isActive !== 'undefined') {
+            token.isActive = (userObj as { isActive?: boolean }).isActive !== false;
+          }
+        }
+        token.lastCheckedAt = Date.now();
+      }
+      return token;
+    },
+    session: async ({ session, token }: { session: Session; token: JWT }) => {
+      if (session.user) {
+        session.user.id = typeof token.id === 'string' ? token.id : '';
+        session.user.role = typeof token.role === 'string' ? token.role : 'user';
+        session.user.name = typeof token.name === 'string' ? token.name : undefined;
+        session.user.email = typeof token.email === 'string' ? token.email : '';
+      }
+      return session;
+    },
   },
   pages: {
     signIn: "/login",

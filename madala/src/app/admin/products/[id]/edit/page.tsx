@@ -2,8 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
-import { productFormSchema } from '@/lib/validations/forms';
-import { z } from 'zod';
+import { productFormSchema, ProductFormData } from '@/lib/validations/forms';
 import { AdminLayout } from '@/Components/admin/AdminLayout';
 import { Button } from '@/Components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -32,14 +31,14 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
         formState: { errors },
         reset,
         control,
-    } = useForm<any>({
+    } = useForm<ProductFormData>({
         resolver: zodResolver(productFormSchema),
         defaultValues: {
             name: '',
             description: '',
             shortDescription: '',
             price: 0,
-            salePrice: undefined,
+            salePrice: 0,
             sku: '',
             stock: 0,
             images: [],
@@ -69,30 +68,30 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
                 if (data.success) {
                     const product = data.data;
                     setProductId(product._id);
-                                reset({
-                                    name: product.name,
-                                    description: product.description,
-                                    shortDescription: product.shortDescription,
-                                    price: product.price,
-                                    salePrice: product.salePrice,
-                                    sku: product.sku,
-                                    stock: product.stock,
-                                    images: product.images || [],
-                                    categoryIds: product.categoryIds || [],
-                                    tags: product.tags || [],
-                                    attributes: {
-                                        brand: product.attributes?.brand || '',
-                                        type: product.attributes?.type || '',
-                                        material: product.attributes?.material || '',
-                                        color: product.attributes?.color || '',
-                                        size: product.attributes?.size || '',
-                                        weight: product.attributes?.weight || '',
-                                    },
-                                    isActive: product.isActive,
-                                    isFeatured: product.isFeatured,
-                                    isHotTrend: product.isHotTrend,
-                                    discountPercentage: product.discountPercentage || 0,
-                                });
+                    reset({
+                        name: product.name,
+                        description: product.description,
+                        shortDescription: product.shortDescription,
+                        price: product.price,
+                        salePrice: product.salePrice,
+                        sku: product.sku,
+                        stock: product.stock,
+                        images: product.images || [],
+                        categoryIds: product.categoryIds || [],
+                        tags: product.tags || [],
+                        attributes: {
+                            brand: product.attributes?.brand || '',
+                            type: product.attributes?.type || '',
+                            material: product.attributes?.material || '',
+                            color: product.attributes?.color || '',
+                            size: product.attributes?.size || '',
+                            weight: product.attributes?.weight || '',
+                        },
+                        isActive: product.isActive,
+                        isFeatured: product.isFeatured,
+                        isHotTrend: product.isHotTrend,
+                        discountPercentage: product.discountPercentage || 0,
+                    });
                 } else {
                     toast.error('Không tìm thấy sản phẩm');
                     router.push('/admin/products');
@@ -113,7 +112,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
         return [];
     };
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: ProductFormData) => {
         setLoading(true);
         try {
             const response = await fetch(`/api/admin/products/${productId}`, {
@@ -124,7 +123,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             const result = await response.json();
             if (result.success) {
                 toast.success('Cập nhật sản phẩm thành công!');
-                router.push('/admin/products');
+                setTimeout(() => router.push('/admin/products'), 1000);
             } else {
                 toast.error(result.error || 'Lỗi khi cập nhật sản phẩm');
             }
@@ -132,6 +131,13 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             toast.error('Lỗi khi cập nhật sản phẩm');
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Hiển thị thông báo lỗi validate khi submit lỗi
+    const onError = (formErrors: any) => {
+        if (formErrors && Object.keys(formErrors).length > 0) {
+            toast.error('Vui lòng kiểm tra lại các trường bắt buộc!');
         }
     };
 
@@ -162,77 +168,85 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-800">
                             Chỉnh sửa sản phẩm
                         </h1>
-                        <p className="text-base font-medium text-gray-700 dark:text-gray-400">Cập nhật thông tin sản phẩm</p>
+                        <p className="text-base font-medium text-gray-700 dark:text-white">Cập nhật thông tin sản phẩm</p>
                     </div>
                 </div>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-6">
                     <ProductBasicInfoSection register={register} errors={errors} />
                     <PriceStockSection register={register} errors={errors} />
                     <ProductImagesSection
                         images={getValues('images') || []}
                         uploadingImage={loading}
-                        setValue={setValue as any}
-                        getValues={getValues as any}
+                        setValue={setValue}
+                        getValues={getValues}
                         errors={errors}
                         uploadImagesToCloudinary={uploadImagesToCloudinary}
                     />
+                    {errors.images && (
+                        <p className="text-red-500 text-xs mt-1">{errors.images.message as string}</p>
+                    )}
                     <Controller
                         name="categoryIds"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <ProductCategoriesTagsSection
-                                            value={field.value || []}
-                                            onChange={field.onChange}
-                                            errors={errors}
-                                            name="categoryIds"
-                                            label="Danh mục *"
-                                        />
-                                    )}
+                        control={control}
+                        render={({ field }) => (
+                            <>
+                                <ProductCategoriesTagsSection
+                                    value={field.value || []}
+                                    onChange={field.onChange}
+                                    errors={errors}
+                                    name="categoryIds"
+                                    label="Danh mục *"
                                 />
-                                <Controller
-                                    name="tags"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <ProductCategoriesTagsSection
-                                            value={field.value || []}
-                                            onChange={field.onChange}
-                                            errors={errors}
-                                            name="tags"
-                                            label="Tags"
-                                        />
-                                    )}
-                                />
-                                <Controller
-                                    name="attributes"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <ProductAttributesSection
-                                            attributes={field.value || { brand: '', type: '', material: '', color: '', size: '', weight: '' }}
-                                            onChange={field.onChange}
-                                        />
-                                    )}
-                                />
-                            <ProductSettingsSection
-                                isActive={getValues('isActive')}
-                                isFeatured={getValues('isFeatured')}
-                                isHotTrend={getValues('isHotTrend')}
-                                setValue={setValue as any}
+                                {errors.categoryIds && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.categoryIds.message as string}</p>
+                                )}
+                            </>
+                        )}
+                    />
+                    <Controller
+                        name="tags"
+                        control={control}
+                        render={({ field }) => (
+                            <ProductCategoriesTagsSection
+                                value={field.value || []}
+                                onChange={field.onChange}
+                                errors={errors}
+                                name="tags"
+                                label="Tags"
                             />
-                            <div className="flex justify-end space-x-4">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={loading}
-                                    className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-black dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700 dark:hover:text-yellow-300"
-                                    onClick={() => router.push('/admin/products')}
-                                >
-                                    Hủy
-                                </Button>
-                                <Button type="submit" disabled={loading}>
-                                    {loading ? 'Đang cập nhật...' : 'Cập nhật sản phẩm'}
-                                </Button>
-                            </div>
-                        </form>
+                        )}
+                    />
+                    <Controller
+                        name="attributes"
+                        control={control}
+                        render={({ field }) => (
+                            <ProductAttributesSection
+                                attributes={field.value || { brand: '', type: '', material: '', color: '', size: '', weight: '' }}
+                                onChange={field.onChange}
+                            />
+                        )}
+                    />
+                    <ProductSettingsSection
+                        isActive={getValues('isActive')}
+                        isFeatured={getValues('isFeatured')}
+                        isHotTrend={getValues('isHotTrend')}
+                        setValue={setValue}
+                    />
+                    <div className="flex justify-end space-x-4">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={loading}
+                            className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-black dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700 dark:hover:text-yellow-300"
+                            onClick={() => router.push('/admin/products')}
+                        >
+                            Hủy
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                            {loading ? 'Đang cập nhật...' : 'Cập nhật sản phẩm'}
+                        </Button>
+                    </div>
+                </form>
             </div>
         </AdminLayout>
     );

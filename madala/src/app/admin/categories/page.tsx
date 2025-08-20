@@ -5,19 +5,20 @@ import { AdminGuard } from '@/Components/admin/AdminGuard';
 import { AdminLayout } from '@/Components/admin/AdminLayout';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
-import { Textarea } from '@/Components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
-import { Switch } from '@/Components/ui/switch';
 import { Badge } from '@/Components/ui/badge';
 import {
     Dialog,
     DialogContent,
     DialogTrigger,
+    DialogTitle,
 } from '@/Components/ui/dialog';
-import CategoryForm, { CategoryFormValues } from '@/Components/admin/categories/CategoryForm';
-import { CategoryTable } from '@/Components/admin/categories/CategoryTable';
-import { Label } from '@/Components/ui/label';
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+import type { CategoryFormValues } from '@/lib/validations/forms';
+
+const CategoryForm = dynamic(() => import('@/Components/admin/categories/CategoryForm'), { ssr: false });
+const CategoryTable = dynamic(() => import('@/Components/admin/categories/CategoryTable').then(mod => mod.CategoryTable), { ssr: false });
+import { Plus, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { ICategory } from '@/models/Category';
 import { Category } from '@/types/category';
@@ -32,16 +33,6 @@ interface CategoryFormData {
     sortOrder: number;
     isActive: boolean;
 }
-
-const initialFormData: CategoryFormData = {
-    name: '',
-    slug: '',
-    description: '',
-    parentId: '',
-    level: 1,
-    sortOrder: 1,
-    isActive: true,
-};
 
 export default function CategoriesPage() {
     const [categories, setCategories] = useState<ICategory[]>([]);
@@ -197,6 +188,7 @@ export default function CategoriesPage() {
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-md">
+                                <DialogTitle className="sr-only">Thêm hoặc chỉnh sửa danh mục</DialogTitle>
                                 <CategoryForm
                                     parentCategories={parentCategoriesForForm}
                                     editingCategory={editingCategoryForForm}
@@ -232,14 +224,16 @@ export default function CategoriesPage() {
                     </div>
 
                     {/* Categories Table */}
-                    <CategoryTable
-                        categories={categories.map(mapICategoryToCategory)}
-                        loading={loading}
-                        filteredCategories={filteredCategoriesForTable}
-                        getParentCategoryName={getParentCategoryName}
-                        handleEdit={handleEdit}
-                        handleDelete={handleDelete}
-                    />
+                    <Suspense fallback={<div>Đang tải bảng danh mục...</div>}>
+                        <CategoryTable
+                            categories={categories.map(mapICategoryToCategory)}
+                            loading={loading}
+                            filteredCategories={filteredCategoriesForTable}
+                            getParentCategoryName={getParentCategoryName}
+                            handleEdit={handleEdit}
+                            handleDelete={handleDelete}
+                        />
+                    </Suspense>
                 </div>
             </AdminLayout>
         </AdminGuard>

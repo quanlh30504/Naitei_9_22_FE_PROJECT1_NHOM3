@@ -1,13 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
-import { Textarea } from "@/Components/ui/textarea";
 import { Badge } from "@/Components/ui/badge";
-import { ChevronLeft, ChevronRight, Home } from "lucide-react";
 import { CommentForm } from '@/Components/news/CommentForm'; 
 
 import {

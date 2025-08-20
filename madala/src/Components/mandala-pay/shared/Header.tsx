@@ -6,11 +6,11 @@ import Link from "next/link";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import NotificationItem from "@/Components/shared/NotificationItem";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
 } from "@/Components/DropdownMenu";
 import { Button } from "@/Components/ui/button";
 import { cn } from "@/lib/utils";
@@ -51,10 +51,10 @@ const NotificationBell = () => {
                 <div className="max-h-96 overflow-y-auto">
                     {notifications.length > 0 ? (
                         notifications.map((notif) => (
-                            <NotificationItem 
-                                key={notif._id} 
+                            <NotificationItem
+                                key={notif._id}
                                 notif={notif}
-                                onClick={markOneAsRead} 
+                                onClick={markOneAsRead}
                             />
                         ))
                     ) : (

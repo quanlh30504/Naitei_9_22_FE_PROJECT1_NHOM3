@@ -26,7 +26,7 @@ async function connectAndPing(client: MongoClient) {
 // development environment: Dùng biến gobal để giữ kết nối MongoDB -> tránh tạo kết nối mới mỗi lần gọi API.
 if (process.env.NODE_ENV === 'development') {
     // Add thuộc tính `_mongoClientPromise` vào `global` để giữ kết nối MongoDB.
-  let globalWithMongo = global as typeof global & {
+  const globalWithMongo = global as typeof global & {
     _mongoClientPromise?: Promise<MongoClient>
   };
 

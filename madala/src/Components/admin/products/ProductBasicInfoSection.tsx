@@ -4,9 +4,12 @@ import { Label } from '@/Components/ui/label';
 import { Input } from '@/Components/ui/input';
 import { Textarea } from '@/Components/ui/textarea';
 
+import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import { ProductFormData } from '@/lib/validations/forms';
+
 interface ProductBasicInfoSectionProps {
-    register: any;
-    errors: any;
+    register: UseFormRegister<ProductFormData>;
+    errors: FieldErrors<ProductFormData>;
 }
 
 const ProductBasicInfoSection: React.FC<ProductBasicInfoSectionProps> = ({ register, errors }) => (

@@ -2,9 +2,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/Components/ui/card";
 import { Label } from "@/Components/ui/label";
 import { Input } from "@/Components/ui/input";
 
+import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import { ProductFormData } from '@/lib/validations/forms';
+
 interface PriceStockSectionProps {
-    register: any;
-    errors: any;
+    register: UseFormRegister<ProductFormData>;
+    errors: FieldErrors<ProductFormData>;
 }
 
 const PriceStockSection: React.FC<PriceStockSectionProps> = ({ register, errors }) => (

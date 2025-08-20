@@ -3,9 +3,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { getAdminOrderDetails } from "@/lib/actions/order";
-import { IOrder, OrderStatus } from "@/models/Order";
+import { IOrder } from "@/models/Order";
 
 // Import các component từ shadcn/ui và lucide-react
 import { Button } from "@/Components/ui/button";
@@ -206,7 +205,11 @@ export default function AdminOrderDetailPage() {
           </CardContent>
           {order.status === "processing" && order._id ? (
             <CardFooter className="justify-end">
-              <CancelOrderButton orderId={String((order._id as any)?.toString ? (order._id as any).toString() : order._id)} />
+              <CancelOrderButton orderId={
+                typeof order._id === 'object' && order._id !== null && 'toString' in order._id
+                  ? order._id.toString()
+                  : String(order._id)
+              } />
             </CardFooter>
           ) : null}
         </Card>

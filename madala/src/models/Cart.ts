@@ -1,10 +1,10 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
-import { ICartItem } from './CartItem'; 
+import { ICartItem } from './CartItem';
 
 export interface ICart extends Document {
-  user: Types.ObjectId; 
-  items: Types.ObjectId[] | ICartItem[]; 
-  totalItems: number; 
+  user: Types.ObjectId;
+  items: Types.ObjectId[];
+  totalItems: number;
 }
 
 const CartSchema: Schema<ICart> = new Schema(
@@ -13,7 +13,7 @@ const CartSchema: Schema<ICart> = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'User', // tham chiếu đến model 'User'
       required: true,
-      unique: true, 
+      unique: true,
     },
     items: [
       {

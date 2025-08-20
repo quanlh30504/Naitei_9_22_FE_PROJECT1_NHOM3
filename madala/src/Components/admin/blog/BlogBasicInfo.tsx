@@ -6,11 +6,12 @@ import { BlogFormData } from "@/lib/validations/forms";
 interface BlogBasicInfoProps {
     register: UseFormRegister<BlogFormData>;
     errors: FieldErrors<BlogFormData>;
-    watch: (field: keyof BlogFormData) => any;
+    watch: (field: keyof BlogFormData) => string | number | boolean | undefined;
 }
 
 export default function BlogBasicInfo({ register, errors, watch }: BlogBasicInfoProps) {
-    const excerpt = watch("excerpt") || "";
+    const rawExcerpt = watch("excerpt");
+    const excerpt = typeof rawExcerpt === 'string' ? rawExcerpt : '';
     return (
         <Card>
             <CardHeader>

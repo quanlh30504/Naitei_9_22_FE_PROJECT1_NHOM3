@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from 'react';
 import { toast } from 'react-hot-toast';
 import { getAddresses } from '@/lib/actions/address';
-import AddressForm from '@/Components/Profile/AddressForm';   
+import AddressForm from '@/Components/Profile/AddressForm';
 
 import {
     Dialog,

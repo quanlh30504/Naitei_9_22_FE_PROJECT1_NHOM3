@@ -5,8 +5,6 @@ import { IProduct } from '@/models/Product';
 import { ICategory } from '@/models/Category';
 import { X, ShoppingCart } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import { Badge } from '@/Components/ui/badge';
 import SafeImage from '@/Components/SafeImage';
 import StarRating from '@/Components/products/StarRating';
 import { formatPrice } from '@/utils/formatPrice';

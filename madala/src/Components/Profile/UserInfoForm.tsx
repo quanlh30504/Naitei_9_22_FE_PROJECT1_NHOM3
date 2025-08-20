@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useCallback, useMemo } from "react";
-import { useActionState } from "react";
 import type { IUser } from "@/models/User";
 import { useRouter } from "next/navigation";
 import { User, Calendar as CalendarIcon, Loader2 } from "lucide-react";
-import { useEffect, useTransition } from "react";
+import { useTransition } from "react";
 import { toast } from "react-hot-toast";
 import { updateProfile } from "@/lib/actions/user";
 import { countries } from "@/lib/data";

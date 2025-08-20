@@ -2,7 +2,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
 import React from 'react';
 
 interface ProductAttributesDisplaySectionProps {
-    attributes: Record<string, any>;
+    attributes: Record<string, string | Record<string, string>>;
 }
 
 const ProductAttributesDisplaySection: React.FC<ProductAttributesDisplaySectionProps> = ({ attributes }) => {
@@ -18,7 +18,9 @@ const ProductAttributesDisplaySection: React.FC<ProductAttributesDisplaySectionP
                         <div key={key}>
                             <p className="text-sm font-medium text-muted-foreground capitalize">{key}</p>
                             <p className="text-sm">
-                                {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                {typeof value === 'object' && value !== null
+                                    ? Object.entries(value).map(([k, v]) => `${k}: ${v}`).join(', ')
+                                    : String(value)}
                             </p>
                         </div>
                     ))}

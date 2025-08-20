@@ -7,7 +7,7 @@ import AddressSelectionModal from "@/Components/Profile/AddressSelectionModal";
 import PaymentOptions from "@/Components/checkout/PaymentOptions";
 import { MapPin, Truck } from "lucide-react";
 import type { AddressType } from "@/types/address";
-import type { PopulatedCartItem } from "@/app/cart/context/CartContext";
+import type { PopulatedCartItem } from "@/store/useCartStore";
 import SafeImage from "@/Components/SafeImage";
 import { formatCurrency } from "@/lib/utils";
 

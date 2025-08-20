@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import BlogPost from '@/models/BlogPost';
 import connectToDB from '@/lib/db';
-import { uploadToCloudinary, deleteFromCloudinary, extractPublicId } from '@/lib/cloudinary';
+import { uploadToCloudinary } from '@/lib/cloudinary';
 
 /**
  * Get blog posts
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build query
-    const query: any = includeUnpublished ? {} : { isPublished: true };
+    const query: Record<string, unknown> = includeUnpublished ? {} : { isPublished: true };
 
     // Get total count and blog posts in parallel
     const [total, blogPosts] = await Promise.all([
@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
       slug,
       content,
       excerpt,
-      featuredImage, 
-      featuredImageFile, 
+      featuredImage,
+      featuredImageFile,
       tags,
       isPublished,
       isFeatured

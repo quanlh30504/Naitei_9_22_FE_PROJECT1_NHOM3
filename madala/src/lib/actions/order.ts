@@ -11,7 +11,7 @@ import Order, { PaymentMethod, IOrderItem, OrderStatus, IOrder } from "@/models/
 import Cart from "@/models/Cart";
 import CartItem, { ICartItem } from "@/models/CartItem";
 
-type ActionResponse<T = any> = {
+type ActionResponse<T = unknown> = {
   success: boolean;
   message: string;
   data?: T;
@@ -33,9 +33,27 @@ type ShippingAddressPayload = {
   ward: string;
 };
 
+// Convert all ObjectId fields to string recursively for any object
+function toPlain(obj: unknown): unknown {
+  if (Array.isArray(obj)) return (obj as unknown[]).map(toPlain);
+  if (obj && typeof obj === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const key in obj) {
+      const value = (obj as Record<string, unknown>)[key];
+      if (value && typeof value === 'object' && typeof (value as { toHexString?: unknown }).toHexString === 'function') {
+        result[key] = (value as { toHexString: () => string }).toHexString();
+      } else {
+        result[key] = toPlain(value);
+      }
+    }
+    return result;
+  }
+  return obj;
+}
+
 export async function placeOrder(
   input: PlaceOrderInput
-): Promise<{ success: boolean; message: string; orderId?: string }> {
+): Promise<{ success: boolean; message: string; orderId?: string; data?: unknown }> {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, message: "Bạn cần đăng nhập để đặt hàng." };
@@ -58,7 +76,7 @@ export async function placeOrder(
     await connectToDB();
 
     // --- Lấy dữ liệu gốc ---
-    const userCart = await Cart.findOne({ user: session.user.id }).session(
+    const userCart = await Cart.findOne({ user: new mongoose.Types.ObjectId(session.user.id) }).session(
       mongoSession
     );
     if (!userCart) throw new Error("Không tìm thấy giỏ hàng.");
@@ -75,8 +93,8 @@ export async function placeOrder(
       .populate<{ product: IProduct }>("product")
       .session(mongoSession);
     const userAddress = await Address.findOne({
-      _id: shippingAddressId,
-      userId: session.user.id,
+      _id: new mongoose.Types.ObjectId(shippingAddressId),
+      userId: new mongoose.Types.ObjectId(session.user.id),
     }).session(mongoSession);
     if (!userAddress) throw new Error("Địa chỉ giao hàng không hợp lệ.");
 
@@ -169,8 +187,11 @@ export async function placeOrder(
     // --- Tạo đơn hàng với trạng thái thanh toán tương ứng ---
     const newOrder = new Order({
       orderId: `DH-${Date.now()}`,
-      userId: session.user.id,
-      items: orderItems,
+      userId: new mongoose.Types.ObjectId(session.user.id),
+      items: orderItems.map(item => ({
+        ...item,
+        productId: new mongoose.Types.ObjectId(item.productId)
+      })),
       shippingAddress: {
         fullName: userAddress.fullName,
         phoneNumber: userAddress.phoneNumber,
@@ -213,18 +234,19 @@ export async function placeOrder(
     revalidatePath("/cart");
     revalidatePath("/profile/orders");
 
-    console.log("order id " +  newOrder._id.toString());
+    console.log("order id " + newOrder._id.toString());
     return {
       success: true,
       message: "Đặt hàng thành công!",
       orderId: newOrder._id.toString(),
+      data: toPlain(newOrder.toObject()),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     await mongoSession.abortTransaction();
     console.error("[PLACE_ORDER_ERROR]", error);
     return {
       success: false,
-      message: error.message || "Đã xảy ra lỗi khi đặt hàng.",
+      message: (error instanceof Error ? error.message : "Đã xảy ra lỗi khi đặt hàng."),
     };
   } finally {
     mongoSession.endSession();
@@ -255,7 +277,7 @@ export async function getMyOrders({
 
     // Sử dụng kiểu mongoose.FilterQuery để có gợi ý code tốt hơn
     const filter: mongoose.FilterQuery<IOrder> = {
-      userId: session.user.id,
+      userId: new mongoose.Types.ObjectId(session.user.id),
     };
 
     // Lọc theo trạng thái nếu có
@@ -278,7 +300,7 @@ export async function getMyOrders({
     return {
       success: true,
       message: "Lấy danh sách đơn hàng thành công.",
-      data: JSON.parse(JSON.stringify(orders)),
+      data: orders.map((o: unknown) => toPlain(o) as IOrder),
     };
   } catch (error) {
     console.error("[GET_MY_ORDERS_ERROR]", error);
@@ -290,11 +312,11 @@ export async function getMyOrders({
  * Lấy thông tin chi tiết của một đơn hàng bằng ID.
  * Đảm bảo đơn hàng thuộc về người dùng đang đăng nhập.
  * @param {string} orderId - ID của đơn hàng cần lấy.
- * @returns {Promise<ActionResponse<IOrder>>} Chi tiết đơn hàng.
+ * @returns {Promise<ActionResponse<Record<string, unknown>>>} Chi tiết đơn hàng.
  */
 export async function getOrderDetails(
   orderId: string
-): Promise<ActionResponse<IOrder>> {
+): Promise<ActionResponse<Record<string, unknown>>> {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, message: "Vui lòng đăng nhập." };
@@ -307,32 +329,19 @@ export async function getOrderDetails(
   try {
     await connectToDB();
     const order = await Order.findOne({
-      _id: orderId,
-      userId: session.user.id,
+      _id: new mongoose.Types.ObjectId(orderId),
+      userId: new mongoose.Types.ObjectId(session.user.id),
     }).lean();
 
     if (!order) {
       return { success: false, message: "Không tìm thấy đơn hàng." };
     }
 
-    // Nếu order là mảng, lấy phần tử đầu tiên
-    const orderData = Array.isArray(order) ? order[0] : order;
-    // Map lại object trả về từ MongoDB thành đúng shape IOrder
-    const mapOrder = (orderObj: any): IOrder => ({
-      ...orderObj,
-      _id: orderObj._id?.toString(),
-      userId: orderObj.userId?.toString(),
-      items: orderObj.items?.map((item: any) => ({
-        ...item,
-        productId: item.productId?.toString(),
-      })) || [],
-      createdAt: orderObj.createdAt?.toString(),
-      updatedAt: orderObj.updatedAt?.toString(),
-    });
+    // Đảm bảo trả về plain object cho client
     return {
       success: true,
       message: "Lấy chi tiết đơn hàng thành công.",
-      data: mapOrder(orderData),
+      data: toPlain(order) as Record<string, unknown>,
     };
   } catch (error) {
     console.error("[GET_ORDER_DETAILS_ERROR]", error);
@@ -365,8 +374,8 @@ export async function cancelOrder(orderId: string): Promise<ActionResponse> {
 
     // Tìm đơn hàng và đảm bảo nó thuộc về user và có thể hủy
     const order = await Order.findOne({
-      _id: orderId,
-      userId: session.user.id,
+      _id: new mongoose.Types.ObjectId(orderId),
+      userId: new mongoose.Types.ObjectId(session.user.id),
     }).session(mongoSession);
 
     if (!order) {
@@ -379,7 +388,7 @@ export async function cancelOrder(orderId: string): Promise<ActionResponse> {
     }
 
     // Chuẩn bị các thao tác hoàn trả tồn kho
-  const stockUpdates = order.items.map((item: IOrderItem) => ({
+    const stockUpdates = order.items.map((item: IOrderItem) => ({
       updateOne: {
         filter: { _id: item.productId },
         update: { $inc: { stock: item.quantity } },
@@ -401,12 +410,12 @@ export async function cancelOrder(orderId: string): Promise<ActionResponse> {
     revalidatePath(`/profile/orders/${orderId}`);
 
     return { success: true, message: "Hủy đơn hàng thành công." };
-  } catch (error: any) {
+  } catch (error: unknown) {
     await mongoSession.abortTransaction();
     console.error("[CANCEL_ORDER_ERROR]", error);
     return {
       success: false,
-      message: error.message || "Lỗi khi hủy đơn hàng.",
+      message: (error instanceof Error ? error.message : "Lỗi khi hủy đơn hàng."),
     };
   } finally {
     mongoSession.endSession();
@@ -436,7 +445,7 @@ export async function updateShippingAddress({
 
   // Kiểm tra xem orderId có phải là một ObjectId hợp lệ không
   if (!mongoose.Types.ObjectId.isValid(orderId)) {
-      return { success: false, message: "Mã đơn hàng không hợp lệ." };
+    return { success: false, message: "Mã đơn hàng không hợp lệ." };
   }
 
   try {
@@ -444,8 +453,8 @@ export async function updateShippingAddress({
 
     // 2. Tìm đơn hàng VÀ kiểm tra quyền sở hữu cùng lúc
     const order = await Order.findOne({
-      _id: orderId,
-      userId: session.user.id, // Đảm bảo người dùng chỉ có thể tìm thấy đơn hàng của chính mình
+      _id: new mongoose.Types.ObjectId(orderId),
+      userId: new mongoose.Types.ObjectId(session.user.id), // Đảm bảo người dùng chỉ có thể tìm thấy đơn hàng của chính mình
     });
 
     if (!order) {
@@ -469,11 +478,11 @@ export async function updateShippingAddress({
 
     // 5. Làm mới cache cho trang chi tiết đơn hàng
     revalidatePath(`/profile/orders/${orderId}`);
-    
+
     return {
       success: true,
       message: "Cập nhật địa chỉ giao hàng thành công.",
-      data: JSON.parse(JSON.stringify(updatedOrder)), 
+      data: toPlain(updatedOrder.toObject()) as IOrder,
     };
 
   } catch (error) {
@@ -483,7 +492,7 @@ export async function updateShippingAddress({
 }
 // Check role admin
 async function isAdmin() {
-    const session = await auth();
+  const session = await auth();
   // Thay 'admin' bằng vai trò thực tế của bạn trong database
   return session?.user?.role === 'admin';
 }
@@ -495,111 +504,112 @@ type PaginatedOrdersResponse = {
   totalOrders: number;
 };
 
-export async function getAllOrdersPaginated({ 
-    status, 
-    page = 1, 
-    limit = 10,
-    search = '' 
-}: { 
-    status?: OrderStatus, 
-    page?: number, 
-    limit?: number,
-    search?: string 
+export async function getAllOrdersPaginated({
+  status,
+  page = 1,
+  limit = 10,
+  search = ''
+}: {
+  status?: OrderStatus,
+  page?: number,
+  limit?: number,
+  search?: string
 }): Promise<ActionResponse<PaginatedOrdersResponse>> {
-    if (!await isAdmin()) {
-        return { success: false, message: "Không có quyền truy cập." };
-    }
+  if (!await isAdmin()) {
+    return { success: false, message: "Không có quyền truy cập." };
+  }
 
-    try {
-        await connectToDB();
-        
-        const query: mongoose.FilterQuery<IOrder> = {};
+  try {
+    await connectToDB();
 
-        // Thêm bộ lọc trạng thái
+    const query: mongoose.FilterQuery<IOrder> = {};
+
+    // Thêm bộ lọc trạng thái
     // Lấy enum status đúng cách
-    const statusPath = Order.schema.path('status') as any;
-    const validStatuses: string[] = statusPath?.options?.enum || [];
+    const statusPath = Order.schema.path('status');
+    const validStatuses: string[] = (statusPath && (statusPath as { options?: { enum?: string[] } }).options?.enum) || [];
     if (status && validStatuses.includes(status)) {
       query.status = status;
     }
 
-        // **LOGIC TÌM KIẾM MỚI**
-        if (search) {
-            const searchRegex = new RegExp(search, 'i'); // 'i' for case-insensitive
-            query.$or = [
-                { orderId: { $regex: searchRegex } },
-                { 'shippingAddress.fullName': { $regex: searchRegex } },
-                { 'shippingAddress.phoneNumber': { $regex: searchRegex } }
-            ];
-        }
+    // **LOGIC TÌM KIẾM MỚI**
+    if (search) {
+      const searchRegex = new RegExp(search, 'i'); // 'i' for case-insensitive
+      query.$or = [
+        { orderId: { $regex: searchRegex } },
+        { 'shippingAddress.fullName': { $regex: searchRegex } },
+        { 'shippingAddress.phoneNumber': { $regex: searchRegex } }
+      ];
+    }
 
-        const skip = (page - 1) * limit;
-        const totalOrders = await Order.countDocuments(query);
-        const totalPages = Math.ceil(totalOrders / limit);
+    const skip = (page - 1) * limit;
+    const totalOrders = await Order.countDocuments(query);
+    const totalPages = Math.ceil(totalOrders / limit);
 
-        const orders = await Order.find(query)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean();
+    const orders = await Order.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     // Chuyển đổi từng order sang đúng type IOrder (nếu cần)
     // Convert all ObjectId fields to string recursively for each order
-    function toPlain(obj: any): any {
-      if (Array.isArray(obj)) return obj.map(toPlain);
+    function toPlain(obj: unknown): unknown {
+      if (Array.isArray(obj)) return (obj as unknown[]).map(toPlain);
       if (obj && typeof obj === 'object') {
-        const result: any = {};
+        const result: Record<string, unknown> = {};
         for (const key in obj) {
-          if (obj[key] && typeof obj[key] === 'object' && typeof obj[key].toHexString === 'function') {
-            result[key] = obj[key].toHexString();
+          const value = (obj as Record<string, unknown>)[key];
+          if (value && typeof value === 'object' && typeof (value as { toHexString?: unknown }).toHexString === 'function') {
+            result[key] = (value as { toHexString: () => string }).toHexString();
           } else {
-            result[key] = toPlain(obj[key]);
+            result[key] = toPlain(value);
           }
         }
         return result;
       }
       return obj;
     }
-    const plainOrders: IOrder[] = orders.map((o: any) => toPlain(o));
-    return { 
-      success: true, 
-      message: "Lấy danh sách đơn hàng thành công.", 
+    const plainOrders: IOrder[] = orders.map((o: unknown) => toPlain(o) as IOrder);
+    return {
+      success: true,
+      message: "Lấy danh sách đơn hàng thành công.",
       data: { orders: plainOrders, totalPages, currentPage: page, totalOrders }
     };
-    } catch (error) {
-        console.error("[GET_ALL_ORDERS_PAGINATED_ERROR]", error);
-        return { success: false, message: "Lỗi khi lấy danh sách đơn hàng." };
-    }
+  } catch (error) {
+    console.error("[GET_ALL_ORDERS_PAGINATED_ERROR]", error);
+    return { success: false, message: "Lỗi khi lấy danh sách đơn hàng." };
+  }
 }
 /**
  * [Admin] Cập nhật trạng thái của một đơn hàng.
  */
 export async function updateOrderStatus(orderId: string, newStatus: OrderStatus): Promise<ActionResponse> {
-     if (!await isAdmin()) {
-        return { success: false, message: "Không có quyền truy cập." };
+  if (!await isAdmin()) {
+    return { success: false, message: "Không có quyền truy cập." };
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    return { success: false, message: "ID đơn hàng không hợp lệ." };
+  }
+
+  try {
+    await connectToDB();
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return { success: false, message: "Không tìm thấy đơn hàng." };
     }
 
-    if (!mongoose.Types.ObjectId.isValid(orderId)) {
-        return { success: false, message: "ID đơn hàng không hợp lệ." };
-    }
+    order.status = newStatus;
+    await order.save();
 
-    try {
-        await connectToDB();
-        const order = await Order.findById(orderId);
-        if (!order) {
-            return { success: false, message: "Không tìm thấy đơn hàng." };
-        }
+    revalidatePath("/admin/orders");
 
-        order.status = newStatus;
-        await order.save();
-
-        revalidatePath("/admin/orders");
-
-        return { success: true, message: `Cập nhật trạng thái đơn hàng thành công.` };
-    } catch (error) {
-        console.error("[UPDATE_ORDER_STATUS_ERROR]", error);
-        return { success: false, message: "Lỗi khi cập nhật trạng thái đơn hàng." };
-    }
+    return { success: true, message: `Cập nhật trạng thái đơn hàng thành công.` };
+  } catch (error) {
+    console.error("[UPDATE_ORDER_STATUS_ERROR]", error);
+    return { success: false, message: "Lỗi khi cập nhật trạng thái đơn hàng." };
+  }
 }
 
 /**
@@ -609,52 +619,52 @@ export async function updateOrderStatus(orderId: string, newStatus: OrderStatus)
  * @returns {Promise<ActionResponse<IOrder>>} Chi tiết đơn hàng.
  */
 export async function getAdminOrderDetails(orderId: string): Promise<ActionResponse<IOrder>> {
-    if (!await isAdmin()) {
-        return { success: false, message: "Không có quyền truy cập." };
+  if (!await isAdmin()) {
+    return { success: false, message: "Không có quyền truy cập." };
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    return { success: false, message: "ID đơn hàng không hợp lệ." };
+  }
+
+  try {
+    await connectToDB();
+
+    const order = await Order.findOne({ _id: orderId }).lean();
+
+    if (!order) {
+      return { success: false, message: "Không tìm thấy đơn hàng." };
     }
-
-    if (!mongoose.Types.ObjectId.isValid(orderId)) {
-        return { success: false, message: "ID đơn hàng không hợp lệ." };
-    }
-
-    try {
-        await connectToDB();
-        
-        const order = await Order.findOne({ _id: orderId }).lean();
-
-        if (!order) {
-            return { success: false, message: "Không tìm thấy đơn hàng." };
-        }
 
     // Đảm bảo order là object, không phải mảng
-        if (order && !Array.isArray(order)) {
-            // Convert all ObjectId fields to string recursively for the order
-            function toPlain(obj: any): any {
-              if (Array.isArray(obj)) return obj.map(toPlain);
-              if (obj && typeof obj === 'object') {
-                const result: any = {};
-                for (const key in obj) {
-                  if (obj[key] && typeof obj[key] === 'object' && typeof obj[key].toHexString === 'function') {
-                    result[key] = obj[key].toHexString();
-                  } else {
-                    result[key] = toPlain(obj[key]);
-                  }
-                }
-                return result;
-              }
-              return obj;
+    if (order && !Array.isArray(order)) {
+      // Convert all ObjectId fields to string recursively for the order
+      function toPlain(obj: unknown): unknown {
+        if (Array.isArray(obj)) return (obj as unknown[]).map(toPlain);
+        if (obj && typeof obj === 'object') {
+          const result: Record<string, unknown> = {};
+          for (const key in obj) {
+            const value = (obj as Record<string, unknown>)[key];
+            if (value && typeof value === 'object' && typeof (value as { toHexString?: unknown }).toHexString === 'function') {
+              result[key] = (value as { toHexString: () => string }).toHexString();
+            } else {
+              result[key] = toPlain(value);
             }
-            return {
-                success: true,
-                message: "Lấy chi tiết đơn hàng thành công.",
-                data: toPlain(order) as IOrder,
-            };
-        } else {
-            return { success: false, message: "Không tìm thấy đơn hàng." };
+          }
+          return result;
         }
-    } catch (error) {
-        console.error("[GET_ADMIN_ORDER_DETAILS_ERROR]", error);
-        return { success: false, message: "Lỗi khi lấy chi tiết đơn hàng." };
+        return obj;
+      }
+      return {
+        success: true,
+        message: "Lấy chi tiết đơn hàng thành công.",
+        data: toPlain(order) as IOrder,
+      };
+    } else {
+      return { success: false, message: "Không tìm thấy đơn hàng." };
     }
+  } catch (error) {
+    console.error("[GET_ADMIN_ORDER_DETAILS_ERROR]", error);
+    return { success: false, message: "Lỗi khi lấy chi tiết đơn hàng." };
+  }
 }
-

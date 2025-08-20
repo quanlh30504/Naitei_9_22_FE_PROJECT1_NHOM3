@@ -4,7 +4,6 @@ import React, { useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { User as UserType } from "next-auth";
 import { User, MapPin, CreditCard, Star, Eye, Heart } from "lucide-react";
 import userImage from "@/assets/images/Users/user-image.jpg";
 import { Package } from 'lucide-react';

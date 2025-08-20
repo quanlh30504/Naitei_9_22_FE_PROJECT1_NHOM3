@@ -3,9 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/Components/ui/button";
-import { ChevronLeft, ChevronRight, Grid, List } from "lucide-react";
-import { Badge } from "@/Components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/Components/ui/card";
+import { Grid, List } from "lucide-react";
 import {
   BlogService,
   BlogPost,

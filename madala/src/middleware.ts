@@ -14,7 +14,9 @@ export async function middleware(request: NextRequest) {
     }
 
     // Type guard cho token
-    const isAuthToken = (t: any): t is { role?: string; isActive?: boolean } => t && typeof t === 'object';
+    const isAuthToken = (t: unknown): t is { role?: string; isActive?: boolean } =>
+        t !== null && typeof t === 'object' &&
+        ('role' in t || 'isActive' in t);
 
     // Chặn user bị ban (isActive === false, không phải admin)
     if (isAuthToken(token) && token.role !== 'admin' && token.isActive === false) {

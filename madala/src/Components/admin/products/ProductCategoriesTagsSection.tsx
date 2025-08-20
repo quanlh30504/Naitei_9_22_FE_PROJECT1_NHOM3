@@ -1,6 +1,6 @@
 import React from 'react';
+import type { FC } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
-import { Label } from '@/Components/ui/label';
 import { Input } from '@/Components/ui/input';
 import { Button } from '@/Components/ui/button';
 import { Plus, X } from 'lucide-react';
@@ -9,12 +9,12 @@ import { Plus, X } from 'lucide-react';
 interface ProductCategoriesTagsSectionProps {
     value: string[];
     onChange: (value: string[]) => void;
-    errors?: any;
+    errors?: Record<string, { message?: string }>;
     name: string;
     label: string;
 }
 
-const ProductCategoriesTagsSection: React.FC<ProductCategoriesTagsSectionProps> = ({ value = [], onChange, errors, name, label }) => {
+const ProductCategoriesTagsSection: FC<ProductCategoriesTagsSectionProps> = ({ value = [], onChange, errors, name, label }) => {
     const [input, setInput] = React.useState('');
     const addItem = () => {
         if (input.trim() && !value.includes(input.trim())) {
@@ -23,7 +23,7 @@ const ProductCategoriesTagsSection: React.FC<ProductCategoriesTagsSectionProps> 
         }
     };
     const removeItem = (item: string) => {
-        onChange(value.filter((v) => v !== item));
+        onChange(value.filter((v: string) => v !== item));
     };
     return (
         <Card>
@@ -45,7 +45,7 @@ const ProductCategoriesTagsSection: React.FC<ProductCategoriesTagsSectionProps> 
                     </div>
                     {value.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                            {value.map((item, index) => (
+                            {value.map((item: string, index: number) => (
                                 <div key={index} className="flex items-center bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm">
                                     {item}
                                     <Button

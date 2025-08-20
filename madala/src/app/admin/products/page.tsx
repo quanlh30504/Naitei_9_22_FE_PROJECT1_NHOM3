@@ -4,9 +4,15 @@ import { useState, useEffect } from "react"
 import { AdminLayout } from "@/Components/admin/AdminLayout"
 import { Button } from "@/Components/ui/button"
 import { Input } from "@/Components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/table"
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+const Table = dynamic(() => import('@/Components/ui/table').then(mod => mod.Table), { ssr: false });
+const TableBody = dynamic(() => import('@/Components/ui/table').then(mod => mod.TableBody), { ssr: false });
+const TableCell = dynamic(() => import('@/Components/ui/table').then(mod => mod.TableCell), { ssr: false });
+const TableHead = dynamic(() => import('@/Components/ui/table').then(mod => mod.TableHead), { ssr: false });
+const TableHeader = dynamic(() => import('@/Components/ui/table').then(mod => mod.TableHeader), { ssr: false });
+const TableRow = dynamic(() => import('@/Components/ui/table').then(mod => mod.TableRow), { ssr: false });
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card"
-import { Badge } from "@/Components/ui/badge"
 import { Search, Plus, Edit, Trash2, Eye, Image as ImageIcon } from "lucide-react"
 import { PaginationWrapper } from "@/Components/PaginationWrapper"
 import { Product } from "@/types/product"
@@ -174,103 +180,105 @@ export default function ProductManagement() {
               </div>
             ) : (
               <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Hình ảnh</TableHead>
-                      <TableHead>Tên sản phẩm</TableHead>
-                      <TableHead>SKU</TableHead>
-                      <TableHead>Giá</TableHead>
-                      <TableHead>Giá khuyến mãi</TableHead>
-                      <TableHead>Tồn kho</TableHead>
-                      <TableHead>Trạng thái</TableHead>
-                      <TableHead>Lượt xem</TableHead>
-                      <TableHead>Thao tác</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {products.map((product) => (
-                      <TableRow key={product._id}>
-                        <TableCell>
-                          <div className="w-12 bg-muted rounded-md flex items-center justify-center">
-                            {product.images && product.images.length > 0 ? (
-                              <ProductImage
-                                src={getImageUrl(product.images[0])}
-                                alt={product.name}
-                                width={48}
-                                height={48}
-                                className="object-cover w-full h-full"
-                                fallbackClassName="w-12 h-12"
-                              />
-                            ) : (
-                              <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{product.name}</div>
-                            <div className="text-sm text-muted-foreground truncate max-w-xs">
-                              {product.shortDescription}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <code className="text-xs bg-muted px-2 py-1 rounded">
-                            {product.sku}
-                          </code>
-                        </TableCell>
-                        <TableCell>{formatPrice(product.price)}</TableCell>
-                        <TableCell>
-                          {product.salePrice && product.salePrice < product.price ? (
-                            <span className="text-red-600 font-semibold">
-                              {formatPrice(product.salePrice)}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>{getStockDisplay(product.stock)}</TableCell>
-                        <TableCell>
-                          <button
-                            onClick={() => handleToggleStatus(product._id, product.isActive)}
-                            className="cursor-pointer"
-                          >
-                            <StatusBadge product={product} />
-                          </button>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground">
-                            {product.viewCount || 0}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Link href={`/products/${product.slug}`} target="_blank">
-                              <Button variant="ghost" size="sm" title="Xem sản phẩm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                            <Link href={`/admin/products/${product._id}/edit`}>
-                              <Button variant="ghost" size="sm" title="Chỉnh sửa">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              title="Xóa sản phẩm"
-                              onClick={() => handleDelete(product._id)}
-                              disabled={loading}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Hình ảnh</TableHead>
+                        <TableHead>Tên sản phẩm</TableHead>
+                        <TableHead>SKU</TableHead>
+                        <TableHead>Giá</TableHead>
+                        <TableHead>Giá khuyến mãi</TableHead>
+                        <TableHead>Tồn kho</TableHead>
+                        <TableHead>Trạng thái</TableHead>
+                        <TableHead>Lượt xem</TableHead>
+                        <TableHead>Thao tác</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {products.map((product) => (
+                        <TableRow key={product._id}>
+                          <TableCell>
+                            <div className="w-12 bg-muted rounded-md flex items-center justify-center">
+                              {product.images && product.images.length > 0 ? (
+                                <ProductImage
+                                  src={getImageUrl(product.images[0])}
+                                  alt={product.name}
+                                  width={48}
+                                  height={48}
+                                  className="object-cover w-full h-full"
+                                  fallbackClassName="w-12 h-12"
+                                />
+                              ) : (
+                                <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{product.name}</div>
+                              <div className="text-sm text-muted-foreground truncate max-w-xs">
+                                {product.shortDescription}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <code className="text-xs bg-muted px-2 py-1 rounded">
+                              {product.sku}
+                            </code>
+                          </TableCell>
+                          <TableCell>{formatPrice(product.price)}</TableCell>
+                          <TableCell>
+                            {product.salePrice && product.salePrice < product.price ? (
+                              <span className="text-red-600 font-semibold">
+                                {formatPrice(product.salePrice)}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>{getStockDisplay(product.stock)}</TableCell>
+                          <TableCell>
+                            <button
+                              onClick={() => handleToggleStatus(product._id, product.isActive)}
+                              className="cursor-pointer"
+                            >
+                              <StatusBadge product={product} />
+                            </button>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-muted-foreground">
+                              {product.viewCount || 0}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Link href={`/products/${product.slug}`} target="_blank">
+                                <Button variant="ghost" size="sm" title="Xem sản phẩm">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <Link href={`/admin/products/${product._id}/edit`}>
+                                <Button variant="ghost" size="sm" title="Chỉnh sửa">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                title="Xóa sản phẩm"
+                                onClick={() => handleDelete(product._id)}
+                                disabled={loading}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Suspense>
 
                 {/* Pagination */}
                 {totalPages > 1 && (

@@ -4,20 +4,19 @@ import { useState, useEffect, use } from "react"
 import { AdminLayout } from "@/Components/admin/AdminLayout"
 import { Button } from "@/Components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card"
-import { Badge } from "@/Components/ui/badge"
-import ProductImagesDisplaySection from '@/Components/admin/products/ProductImagesDisplaySection';
-import ProductBasicInfoDisplaySection from '@/Components/admin/products/ProductBasicInfoDisplaySection';
-import ProductPriceStockDisplaySection from '@/Components/admin/products/ProductPriceStockDisplaySection';
-import ProductCategoriesTagsDisplaySection from '@/Components/admin/products/ProductCategoriesTagsDisplaySection';
-import ProductAttributesDisplaySection from '@/Components/admin/products/ProductAttributesDisplaySection';
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+const ProductImagesDisplaySection = dynamic(() => import('@/Components/admin/products/ProductImagesDisplaySection'), { ssr: false });
+const ProductBasicInfoDisplaySection = dynamic(() => import('@/Components/admin/products/ProductBasicInfoDisplaySection'), { ssr: false });
+const ProductPriceStockDisplaySection = dynamic(() => import('@/Components/admin/products/ProductPriceStockDisplaySection'), { ssr: false });
+const ProductCategoriesTagsDisplaySection = dynamic(() => import('@/Components/admin/products/ProductCategoriesTagsDisplaySection'), { ssr: false });
+const ProductAttributesDisplaySection = dynamic(() => import('@/Components/admin/products/ProductAttributesDisplaySection'), { ssr: false });
 import { ArrowLeft, Edit, Trash2, Eye } from "lucide-react"
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import Image from "next/image"
 import { Product } from "@/types/product"
 import { getImageUrl, formatPrice } from "@/lib/utils/productUtils"
-import { StatusBadge } from "@/Components/StatusBadge"
 
 export default function ViewProduct({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -30,7 +29,6 @@ export default function ViewProduct({ params }: { params: Promise<{ id: string }
       try {
         const response = await fetch(`/api/admin/products/${resolvedParams.id}`)
         const data = await response.json()
-        
         if (data.success) {
           setProduct(data.data)
         } else {
@@ -45,7 +43,6 @@ export default function ViewProduct({ params }: { params: Promise<{ id: string }
         setLoading(false)
       }
     }
-
     fetchProduct()
   }, [resolvedParams.id, router])
 
@@ -128,31 +125,40 @@ export default function ViewProduct({ params }: { params: Promise<{ id: string }
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <ProductImagesDisplaySection images={product.images} name={product.name} getImageUrl={getImageUrl} />
+          <Suspense fallback={<div className="p-4 text-center">Đang tải...</div>}>
+            <ProductImagesDisplaySection images={product.images} name={product.name} getImageUrl={getImageUrl} />
+          </Suspense>
           <div className="lg:col-span-2 space-y-6">
-            <ProductBasicInfoDisplaySection
-              name={product.name}
-              shortDescription={product.shortDescription}
-              sku={product.sku}
-              slug={product.slug}
-              description={product.description}
-              isFeatured={product.isFeatured}
-              isHotTrend={product.isHotTrend}
-              product={product}
-            />
-            <ProductPriceStockDisplaySection
-              price={product.price}
-              salePrice={product.salePrice}
-              stock={product.stock}
-              discountPercentage={product.discountPercentage}
-              formatPrice={formatPrice}
-            />
-            <ProductCategoriesTagsDisplaySection
-              categoryIds={product.categoryIds}
-              tags={product.tags}
-            />
-            <ProductAttributesDisplaySection attributes={product.attributes} />
-
+            <Suspense fallback={<div className="p-4 text-center">Đang tải...</div>}>
+              <ProductBasicInfoDisplaySection
+                name={product.name}
+                shortDescription={product.shortDescription}
+                sku={product.sku}
+                slug={product.slug}
+                description={product.description}
+                isFeatured={product.isFeatured}
+                isHotTrend={product.isHotTrend}
+                product={product}
+              />
+            </Suspense>
+            <Suspense fallback={<div className="p-4 text-center">Đang tải...</div>}>
+              <ProductPriceStockDisplaySection
+                price={product.price}
+                salePrice={product.salePrice}
+                stock={product.stock}
+                discountPercentage={product.discountPercentage}
+                formatPrice={formatPrice}
+              />
+            </Suspense>
+            <Suspense fallback={<div className="p-4 text-center">Đang tải...</div>}>
+              <ProductCategoriesTagsDisplaySection
+                categoryIds={product.categoryIds}
+                tags={product.tags}
+              />
+            </Suspense>
+            <Suspense fallback={<div className="p-4 text-center">Đang tải...</div>}>
+              <ProductAttributesDisplaySection attributes={typeof product.attributes === 'object' && !Array.isArray(product.attributes) ? product.attributes : {}} />
+            </Suspense>
             <Card>
               <CardHeader>
                 <CardTitle>Thống kê</CardTitle>

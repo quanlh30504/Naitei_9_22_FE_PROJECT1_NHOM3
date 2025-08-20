@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import UserInfoForm from "@/Components/Profile/UserInfoForm";
-import UserModel from "@/models/User";
+import UserModel, { IUser } from "@/models/User";
 import connectToDB from "@/lib/db";
 import ProfileClientWrapper from "@/Components/Profile/ProfileClientWrapper";
 import { motion } from "framer-motion";

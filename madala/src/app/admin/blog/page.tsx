@@ -7,12 +7,15 @@ import { Input } from "@/Components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Badge } from "@/Components/ui/badge";
-import { Search, Plus, Edit, Trash2, Eye, FileText } from "lucide-react";
-import BlogActionButtons from '@/Components/admin/blog/BlogActionButtons';
+import { Search, Plus, FileText } from "lucide-react";
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
 import toast from "react-hot-toast";
 import Image from "next/image";
 import { BlogPost, BlogStats } from "@/types/blog";
-import BlogStatsCards from "@/Components/admin/blog/BlogStatsCards";
+
+const BlogActionButtons = dynamic(() => import('@/Components/admin/blog/BlogActionButtons'), { ssr: false });
+const BlogStatsCards = dynamic(() => import('@/Components/admin/blog/BlogStatsCards'), { ssr: false });
 
 export default function BlogManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,7 +54,7 @@ export default function BlogManagement() {
         draft: posts.filter((p: BlogPost) => !p.isPublished).length,
         totalViews
       });
-    } catch (error) {
+    } catch {
       toast.error('Lỗi khi tải danh sách bài viết');
     } finally {
       setLoading(false);
@@ -66,7 +69,7 @@ export default function BlogManagement() {
       await apiCall(`/api/blog/${slug}`, { method: 'DELETE' });
       toast.success('Xóa bài viết thành công');
       fetchBlogPosts();
-    } catch (error) {
+    } catch {
       toast.error('Lỗi khi xóa bài viết');
     } finally {
       setDeleting(null);
@@ -86,7 +89,7 @@ export default function BlogManagement() {
 
       toast.success(`${!currentStatus ? 'Xuất bản' : 'Hủy xuất bản'} bài viết thành công`);
       fetchBlogPosts();
-    } catch (error) {
+    } catch {
       toast.error('Lỗi khi cập nhật trạng thái');
     }
   };
@@ -107,10 +110,10 @@ export default function BlogManagement() {
     </Badge>
   );
 
-  const formatDate = (dateInput: string | any) => {
-    const date = typeof dateInput === 'object' && dateInput.$date
-      ? new Date(dateInput.$date)
-      : new Date(dateInput);
+  const formatDate = (dateInput: string | { $date?: string }) => {
+    const date = typeof dateInput === 'object' && dateInput !== null && '$date' in dateInput
+      ? new Date((dateInput as { $date: string }).$date)
+      : new Date(dateInput as string);
 
     return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString('vi-VN', {
       year: 'numeric',
@@ -149,7 +152,9 @@ export default function BlogManagement() {
         </div>
 
         {/* Stats Cards */}
-        <BlogStatsCards stats={stats} />
+        <Suspense fallback={<div>Đang tải thống kê blog...</div>}>
+          <BlogStatsCards stats={stats} />
+        </Suspense>
 
         {/* Blog Posts Table */}
         <Card>
@@ -221,12 +226,14 @@ export default function BlogManagement() {
                     <TableCell>{post.viewCount.toLocaleString()}</TableCell>
                     <TableCell>{post.likesCount.toLocaleString()}</TableCell>
                     <TableCell>
-                      <BlogActionButtons
-                        post={post}
-                        deleting={deleting}
-                        togglePublishStatus={togglePublishStatus}
-                        handleDelete={handleDelete}
-                      />
+                      <Suspense fallback={<div>Đang tải thao tác...</div>}>
+                        <BlogActionButtons
+                          post={post}
+                          deleting={deleting}
+                          togglePublishStatus={togglePublishStatus}
+                          handleDelete={handleDelete}
+                        />
+                      </Suspense>
                     </TableCell>
                   </TableRow>
                 ))}

@@ -1,21 +1,24 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import ProductGrid from '@/app/products/components/ProductGrid';
-import ProductList from '@/app/products/components/ProductList';
-import CategorySidebar from '@/app/products/components/CategorySidebar';
-import CompareBox from '@/app/products/components/CompareBox';
-import TagList from '@/app/products/components/TagList';
-import ViewToggle from '@/app/products/components/ViewToggle';
-import SimpleBanner from '@/Components/banner/SimpleBanner';
-import { PaginationWrapper } from '@/Components/PaginationWrapper';
-import ProductCounter from './components/ProductCounter';
+import dynamic from 'next/dynamic';
+
+const ProductGrid = dynamic(() => import('@/app/products/components/ProductGrid'));
+const ProductList = dynamic(() => import('@/app/products/components/ProductList'));
+const CategorySidebar = dynamic(() => import('@/app/products/components/CategorySidebar'));
+const CompareBox = dynamic(() => import('@/app/products/components/CompareBox'));
+const TagList = dynamic(() => import('@/app/products/components/TagList'));
+const ViewToggle = dynamic(() => import('@/app/products/components/ViewToggle'));
+const SimpleBanner = dynamic(() => import('@/Components/banner/SimpleBanner'));
+const PaginationWrapper = dynamic(() => import('@/Components/PaginationWrapper').then(mod => mod.PaginationWrapper));
+const ProductCounter = dynamic(() => import('./components/ProductCounter'));
+const SortFilter = dynamic(() => import('./components/SortFilter'));
+
 import { IProduct } from '@/models/Product';
 import { ICategory } from '@/models/Category';
 import { productService } from '@/services/productService';
 import { categoryService } from '@/services/categoryService';
 import { SortOption } from './components/SortFilter';
-import SortFilter from './components/SortFilter';
 
 const ProductPage = () => {
     const [products, setProducts] = useState<IProduct[]>([]);
@@ -167,7 +170,7 @@ const ProductPage = () => {
         };
 
         fetchProducts();
-    }, [selectedCategory, selectedTags]);
+    }, [selectedCategory, selectedTags, sortOption]);
 
     // Áp dụng sắp xếp khi sortOption thay đổi
     useEffect(() => {
@@ -221,15 +224,19 @@ const ProductPage = () => {
     };
 
     // Chức năng thêm vào giỏ hàng
-    const { syncCart } = require('@/store/useCartStore');
-    const { addItemToCart } = require('@/lib/actions/cart');
-    const { toast } = require('react-hot-toast');
     const handleAddToCart = async (product: IProduct) => {
+        const { useCartStore } = await import('@/store/useCartStore');
+        const { addItemToCart, getCart } = await import('@/lib/actions/cart');
+        const { toast } = await import('react-hot-toast');
         const res = await addItemToCart(String(product._id), 1);
         if (res.success) {
             toast.success('Đã thêm sản phẩm vào giỏ hàng!');
-            if (res.data && res.data.cart) {
-                syncCart(res.data.cart);
+            // Lấy lại giỏ hàng mới và đồng bộ store
+            const cartRes = await getCart();
+            if (cartRes.success && cartRes.data) {
+                // Ép kiểu đúng với PopulatedCart để tránh lỗi eslint
+                const { _id, user, items, totalItems } = cartRes.data as { _id: string, user: string, items: any[], totalItems: number };
+                useCartStore.getState().syncCart({ _id, user, items, totalItems });
             }
         } else {
             toast.error(res.message || 'Thêm vào giỏ hàng thất bại!');

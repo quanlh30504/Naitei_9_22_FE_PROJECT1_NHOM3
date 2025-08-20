@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    let existingRating = await Rating.findOne({ slug, userId });
+    const existingRating = await Rating.findOne({ slug, userId });
     
     if (existingRating) {
       const oldRating = existingRating.rating;

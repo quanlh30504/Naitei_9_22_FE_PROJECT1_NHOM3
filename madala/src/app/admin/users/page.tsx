@@ -1,13 +1,14 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+"use client";
+import dynamic from 'next/dynamic';
+import { Suspense, useState, useEffect } from 'react';
 import { AdminGuard } from '@/Components/admin/AdminGuard';
 import { AdminLayout } from '@/Components/admin/AdminLayout';
 import { userService } from '@/services/userService';
 import { toast } from 'react-hot-toast';
-import UserStatsCards from '@/Components/admin/users/UserStatsCards';
-import UserSearchBar from '@/Components/admin/users/UserSearchBar';
-import UserTable from '@/Components/admin/users/UserTable';
+
+const UserStatsCards = dynamic(() => import('@/Components/admin/users/UserStatsCards'), { ssr: false });
+const UserSearchBar = dynamic(() => import('@/Components/admin/users/UserSearchBar'), { ssr: false });
+const UserTable = dynamic(() => import('@/Components/admin/users/UserTable'), { ssr: false });
 
 interface User {
     _id: string;
@@ -60,15 +61,18 @@ export default function UsersManagementPage() {
 
             if (response.success && response.data) {
                 // Convert IUser[] to User[]
-                const convertedUsers: User[] = response.data.map((user: any) => ({
-                    _id: user._id?.toString() || '',
-                    name: user.name,
-                    email: user.email,
-                    phone: user.phone,
-                    role: user.role,
-                    isActive: user.isActive,
-                    createdAt: user.createdAt,
-                }));
+                const convertedUsers: User[] = response.data.map((user: unknown) => {
+                    const u = user as User & { _id?: string | { toString: () => string } };
+                    return {
+                        _id: u._id?.toString() || '',
+                        name: u.name,
+                        email: u.email,
+                        phone: u.phone,
+                        role: u.role,
+                        isActive: u.isActive,
+                        createdAt: u.createdAt,
+                    };
+                });
                 setUsers(convertedUsers);
                 setTotalPages(response.totalPages || 1);
                 setTotalUsers(response.total || 0);
@@ -127,22 +131,31 @@ export default function UsersManagementPage() {
         fetchUsers();
     }, []);
 
-        return (
-            <AdminGuard>
-                <AdminLayout>
-                    <div className="space-y-6">
-                        {/* Header */}
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-sm">Quản lý người dùng</h1>
-                                <p className="text-gray-600 dark:text-gray-500 mt-1">Quản lý thông tin người dùng trong hệ thống</p>
-                            </div>
+    return (
+        <AdminGuard>
+            <AdminLayout>
+                <div className="space-y-6">
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-sm">Quản lý người dùng</h1>
+                            <p className="text-gray-600 dark:text-gray-500 mt-1">Quản lý thông tin người dùng trong hệ thống</p>
                         </div>
-                        {/* Stats Cards */}
-                        {stats && <UserStatsCards stats={stats} />}
-                        {/* Search */}
-                        <UserSearchBar searchTerm={searchTerm} onSearch={handleSearch} onClear={clearSearch} />
-                        {/* Users Table */}
+                    </div>
+                    {/* Stats Cards */}
+                    {stats && (
+                        <Suspense fallback={<div>Đang tải thống kê người dùng...</div>}>
+                            <UserStatsCards stats={stats} />
+                        </Suspense>
+                    )}
+                    <Suspense fallback={<div>Đang tải thanh tìm kiếm...</div>}>
+                        <UserSearchBar
+                            searchTerm={searchTerm}
+                            onSearch={handleSearch}
+                            onClear={clearSearch}
+                        />
+                    </Suspense>
+                    <Suspense fallback={<div className="p-8 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div><p className="mt-2 text-gray-600 dark:text-gray-300">Đang tải bảng người dùng...</p></div>}>
                         <UserTable
                             users={users}
                             loading={loading}
@@ -153,8 +166,9 @@ export default function UsersManagementPage() {
                             usersPerPage={usersPerPage}
                             handlePageChange={handlePageChange}
                         />
-                    </div>
-                </AdminLayout>
-            </AdminGuard>
-        );
+                    </Suspense>
+                </div>
+            </AdminLayout>
+        </AdminGuard>
+    );
 }

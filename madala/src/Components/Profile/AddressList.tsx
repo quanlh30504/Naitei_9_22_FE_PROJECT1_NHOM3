@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { IAddress } from "@/models/Address";
 import {
   setDefaultAddress,
   deleteAddress,

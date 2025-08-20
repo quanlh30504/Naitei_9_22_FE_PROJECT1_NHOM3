@@ -19,33 +19,33 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    let updateData: any = {};
+    let updateData: Record<string, unknown> = {};
     let message = '';
 
     switch (action) {
       case 'publish':
-        updateData = { 
+        updateData = {
           isPublished: true,
           publishedAt: new Date()
         };
         message = `Đã xuất bản ${slugs.length} bài viết`;
         break;
-      
+
       case 'unpublish':
         updateData = { isPublished: false };
         message = `Đã hủy xuất bản ${slugs.length} bài viết`;
         break;
-      
+
       case 'feature':
         updateData = { isFeatured: true };
         message = `Đã đặt nổi bật ${slugs.length} bài viết`;
         break;
-      
+
       case 'unfeature':
         updateData = { isFeatured: false };
         message = `Đã hủy nổi bật ${slugs.length} bài viết`;
         break;
-      
+
       default:
         return NextResponse.json(
           { success: false, error: 'Hành động không hợp lệ' },

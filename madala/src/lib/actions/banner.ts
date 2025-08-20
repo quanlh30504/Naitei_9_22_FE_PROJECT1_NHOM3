@@ -8,17 +8,17 @@ import { uploadToCloudinary, deleteFromCloudinary, extractPublicId } from "../cl
 type ActionResponse = {
     success: boolean;
     message: string;
-    data?: any;
+    data?: unknown;
 };
 
 /**
  * Helper function để serialize Mongoose objects thành plain objects
  */
-function serializeBanner(banner: any) {
+import { Document } from "mongoose";
+function serializeBanner(banner: (Document & IBanner) | null | undefined): Record<string, unknown> | null {
     if (!banner) return null;
-
     return {
-        _id: banner._id.toString(),
+        _id: banner._id?.toString?.() ?? '',
         title: banner.title,
         description: banner.description,
         imageUrl: banner.imageUrl,
@@ -26,16 +26,17 @@ function serializeBanner(banner: any) {
         isActive: banner.isActive,
         displayOrder: banner.displayOrder,
         type: banner.type,
-        createdAt: banner.createdAt?.toISOString(),
-        updatedAt: banner.updatedAt?.toISOString()
+        createdAt: banner.createdAt instanceof Date ? banner.createdAt.toISOString() : banner.createdAt,
+        updatedAt: banner.updatedAt instanceof Date ? banner.updatedAt.toISOString() : banner.updatedAt,
     };
 }
 
 /**
  * Helper function để serialize array of banners
  */
-function serializeBanners(banners: any[]) {
-    return banners.map(banner => serializeBanner(banner));
+function serializeBanners(banners: (Document & IBanner)[] | null | undefined): Record<string, unknown>[] {
+    if (!banners) return [];
+    return banners.map(banner => serializeBanner(banner) as Record<string, unknown>);
 }
 
 /**
@@ -227,7 +228,7 @@ export async function updateBanner(id: string, formData: FormData): Promise<Acti
 
         // Cho phép nhiều banner active cùng loại, không cần tắt banner khác khi cập nhật
 
-        const updateData: any = {
+        const updateData: Record<string, unknown> = {
             title,
             description: description || undefined,
             type,

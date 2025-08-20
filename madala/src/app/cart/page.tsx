@@ -2,7 +2,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getAddresses } from "@/lib/actions/address";
-import { getCart } from "@/lib/actions/cart";
 import CartView from "@/app/cart/components/CartView";
 
 export default async function CartPage() {

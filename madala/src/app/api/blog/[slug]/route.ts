@@ -52,17 +52,17 @@ export async function GET(
         isPublished: true,
         publishedAt: { $lt: singleBlogPost.publishedAt }
       })
-      .sort({ publishedAt: -1 })
-      .select('title slug')
-      .lean(),
-      
+        .sort({ publishedAt: -1 })
+        .select('title slug')
+        .lean(),
+
       BlogPost.findOne({
         isPublished: true,
         publishedAt: { $gt: singleBlogPost.publishedAt }
       })
-      .sort({ publishedAt: 1 })
-      .select('title slug')
-      .lean()
+        .sort({ publishedAt: 1 })
+        .select('title slug')
+        .lean()
     ]);
 
     return NextResponse.json({
@@ -132,7 +132,7 @@ export async function PUT(
       try {
         const uploadResult = await uploadToCloudinary(featuredImageFile, 'blog');
         finalFeaturedImage = uploadResult.url;
-      } catch (uploadError) {
+      } catch {
         return NextResponse.json(
           { success: false, error: 'Lỗi khi upload ảnh đại diện' },
           { status: 400 }
@@ -140,7 +140,7 @@ export async function PUT(
       }
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (title) updateData.title = title;
     if (newSlug) updateData.slug = newSlug;
     if (content) updateData.content = content;

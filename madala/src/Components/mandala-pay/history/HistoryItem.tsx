@@ -7,12 +7,12 @@ import Image from "next/image";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { ArrowDownToLine, Landmark } from 'lucide-react'; 
+import { ArrowDownToLine, Landmark } from 'lucide-react';
 
 type TransactionDetailMap = {
-    icon: React.ReactNode;
-    title: string;
-    description: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
 }
 
 
@@ -54,21 +54,21 @@ const CountdownTimer = ({ expiryDate }: { expiryDate: string | Date }) => {
 
 // object map
 const transactionDetailsMap: Record<string, TransactionDetailMap> = {
-    VIETQR: {
-        icon: <ArrowDownToLine className="h-6 w-6 text-blue-500" />,
-        title: `Nạp tiền`,
-        description: "qua Chuyển khoản VietQR",
-    },
-    GATEWAY: {
-        icon: <Landmark className="h-6 w-6 text-purple-500" />,
-        title: `Nạp tiền`,
-        description: "qua Cổng thanh toán",
-    },
-    default: {
-        icon: <ArrowDownToLine className="h-6 w-6 text-gray-500" />,
-        title: `Giao dịch nạp tiền`,
-        description: "",
-    }
+  VIETQR: {
+    icon: <ArrowDownToLine className="h-6 w-6 text-blue-500" />,
+    title: `Nạp tiền`,
+    description: "qua Chuyển khoản VietQR",
+  },
+  GATEWAY: {
+    icon: <Landmark className="h-6 w-6 text-purple-500" />,
+    title: `Nạp tiền`,
+    description: "qua Cổng thanh toán",
+  },
+  default: {
+    icon: <ArrowDownToLine className="h-6 w-6 text-gray-500" />,
+    title: `Giao dịch nạp tiền`,
+    description: "",
+  }
 };
 
 
@@ -112,11 +112,11 @@ export default function HistoryItem({ req }: { req: ITopUpRequest }) {
           )}
 
           {!isPendingAndActive && (
-             <div className="absolute inset-0 bg-white/80 dark:bg-black/80 flex items-center justify-center backdrop-blur-sm rounded-lg">
-                <span className="text-xs font-bold text-destructive capitalize text-center px-1">
-                    {req.status === "PENDING" ? "Đã hết hạn" : req.status.toLowerCase()}
-                </span>
-             </div>
+            <div className="absolute inset-0 bg-white/80 dark:bg-black/80 flex items-center justify-center backdrop-blur-sm rounded-lg">
+              <span className="text-xs font-bold text-destructive capitalize text-center px-1">
+                {req.status === "PENDING" ? "Đã hết hạn" : req.status.toLowerCase()}
+              </span>
+            </div>
           )}
         </div>
 

@@ -4,8 +4,6 @@ import { useRouter } from "next/navigation";
 import { IProduct } from "@/models/Product";
 import { Heart, ShoppingCart, Scale } from "lucide-react";
 import { Button } from "@/Components/ui/button";
-import { Card, CardContent } from "@/Components/ui/card";
-import { Badge } from "@/Components/ui/badge";
 import SafeImage from "@/Components/SafeImage";
 import StarRating from "@/Components/products/StarRating";
 import { useCompareStore } from "@/store/useCompareStore";

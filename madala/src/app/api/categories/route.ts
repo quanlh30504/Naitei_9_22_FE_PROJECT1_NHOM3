@@ -16,16 +16,16 @@ export async function GET(request: NextRequest) {
         const includeInactive = searchParams.get('includeInactive');
 
         // Xây dựng filter
-        const filter: any = {};
-        
+        const filter: Record<string, unknown> = {};
+
         if (parentId !== null) {
             filter.parentId = parentId === 'null' ? null : parentId;
         }
-        
+
         if (level) {
             filter.level = parseInt(level);
         }
-        
+
         if (!includeInactive) {
             filter.isActive = isActive === 'false' ? false : true;
         } else if (isActive) {
@@ -41,9 +41,9 @@ export async function GET(request: NextRequest) {
         });
     } catch (err) {
         console.error('Failed to fetch categories:', err);
-        return NextResponse.json({ 
+        return NextResponse.json({
             success: false,
-            error: 'Failed to fetch categories' 
+            error: 'Failed to fetch categories'
         }, { status: 500 });
     }
 }
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         await connectToDB();
-        
+
         const body = await request.json();
         const { name, slug, description, parentId, level, sortOrder, isActive } = body;
 
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         });
 
         const savedCategory = await newCategory.save();
-        
+
         return NextResponse.json({
             success: true,
             data: savedCategory,
@@ -103,9 +103,9 @@ export async function POST(request: NextRequest) {
         }, { status: 201 });
     } catch (err) {
         console.error('Failed to create category:', err);
-        return NextResponse.json({ 
+        return NextResponse.json({
             success: false,
-            error: 'Failed to create category' 
+            error: 'Failed to create category'
         }, { status: 500 });
     }
 }

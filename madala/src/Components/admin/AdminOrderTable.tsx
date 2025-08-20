@@ -16,10 +16,13 @@ interface AdminOrderTableProps {
 
 export default function AdminOrderTable({ orders, setOrders }: AdminOrderTableProps) {
     const handleStatusUpdate = (orderId: string, newStatus: OrderStatus) => {
-        setOrders(prevOrders => 
-            prevOrders.map(order => 
-                order._id === orderId ? { ...order, status: newStatus } : order
-            )
+        setOrders(prevOrders =>
+            prevOrders.map(order => {
+                if (order._id?.toString() === orderId) {
+                    return { ...order, status: newStatus } as IOrder;
+                }
+                return order;
+            })
         );
     };
 
@@ -42,21 +45,21 @@ export default function AdminOrderTable({ orders, setOrders }: AdminOrderTablePr
                 </TableHeader>
                 <TableBody>
                     {orders.map((order) => (
-                        <TableRow key={order._id}>
+                        <TableRow key={order._id?.toString?.() || String(order._id)}>
                             <TableCell className="font-medium">{order.orderId}</TableCell>
                             <TableCell>{order.shippingAddress?.fullName}</TableCell>
-                            <TableCell>{new Date(order.createdAt).toLocaleDateString("vi-VN")}</TableCell>
+                            <TableCell>{order.createdAt ? new Date(order.createdAt).toLocaleDateString("vi-VN") : "-"}</TableCell>
                             <TableCell className="text-right font-semibold">{formatCurrency(order.totals?.grandTotal)}</TableCell>
                             <TableCell className="text-center flex justify-center">
                                 <UpdateStatusSelect 
-                                    orderId={order._id.toString()} 
+                                    orderId={order._id?.toString?.() || String(order._id)}
                                     currentStatus={order.status}
                                     onStatusUpdate={handleStatusUpdate}
                                 />
                             </TableCell>
                             <TableCell className="text-left">
                                 <Button asChild variant="ghost" size="sm">
-                                    <Link href={`/admin/orders/${order._id}`}>Xem</Link>
+                                    <Link href={`/admin/orders/${order._id?.toString?.() || String(order._id)}`}>Xem</Link>
                                 </Button>
                             </TableCell>
                         </TableRow>

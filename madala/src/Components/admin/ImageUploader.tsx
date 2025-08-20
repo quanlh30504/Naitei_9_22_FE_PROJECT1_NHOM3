@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react';
 import FileDropZone from './FileDropZone';
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
-import { Upload, X, Eye } from "lucide-react";
+import { X, Eye } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { IMAGE_UPLOADER_CONSTANTS, IMAGE_UPLOAD_MESSAGES } from "@/constants/imageUploader";

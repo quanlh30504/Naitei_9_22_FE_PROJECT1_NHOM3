@@ -23,10 +23,11 @@ export default function BannerManager() {
         setLoading(true);
         try {
             const result = await getBanners();
-            if (result.success && result.data) {
-                setBanners(result.data);
-                updateBannerCounts(result.data);
-                filterBanners(result.data, activeFilter);
+            const bannersData: IBanner[] = Array.isArray(result.data) ? result.data : [];
+            if (result.success) {
+                setBanners(bannersData);
+                updateBannerCounts(bannersData);
+                filterBanners(bannersData, activeFilter);
             } else {
                 toast.error(result.message);
             }

@@ -4,14 +4,15 @@ import { Input } from "@/Components/ui/input";
 import { Button } from "@/Components/ui/button";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
-import React from "react";
+import type { ProductFormData } from '@/lib/validations/forms';
+import type { UseFormSetValue, UseFormGetValues } from 'react-hook-form';
 
 interface ProductImagesSectionProps {
     images: string[];
     uploadingImage: boolean;
-    setValue: (field: string, value: any) => void;
-    getValues: (field: string) => any;
-    errors: any;
+    setValue: UseFormSetValue<ProductFormData>;
+    getValues: UseFormGetValues<ProductFormData>;
+    errors: Record<string, { message?: string }>;
     uploadImagesToCloudinary: (files: FileList) => Promise<string[]>;
 }
 
@@ -30,7 +31,7 @@ const ProductImagesSection: React.FC<ProductImagesSectionProps> = ({
         setValue('images', [...(getValues('images') || []), ...imageUrls]);
     };
     const removeImage = (index: number) => {
-        setValue('images', images.filter((_, i) => i !== index));
+        setValue('images', images.filter((_: string, i: number) => i !== index));
     };
     return (
         <Card>
@@ -58,7 +59,7 @@ const ProductImagesSection: React.FC<ProductImagesSectionProps> = ({
                 {errors.images && <p className="text-red-500 text-xs mt-1">{errors.images.message}</p>}
                 {(images?.length || 0) > 0 && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {images.map((image, index) => (
+                        {images.map((image: string, index: number) => (
                             <div key={index} className="relative group">
                                 <div className="aspect-square rounded-lg border">
                                     <Image

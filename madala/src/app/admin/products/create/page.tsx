@@ -6,23 +6,20 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { productFormSchema, ProductFormData } from "@/lib/validations/forms"
 import { AdminLayout } from "@/Components/admin/AdminLayout"
 import { Button } from "@/Components/ui/button"
-import { Input } from "@/Components/ui/input"
-import { Textarea } from "@/Components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card"
-import { Label } from "@/Components/ui/label"
-import { Switch } from "@/Components/ui/switch"
-import { ArrowLeft, Upload, X, Plus } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
-import Image from "next/image"
-import { validateProductForm, uploadImagesToCloudinary } from "@/lib/utils/productUtils"
-import PriceStockSection from '@/Components/admin/products/PriceStockSection';
-import ProductImagesSection from '@/Components/admin/products/ProductImagesSection';
-import ProductCategoriesTagsSection from '@/Components/admin/products/ProductCategoriesTagsSection';
-import ProductAttributesSection from '@/Components/admin/products/ProductAttributesSection';
-import ProductSettingsSection from '@/Components/admin/products/ProductSettingsSection';
-import ProductBasicInfoSection from '@/Components/admin/products/ProductBasicInfoSection';
+import { uploadImagesToCloudinary } from "@/lib/utils/productUtils"
+
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+
+const PriceStockSection = dynamic(() => import('@/Components/admin/products/PriceStockSection'), { ssr: false });
+const ProductImagesSection = dynamic(() => import('@/Components/admin/products/ProductImagesSection'), { ssr: false });
+const ProductCategoriesTagsSection = dynamic(() => import('@/Components/admin/products/ProductCategoriesTagsSection'), { ssr: false });
+const ProductAttributesSection = dynamic(() => import('@/Components/admin/products/ProductAttributesSection'), { ssr: false });
+const ProductSettingsSection = dynamic(() => import('@/Components/admin/products/ProductSettingsSection'), { ssr: false });
+const ProductBasicInfoSection = dynamic(() => import('@/Components/admin/products/ProductBasicInfoSection'), { ssr: false });
 
 
 
@@ -37,26 +34,27 @@ export default function CreateProduct() {
     control,
     setValue,
     getValues,
-    formState: { errors }
-  } = useForm({
+    formState: { errors },
+    watch
+  } = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       name: '',
       description: '',
       shortDescription: '',
-      price: 0,
-      salePrice: undefined,
+      price: '' as unknown as number,
+      salePrice: '' as unknown as number,
       sku: '',
-      stock: 0,
+      stock: '' as unknown as number,
       images: [],
       categoryIds: [],
-      tags: [],
-      attributes: {},
+      tags: undefined,
+      attributes: undefined,
       isActive: true,
       isFeatured: false,
       isHotTrend: false,
-      discountPercentage: 0,
-    }
+      discountPercentage: '' as unknown as number,
+    } as ProductFormData,
   });
 
   // Image upload handler
@@ -74,14 +72,13 @@ export default function CreateProduct() {
     } catch (cloudinaryError) {
       console.error('Cloudinary upload failed:', cloudinaryError);
       toast.error(cloudinaryError instanceof Error ? cloudinaryError.message : 'Lỗi khi tải lên ảnh');
-    } finally {
-      setUploadingImage(false);
     }
-  };
 
+  // Image remove handler
   const removeImage = (indexToRemove: number) => {
     const currentImages = getValues('images');
-    setValue('images', currentImages.filter((_, index) => index !== indexToRemove));
+    setValue('images', currentImages.filter((_: any, index: number) => index !== indexToRemove));
+  };
   };
 
   // Tag/category handlers
@@ -162,40 +159,54 @@ export default function CreateProduct() {
           <p className="text-base font-medium text-gray-700 dark:text-white">Tạo sản phẩm mới trong hệ thống</p>
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <ProductBasicInfoSection register={register} errors={errors} />
-          <PriceStockSection register={register} errors={errors} />
-          <ProductImagesSection
-            images={getValues('images')}
-            uploadingImage={uploadingImage}
-            setValue={(field, value) => setValue(field as any, value)}
-            getValues={getValues}
-            errors={errors}
-            uploadImagesToCloudinary={uploadImagesToCloudinary}
-          />
-          <ProductCategoriesTagsSection
-            value={getValues('categoryIds')}
-            onChange={(val) => setValue('categoryIds', val)}
-            errors={errors}
-            name="categoryIds"
-            label="Danh mục *"
-          />
-          <ProductCategoriesTagsSection
-            value={getValues('tags') || []}
-            onChange={(val) => setValue('tags', val)}
-            errors={errors}
-            name="tags"
-            label="Tags"
-          />
-          <ProductAttributesSection
-            attributes={getValues('attributes') || {}}
-            onChange={(val) => setValue('attributes', val)}
-          />
-          <ProductSettingsSection
-            isActive={getValues('isActive')}
-            isFeatured={getValues('isFeatured')}
-            isHotTrend={getValues('isHotTrend')}
-            setValue={(field, value) => setValue(field as any, value)}
-          />
+          <Suspense fallback={<div>Đang tải thông tin cơ bản...</div>}>
+            <ProductBasicInfoSection register={register} errors={errors} />
+          </Suspense>
+          <Suspense fallback={<div>Đang tải giá và kho...</div>}>
+            <PriceStockSection register={register} errors={errors} />
+          </Suspense>
+          <Suspense fallback={<div>Đang tải ảnh sản phẩm...</div>}>
+            <ProductImagesSection
+              images={getValues('images')}
+              uploadingImage={uploadingImage}
+              setValue={(field, value) => setValue(field as keyof ProductFormData, value)}
+              getValues={getValues}
+              errors={errors}
+              uploadImagesToCloudinary={uploadImagesToCloudinary}
+            />
+          </Suspense>
+          <Suspense fallback={<div>Đang tải danh mục...</div>}>
+            <ProductCategoriesTagsSection
+              value={watch('categoryIds') || []}
+              onChange={(val) => setValue('categoryIds', val)}
+              errors={errors}
+              name="categoryIds"
+              label="Danh mục *"
+            />
+          </Suspense>
+          <Suspense fallback={<div>Đang tải tags...</div>}>
+            <ProductCategoriesTagsSection
+              value={watch('tags') || []}
+              onChange={(val) => setValue('tags', val)}
+              errors={errors}
+              name="tags"
+              label="Tags"
+            />
+          </Suspense>
+          <Suspense fallback={<div>Đang tải thuộc tính...</div>}>
+            <ProductAttributesSection
+              attributes={getValues('attributes') || {}}
+              onChange={(val) => setValue('attributes', val)}
+            />
+          </Suspense>
+          <Suspense fallback={<div>Đang tải cài đặt sản phẩm...</div>}>
+            <ProductSettingsSection
+              isActive={getValues('isActive')}
+              isFeatured={getValues('isFeatured')}
+              isHotTrend={getValues('isHotTrend')}
+              setValue={(field, value) => setValue(field as keyof ProductFormData, value)}
+            />
+          </Suspense>
           <div className="flex justify-end space-x-4">
             <Button
               type="button"
