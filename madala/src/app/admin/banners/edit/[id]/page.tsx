@@ -14,7 +14,6 @@ interface EditBannerPageProps {
 }
 
 export default async function EditBannerPage({ params }: EditBannerPageProps) {
-    // Await params before using its properties
     const { id } = await params;
     const result = await getBannerById(id);
 
@@ -22,6 +21,8 @@ export default async function EditBannerPage({ params }: EditBannerPageProps) {
         notFound();
     }
 
+    // Cast result.data to IBanner for type safety
+    const banner = result.data as import("@/models/Banner").IBanner;
     return (
         <AdminGuard>
             <AdminLayout>
@@ -37,7 +38,7 @@ export default async function EditBannerPage({ params }: EditBannerPageProps) {
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900">Chỉnh sửa Banner</h1>
                             <p className="text-gray-600 mt-1">
-                                Cập nhật thông tin banner "{result.data.title}"
+                                Cập nhật thông tin banner &quot;{banner.title}&quot;
                             </p>
                         </div>
                     </div>
@@ -48,7 +49,7 @@ export default async function EditBannerPage({ params }: EditBannerPageProps) {
                             <CardTitle>Thông tin Banner</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <BannerForm mode="edit" banner={result.data} />
+                            <BannerForm mode="edit" banner={banner} />
                         </CardContent>
                     </Card>
                 </div>

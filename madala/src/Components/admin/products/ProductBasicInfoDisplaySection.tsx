@@ -2,6 +2,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { StatusBadge } from '@/Components/StatusBadge';
 import React from 'react';
+import type { Product } from '@/types/product';
 
 interface ProductBasicInfoDisplaySectionProps {
     name: string;
@@ -11,7 +12,7 @@ interface ProductBasicInfoDisplaySectionProps {
     description?: string;
     isFeatured: boolean;
     isHotTrend: boolean;
-    product: any;
+    product: Product;
 }
 
 const ProductBasicInfoDisplaySection: React.FC<ProductBasicInfoDisplaySectionProps> = ({

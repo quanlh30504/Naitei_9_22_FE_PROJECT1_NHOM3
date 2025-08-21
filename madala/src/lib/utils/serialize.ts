@@ -1,7 +1,7 @@
 // Chuyển đổi MongoDB documents thành plain serializable objects 
 // do Next.js chỉ cho phép truyền plain objects từ Server sang Client Components
 
-export function serializeMongoDoc<T extends Record<string, any>>(doc: T): T {
+export function serializeMongoDoc<T extends Record<string, unknown>>(doc: T): T {
     if (!doc) return doc;
 
     // Sử dụng JSON.parse(JSON.stringify()) để deep clone và loại bỏ methods/complex objects
@@ -27,28 +27,26 @@ export function serializeMongoDoc<T extends Record<string, any>>(doc: T): T {
     return serialized;
 }
 
-export function serializeMongoArray<T extends Record<string, any>>(docs: T[]): T[] {
+export function serializeMongoArray<T extends Record<string, unknown>>(docs: T[]): T[] {
     if (!Array.isArray(docs)) return [];
     // Áp dụng serializeMongoDoc cho từng phần tử trong mảng
     return docs.map(doc => serializeMongoDoc(doc));
 }
 
 // Tiện ích bổ sung cho các object lồng nhau (nested objects)
-export function serializeNestedMongo<T extends Record<string, any>>(obj: T): T {
+export function serializeNestedMongo<T extends Record<string, unknown>>(obj: T): T {
     if (!obj || typeof obj !== 'object') return obj;
-    
-    const serialized = { ...obj };
-    
-    // Duyệt qua tất cả các key và serialize từng giá trị
-    Object.keys(serialized).forEach(key => {
-        if (Array.isArray(serialized[key])) {
-            // Nếu là mảng, serialize từng phần tử
-            serialized[key] = serializeMongoArray(serialized[key]);
-        } else if (typeof serialized[key] === 'object' && serialized[key] !== null) {
-            // Nếu là object, serialize object
-            serialized[key] = serializeMongoDoc(serialized[key]);
+
+    const result: Record<string, unknown> = { ...obj };
+
+    Object.keys(result).forEach(key => {
+        const value = result[key];
+        if (Array.isArray(value)) {
+            result[key] = serializeMongoArray(value as Record<string, unknown>[]);
+        } else if (typeof value === 'object' && value !== null) {
+            result[key] = serializeMongoDoc(value as Record<string, unknown>);
         }
     });
-    
-    return serialized;
+
+    return result as T;
 }

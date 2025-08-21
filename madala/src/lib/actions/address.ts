@@ -7,7 +7,7 @@ import connectToDB from "@/lib/db";
 import Address from "@/models/Address";
 import type { AddressType } from "@/types/address";
 
-type ActionResponse<T = any> = {
+type ActionResponse<T = unknown> = {
     success: boolean;
     message: string;
     data?: T;
@@ -35,18 +35,21 @@ export async function getAddresses(): Promise<ActionResponse<AddressType[]>> {
 
     try {
         await connectToDB();
-        const addresses = await Address.find({ userId: session.user.id }).sort({ createdAt: -1 }).lean() as any[];
+        const addressesRaw = await Address.find({ userId: session.user.id }).sort({ createdAt: -1 }).lean();
         // Convert to AddressType[]
-        const plainAddresses: AddressType[] = addresses.map((addr) => ({
-            _id: addr._id?.toString?.() ?? '',
-            fullName: addr.fullName,
-            phoneNumber: addr.phoneNumber,
-            street: addr.street,
-            city: addr.city,
-            district: addr.district,
-            ward: addr.ward,
-            isDefault: !!addr.isDefault,
-        }));
+        const plainAddresses: AddressType[] = (addressesRaw as unknown[]).map((addr) => {
+            const a = addr as Record<string, unknown>;
+            return {
+                _id: typeof a._id === 'object' && a._id !== null && 'toString' in a._id ? (a._id as { toString: () => string }).toString() : '',
+                fullName: String(a.fullName ?? ''),
+                phoneNumber: String(a.phoneNumber ?? ''),
+                street: String(a.street ?? ''),
+                city: String(a.city ?? ''),
+                district: String(a.district ?? ''),
+                ward: String(a.ward ?? ''),
+                isDefault: Boolean(a.isDefault),
+            };
+        });
         return { success: true, message: "Lấy danh sách địa chỉ thành công.", data: plainAddresses };
     } catch (error) {
         console.error("[GET_ADDRESSES_ERROR]", error);
@@ -149,10 +152,10 @@ export async function updateAddress(addressId: string, input: Partial<AddressInp
         revalidatePath("/profile/addresses");
         return { success: true, message: "Cập nhật địa chỉ thành công." };
 
-    } catch (error: any) {
+    } catch (error) {
         await mongoSession.abortTransaction();
         console.error("[UPDATE_ADDRESS_ERROR]", error);
-        return { success: false, message: error.message || "Lỗi khi cập nhật địa chỉ." };
+        return { success: false, message: error instanceof Error ? error.message : "Lỗi khi cập nhật địa chỉ." };
     } finally {
         mongoSession.endSession();
     }
@@ -175,7 +178,7 @@ export async function deleteAddress(addressId: string): Promise<ActionResponse> 
 
     try {
         await connectToDB();
-        
+
         // Ngăn xóa địa chỉ cuối cùng (tùy chọn)
         const addressCount = await Address.countDocuments({ userId: session.user.id });
         if (addressCount <= 1) {
@@ -207,7 +210,7 @@ export async function setDefaultAddress(addressId: string): Promise<ActionRespon
     if (!session?.user?.id) {
         return { success: false, message: "Vui lòng đăng nhập." };
     }
-    
+
     if (!addressId) {
         return { success: false, message: "ID địa chỉ không hợp lệ." };
     }
@@ -218,7 +221,7 @@ export async function setDefaultAddress(addressId: string): Promise<ActionRespon
 
     try {
         await connectToDB();
-        
+
         // Bước 1: Bỏ mặc định tất cả địa chỉ của người dùng
         await Address.updateMany(
             { userId: session.user.id },
@@ -238,14 +241,14 @@ export async function setDefaultAddress(addressId: string): Promise<ActionRespon
         }
 
         await mongoSession.commitTransaction();
-        
+
         revalidatePath("/profile/addresses");
         return { success: true, message: "Đặt địa chỉ mặc định thành công." };
-        
-    } catch (error: any) {
+
+    } catch (error) {
         await mongoSession.abortTransaction();
         console.error("[SET_DEFAULT_ADDRESS_ERROR]", error);
-        return { success: false, message: error.message || "Lỗi khi đặt địa chỉ mặc định." };
+        return { success: false, message: error instanceof Error ? error.message : "Lỗi khi đặt địa chỉ mặc định." };
     } finally {
         mongoSession.endSession();
     }
@@ -270,20 +273,21 @@ export async function getAddressById(addressId: string): Promise<ActionResponse<
     try {
         await connectToDB();
         // Tìm địa chỉ theo ID và đảm bảo nó thuộc về user đang đăng nhập
-        const address = await Address.findOne({ _id: addressId, userId: session.user.id }).lean() as any;
-        if (!address) {
+        const addressRaw = await Address.findOne({ _id: addressId, userId: session.user.id }).lean();
+        if (!addressRaw) {
             return { success: false, message: "Không tìm thấy địa chỉ." };
         }
+        const a = addressRaw as Record<string, unknown>;
         // Convert to AddressType
         const plainAddress: AddressType = {
-            _id: address._id?.toString?.() ?? '',
-            fullName: address.fullName,
-            phoneNumber: address.phoneNumber,
-            street: address.street,
-            city: address.city,
-            district: address.district,
-            ward: address.ward,
-            isDefault: !!address.isDefault,
+            _id: typeof a._id === 'object' && a._id !== null && 'toString' in a._id ? (a._id as { toString: () => string }).toString() : '',
+            fullName: String(a.fullName ?? ''),
+            phoneNumber: String(a.phoneNumber ?? ''),
+            street: String(a.street ?? ''),
+            city: String(a.city ?? ''),
+            district: String(a.district ?? ''),
+            ward: String(a.ward ?? ''),
+            isDefault: Boolean(a.isDefault),
         };
         return { success: true, message: "Lấy thông tin địa chỉ thành công.", data: plainAddress };
     } catch (error) {

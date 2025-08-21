@@ -111,18 +111,9 @@ export const productFormSchema = z.object({
     sku: z.string().min(2, "SKU phải có ít nhất 2 ký tự").max(50, "SKU không được quá 50 ký tự"),
     shortDescription: z.string().max(200).optional(),
     description: z.string().max(2000).optional(),
-    price: z.preprocess(
-        (v) => v === '' || v === undefined || v === null ? 0 : Number(v),
-        z.number().min(0, "Giá phải lớn hơn hoặc bằng 0")
-    ).transform((val) => Number(val)).refine(val => typeof val === 'number' && !isNaN(val), { message: 'Giá phải là số' }),
-    salePrice: z.preprocess(
-        (v) => v === undefined || v === null || v === '' ? undefined : Number(v),
-        z.number().min(0).optional()
-    ).transform((val) => val === undefined ? undefined : Number(val)).refine(val => val === undefined || (typeof val === 'number' && !isNaN(val)), { message: 'Giá khuyến mãi phải là số' }).optional(),
-    stock: z.preprocess(
-        (v) => v === '' || v === undefined || v === null ? 0 : Number(v),
-        z.number().min(0, "Tồn kho phải lớn hơn hoặc bằng 0")
-    ).transform((val) => Number(val)).refine(val => typeof val === 'number' && !isNaN(val), { message: 'Tồn kho phải là số' }),
+    price: z.number().min(0, "Giá phải lớn hơn hoặc bằng 0"),
+    salePrice: z.number().min(0, "Giá khuyến mãi phải lớn hơn hoặc bằng 0").optional(),
+    stock: z.number().min(0, "Tồn kho phải lớn hơn hoặc bằng 0"),
     images: z.array(z.string().url("Ảnh phải là đường dẫn hợp lệ")).min(1, "Cần ít nhất 1 ảnh sản phẩm"),
     categoryIds: z.array(z.string().min(1, "Danh mục không hợp lệ")).min(1, "Cần chọn ít nhất 1 danh mục"),
     tags: z.array(z.string()).optional(),
@@ -137,7 +128,7 @@ export const productFormSchema = z.object({
     isActive: z.boolean(),
     isFeatured: z.boolean(),
     isHotTrend: z.boolean(),
-    discountPercentage: z.preprocess((v) => v === '' || v === undefined || v === null ? 0 : Number(v), z.number().min(0).max(100)).transform((val) => Number(val)).refine(val => typeof val === 'number' && !isNaN(val), { message: 'Phần trăm giảm giá phải là số' }).optional(),
+    discountPercentage: z.number().min(0).max(100).optional(),
 });
 
 // Export types

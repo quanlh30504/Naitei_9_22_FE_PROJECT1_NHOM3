@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         const isFeatured = searchParams.get('featured');
         const isHotTrend = searchParams.get('hotTrend');
 
-        let filter: Record<string, any> = {};
+        const filter: Record<string, unknown> = {};
 
         if (category) {
             // Lọc tất cả category active

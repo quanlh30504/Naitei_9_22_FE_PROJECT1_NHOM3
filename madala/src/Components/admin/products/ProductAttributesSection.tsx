@@ -13,7 +13,7 @@ interface ProductAttributesSectionProps {
         size?: string;
         weight?: string;
     };
-    onChange: (value: any) => void;
+    onChange: (value: { [key: string]: string }) => void;
 }
 
 const ProductAttributesSection: React.FC<ProductAttributesSectionProps> = ({ attributes = {}, onChange }) => {

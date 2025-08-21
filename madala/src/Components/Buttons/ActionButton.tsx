@@ -1,16 +1,19 @@
 import { type ReactNode } from "react";
 import { Loader2Icon } from "lucide-react";
-import { type ButtonProps, Button } from "@/Components/ui/button"; 
+import { Button, buttonVariants } from "@/Components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface ActionButtonProps extends ButtonProps {
-  loading?: boolean; 
+
+import type { VariantProps } from "class-variance-authority";
+
+interface ActionButtonProps extends React.ComponentProps<'button'>, VariantProps<typeof buttonVariants> {
+  loading?: boolean;
   loadingText?: string;
-  children: ReactNode; 
-  className?: string; 
+  children: ReactNode;
+  className?: string;
   variant?: "default" | "destructive" | "outline" | "secondary";
   type?: "button" | "submit" | "reset";
-  asChild?: boolean; 
+  asChild?: boolean;
   disabled?: boolean;
 }
 

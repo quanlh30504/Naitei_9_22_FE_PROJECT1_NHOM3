@@ -92,7 +92,7 @@ export async function PUT(
     }
 
     // Prepare update object
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       updatedAt: new Date()
     };
 

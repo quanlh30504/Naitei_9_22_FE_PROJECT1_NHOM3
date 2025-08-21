@@ -3,12 +3,8 @@ import { Metadata } from 'next';
 import { productService } from '@/services/productService';
 import { getImageUrl } from '@/lib/getImageUrl';
 import { IProduct } from '@/models/Product';
-import ProductImageGallery from '@/Components/products/ProductImageGallery';
-import ProductInfo from '@/Components/products/ProductInfo';
-import ProductTabs from '@/Components/products/ProductTabs';
-import RelatedProducts from '@/Components/products/RelatedProducts';
+import ProductDetailClient from './ProductDetailClient';
 import { Breadcrumbs } from '@/Components/Breadcrumbs';
-import { formatCurrency } from '@/lib/utils';
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -91,61 +87,11 @@ export default async function ProductDetailPage({
           ]}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Product Images */}
-          <div>
-            <ProductImageGallery
-              images={product.images}
-              productName={product.name}
-              description={product.description}
-              shortDescription={product.shortDescription}
-            />
-          </div>
-
-          {/* Product Info */}
-          <div>
-            <ProductInfo 
-              productId={product._id as string}
-              name={product.name}
-              price={product.price}
-              salePrice={product.salePrice}
-              description={product.description}
-              shortDescription={product.shortDescription}
-              attributes={product.attributes}
-              rating={{
-                ...product.rating,
-                details: product.rating.details instanceof Map
-                  ? Object.fromEntries(product.rating.details)
-                  : product.rating.details
-              }}
-              stock={product.stock}
-              tags={product.tags}
-              discountPercentage={discountPercentage}
-            />
-          </div>
-
-          {/* Related Products */}
-          <div>
-            {relatedProducts && relatedProducts.length > 0 && (
-              <RelatedProducts products={relatedProducts} />
-            )}
-          </div>
-        </div>
-
-        {/* Product Details Section */}
-        <div className="mt-12">
-          <ProductTabs 
-            productId={product.slug}
-            description={product.description}
-            attributes={product.attributes}
-            rating={{
-              ...product.rating,
-              details: product.rating.details instanceof Map
-                ? Object.fromEntries(product.rating.details)
-                : product.rating.details
-            }}
-          />
-        </div>
+        <ProductDetailClient
+          product={product}
+          relatedProducts={relatedProducts}
+          discountPercentage={discountPercentage}
+        />
       </div>
     </div>
   );

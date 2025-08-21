@@ -48,7 +48,13 @@ async function CheckoutContent(props: { searchParams: { items?: string } | Promi
 }
 
 // component trang chính được bọc logic trong Suspense
-export default async function CheckoutPage(props: any) {
+interface CheckoutPageProps {
+    searchParams: {
+        items?: string;
+    };
+}
+
+export default async function CheckoutPage(props: CheckoutPageProps) {
     return (
         <div className="bg-gray-50 min-h-screen">
             <div className="container mx-auto px-4 py-8">

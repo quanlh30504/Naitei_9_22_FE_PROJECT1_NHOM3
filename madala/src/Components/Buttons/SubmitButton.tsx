@@ -1,17 +1,18 @@
 import { useFormStatus } from "react-dom";
 import { Loader2Icon } from "lucide-react";
-import { type ButtonProps, Button } from "@/Components/ui/button"; 
-import { cn } from "@/lib/utils"; // Nối classNames
+import { Button } from "@/Components/ui/button";
+import { cn } from "@/lib/utils";
 
+type ButtonProps = React.ComponentProps<typeof Button>;
 interface SubmitButtonProps extends ButtonProps {
   content: string;
-  loadingText?: string; 
-  className?: string; 
+  loadingText?: string;
+  className?: string;
 }
 
 export default function SubmitButton({
   content,
-  loadingText = "Đang xử lý...", 
+  loadingText = "Đang xử lý...",
   className,
   ...rest // props còn lại của Button (variant, size, onClick,...)
 }: SubmitButtonProps) {
@@ -21,7 +22,7 @@ export default function SubmitButton({
     <Button
       type="submit"
       className={cn("tracking-wider", className)}
-      disabled={pending || rest?.disabled}
+      disabled={pending || rest.disabled}
       {...rest}
     >
       {pending ? (

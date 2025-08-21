@@ -18,7 +18,7 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
 }
 
 interface SelectAmountStepProps {
-  onQrGenerated: (data: any) => void;
+  onQrGenerated: (data: { bonusAmount: number; [key: string]: unknown }) => void;
 }
 
 export default function SelectAmountStep({ onQrGenerated }: SelectAmountStepProps) {

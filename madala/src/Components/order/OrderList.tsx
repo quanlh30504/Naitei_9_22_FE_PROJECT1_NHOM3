@@ -8,15 +8,15 @@ import { OrderStatus, IOrder } from "@/models/Order";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
-import { Button } from "@/Components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/Components/ui/card";
-import { Badge } from "@/Components/ui/badge";
-import { Input } from "@/Components/ui/input";
+import dynamic from 'next/dynamic';
+const Button = dynamic(() => import('@/Components/ui/button').then(mod => mod.Button));
+const Card = dynamic(() => import('@/Components/ui/card').then(mod => mod.Card));
+const CardContent = dynamic(() => import('@/Components/ui/card').then(mod => mod.CardContent));
+const CardFooter = dynamic(() => import('@/Components/ui/card').then(mod => mod.CardFooter));
+const CardHeader = dynamic(() => import('@/Components/ui/card').then(mod => mod.CardHeader));
+const Badge = dynamic(() => import('@/Components/ui/badge').then(mod => mod.Badge));
+const Input = dynamic(() => import('@/Components/ui/input').then(mod => mod.Input));
+import { Suspense } from 'react';
 import { Search } from "lucide-react";
 import SafeImage from "@/Components/SafeImage";
 import { formatCurrency } from "@/lib/utils";
@@ -58,7 +58,7 @@ export default function OrderList() {
     const fetchOrders = async () => {
       setIsLoading(true);
       // Gọi action với cả status và searchQuery
-      const response = await getMyOrders({ status, search: searchQuery });
+      const response = await getMyOrders({ status: status ?? undefined, search: searchQuery });
       if (response.success && response.data) {
         setOrders(response.data);
       } else {
@@ -82,7 +82,7 @@ export default function OrderList() {
         }
         router.push(`${pathname}?${params.toString()}`);
       }
-    }, 200); 
+    }, 200);
 
     return () => clearTimeout(handler);
   }, [searchTerm, searchQuery, pathname, router, searchParams]);
@@ -94,87 +94,81 @@ export default function OrderList() {
     );
   }
 
-  if (orders.length === 0) {
-    return (
-      <div className="text-center py-12 border-2 border-dashed rounded-lg">
-        <p className="text-gray-500">Bạn chưa có đơn hàng nào trong mục này.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-        <Input
-          placeholder="Tìm theo mã đơn hoặc tên sản phẩm..."
-          className="pl-10"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-      {orders && orders.length > 0 ? (
-        orders.map((order: IOrder) => (
-          <Card key={order._id.toString()}>
-            <CardHeader className="flex flex-row justify-between items-center">
-              <div>
-                <p className="text-sm font-medium">
-                  Mã đơn hàng: {order.orderId}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Ngày đặt:{" "}
-                  {new Date(order.createdAt).toLocaleDateString("vi-VN")}
-                </p>
-              </div>
-              {getStatusBadge(order.status)}
-            </CardHeader>
-            <CardContent>
-              {order.items.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-4 py-4 border-t first:border-t-0"
-                >
-                  <div className="relative w-16 h-16">
-                    <SafeImage
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="rounded-md border object-cover"
-                    />
-                  </div>
-                  <div className="flex-grow">
-                    <p className="font-medium text-sm">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      SL: x{item.quantity}
-                    </p>
-                  </div>
-                  <p className="text-sm font-semibold">
-                    {formatCurrency(item.price)}
+    <Suspense fallback={<div>Đang tải danh sách đơn hàng...</div>}>
+      <div className="space-y-6">
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Input
+            placeholder="Tìm theo mã đơn hoặc tên sản phẩm..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        {orders && orders.length > 0 ? (
+          orders.map((order: IOrder) => (
+            <Card key={order._id?.toString?.() || String(order._id)}>
+              <CardHeader className="flex flex-row justify-between items-center">
+                <div>
+                  <p className="text-sm font-medium">
+                    Mã đơn hàng: {order.orderId}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Ngày đặt:{" "}
+                    {order.createdAt ? new Date(order.createdAt).toLocaleDateString("vi-VN") : "-"}
                   </p>
                 </div>
-              ))}
-            </CardContent>
-            <CardFooter className="flex justify-end items-center gap-4">
-              <p className="text-sm">
-                Tổng tiền:{" "}
-                <span className="font-bold text-lg text-red-600">
-                  {formatCurrency(order.totals.grandTotal)}
-                </span>
-              </p>
-              <Button variant="outline">Mua lại</Button>
-              <Button asChild>
-                <Link href={`/profile/orders/${order._id}`}>Xem chi tiết</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        ))
-      ) : (
-        <div className="text-center py-12 border-2 border-dashed rounded-lg">
-          <p className="text-gray-500">
-            Bạn chưa có đơn hàng nào trong mục này.
-          </p>
-        </div>
-      )}
-    </div>
+                {getStatusBadge(order.status)}
+              </CardHeader>
+              <CardContent>
+                {order.items.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-4 py-4 border-t first:border-t-0"
+                  >
+                    <div className="relative w-16 h-16">
+                      <SafeImage
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="rounded-md border object-cover"
+                      />
+                    </div>
+                    <div className="flex-grow">
+                      <p className="font-medium text-sm">{item.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        SL: x{item.quantity}
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold">
+                      {formatCurrency(item.price)}
+                    </p>
+                  </div>
+                ))}
+              </CardContent>
+              <CardFooter className="flex justify-end items-center gap-4">
+                <p className="text-sm">
+                  Tổng tiền:{" "}
+                  <span className="font-bold text-lg text-red-600">
+                    {formatCurrency(order.totals.grandTotal)}
+                  </span>
+                </p>
+                <Button variant="outline">Mua lại</Button>
+                <Button asChild>
+                  <Link href={`/profile/orders/${order._id}`}>Xem chi tiết</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center py-12 border-2 border-dashed rounded-lg">
+            <p className="text-gray-500">
+              Bạn chưa có đơn hàng nào trong mục này.
+            </p>
+          </div>
+        )}
+      </div>
+    </Suspense>
   );
 }

@@ -32,7 +32,7 @@ export default function DeleteBannerDialog({
                 <DialogHeader>
                     <DialogTitle>Xác nhận xóa banner</DialogTitle>
                     <DialogDescription>
-                        Bạn có chắc chắn muốn xóa banner "{banner?.title}"?
+                        Bạn có chắc chắn muốn xóa banner &quot;{banner?.title}&quot;?
                         Hành động này không thể hoàn tác.
                     </DialogDescription>
                 </DialogHeader>

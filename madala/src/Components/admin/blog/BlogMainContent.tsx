@@ -7,7 +7,7 @@ import React from "react";
 interface BlogMainContentProps {
     register: UseFormRegister<BlogFormData>;
     errors: FieldErrors<BlogFormData>;
-    watch: (field: keyof BlogFormData) => any;
+    watch: (field: keyof BlogFormData) => string | number | boolean | undefined;
 }
 
 export default function BlogMainContent({ register, errors, watch }: BlogMainContentProps) {

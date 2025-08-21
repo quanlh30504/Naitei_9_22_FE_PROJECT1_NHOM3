@@ -1,13 +1,14 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/Components/ui/card";
 import { Label } from "@/Components/ui/label";
 import { Switch } from "@/Components/ui/switch";
-import React from "react";
+import type { ProductFormData } from '@/lib/validations/forms';
+import type { UseFormSetValue } from 'react-hook-form';
 
 interface ProductSettingsSectionProps {
     isActive: boolean;
     isFeatured: boolean;
     isHotTrend: boolean;
-    setValue: (field: string, value: any) => void;
+    setValue: UseFormSetValue<ProductFormData>;
 }
 
 const ProductSettingsSection: React.FC<ProductSettingsSectionProps> = ({

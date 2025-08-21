@@ -1,6 +1,14 @@
 // Tạo connection đến MongoDB với Mongoose
 import mongoose from 'mongoose';
 
+declare global {
+  // eslint-disable-next-line no-var
+  var mongoose: {
+    conn: typeof import('mongoose') | null;
+    promise: Promise<typeof import('mongoose')> | null;
+  } | undefined;
+}
+
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
@@ -9,13 +17,18 @@ if (!MONGODB_URI) {
   );
 }
 
-let cached = (global as any).mongoose;
+let cached = global.mongoose;
 
 if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+  cached = { conn: null, promise: null };
+  global.mongoose = cached;
 }
 
 async function connectToDB() {
+  // Đảm bảo cached luôn được khởi tạo
+  if (!cached) {
+    throw new Error("Mongoose cache not initialized");
+  }
   if (cached.conn) {
     return cached.conn;
   }
@@ -24,9 +37,7 @@ async function connectToDB() {
     const opts = {
       bufferCommands: false,
     };
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongooseInstance) => {
-      return mongooseInstance;
-    });
+    cached.promise = mongoose.connect(MONGODB_URI!, opts);
   }
 
   try {

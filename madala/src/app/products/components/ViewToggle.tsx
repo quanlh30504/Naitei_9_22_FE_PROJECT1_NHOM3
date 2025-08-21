@@ -1,6 +1,6 @@
 'use client';
 import React, { useCallback, useMemo } from 'react';
-import { FaThLarge, FaList } from 'react-icons/fa';
+import { LayoutGrid, List } from 'lucide-react';
 
 interface ViewToggleProps {
   viewMode: 'grid' | 'list';
@@ -17,12 +17,12 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
     {
       id: 'grid' as const,
       label: 'Grid View',
-      icon: <FaThLarge className="text-sm" />
+  icon: <LayoutGrid className="text-sm" />
     },
     {
       id: 'list' as const,
       label: 'List View',
-      icon: <FaList className="text-sm" />
+  icon: <List className="text-sm" />
     }
   ], []);
 

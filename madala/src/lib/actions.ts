@@ -31,16 +31,16 @@ import { signIn } from "@/auth";
 
 
 type ActionState = {
-      success?: boolean;
-      message: string;
-      errors?: {
-        email?: string[];
-        password?: string[];
-        firstName?: string[];
-        lastName?: string[];
-        confirmPassword?: string[];
-        phone?: string[];
-      };
+  success?: boolean;
+  message: string;
+  errors?: {
+    email?: string[];
+    password?: string[];
+    firstName?: string[];
+    lastName?: string[];
+    confirmPassword?: string[];
+    phone?: string[];
+  };
 } | undefined;
 
 // --- Action cho Đăng nhập ---
@@ -65,16 +65,16 @@ export async function authenticateCredentials(
     }
 
     await connectToDB();
-    const user = await User.findOne({ email }).lean();
-    
+    const user = await User.findOne({ email });
+
     if (!user) {
       return { message: "Email hoặc mật khẩu không chính xác." };
     }
 
     // Kiểm tra user có bị ban không
     if (user.isActive === false) {
-      return { 
-        message: "⚠️ Tài khoản của bạn đã bị vô hiệu hóa bởi quản trị viên. Vui lòng liên hệ admin để được hỗ trợ." 
+      return {
+        message: "⚠️ Tài khoản của bạn đã bị vô hiệu hóa bởi quản trị viên. Vui lòng liên hệ admin để được hỗ trợ."
       };
     }
 
@@ -90,7 +90,7 @@ export async function authenticateCredentials(
       password,
       redirect: false,
     });
-    
+
     return { success: true, message: "Đăng nhập thành công! " };
 
   } catch (error) {

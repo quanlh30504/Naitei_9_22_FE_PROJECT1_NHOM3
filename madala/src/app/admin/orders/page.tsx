@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { getAllOrdersPaginated } from "@/lib/actions/order";
 import { IOrder, OrderStatus } from "@/models/Order";
 
-import OrderTabs from "@/Components/order/OrderTabs";
-import AdminOrderTable from "@/Components/admin/AdminOrderTable";
-import { PaginationWrapper } from "@/Components/PaginationWrapper";
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+
+const OrderTabs = dynamic(() => import('@/Components/order/OrderTabs'), { ssr: false });
+const AdminOrderTable = dynamic(() => import('@/Components/admin/AdminOrderTable'), { ssr: false });
+const PaginationWrapper = dynamic(() => import('@/Components/PaginationWrapper').then(mod => mod.PaginationWrapper), { ssr: false });
 import { Input } from "@/Components/ui/input";
 import { Search, Loader2 } from "lucide-react";
 import { AdminLayout } from "@/Components/admin/AdminLayout";
@@ -54,7 +57,7 @@ function AdminOrdersPageContent() {
     };
 
     fetchOrders();
-  }, [status, page, searchQuery]);
+  }, [status, page, searchQuery, searchTerm]);
 
   // useEffect cập nhật URL sau một khoảng trễ 
   useEffect(() => {
@@ -83,7 +86,9 @@ function AdminOrdersPageContent() {
           </p>
         </div>
 
-        <OrderTabs />
+        <Suspense fallback={<div>Đang tải tabs...</div>}>
+          <OrderTabs />
+        </Suspense>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -101,16 +106,20 @@ function AdminOrdersPageContent() {
           </div>
         ) : (
           <>
-            <AdminOrderTable orders={orders} setOrders={setOrders} />
-            <PaginationWrapper
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={(newPage) => {
-                const params = new URLSearchParams(searchParams);
-                params.set('page', newPage.toString());
-                router.push(`${pathname}?${params.toString()}`);
-              }}
-            />
+            <Suspense fallback={<div>Đang tải bảng đơn hàng...</div>}>
+              <AdminOrderTable orders={orders} setOrders={setOrders} />
+            </Suspense>
+            <Suspense fallback={<div>Đang tải phân trang...</div>}>
+              <PaginationWrapper
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={(newPage) => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set('page', newPage.toString());
+                  router.push(`${pathname}?${params.toString()}`);
+                }}
+              />
+            </Suspense>
           </>
         )}
       </div>

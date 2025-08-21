@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { AdminLayout } from "@/Components/admin/AdminLayout";
 import { Button } from "@/Components/ui/button";
-import { ArrowLeft, Save, Eye } from "lucide-react";
+import { Save, Eye } from "lucide-react";
 import BlogFormHeader from "@/Components/admin/blog/BlogFormHeader";
 import toast from "react-hot-toast";
 import { useBlogForm } from "@/hooks/useBlogForm";
 import BlogBasicInfo from "@/Components/admin/blog/BlogBasicInfo";
-import BlogContentEditor from "@/Components/admin/blog/BlogContentEditor";
+import dynamic from "next/dynamic";
+const BlogContentEditor = dynamic(() => import("@/Components/admin/blog/BlogContentEditor"), { loading: () => <div>Đang tải trình soạn thảo...</div>, ssr: false });
 import BlogImageUpload from "@/Components/admin/blog/BlogImageUpload";
 import BlogTagsManager from "@/Components/admin/blog/BlogTagsManager";
 import BlogSettings from "@/Components/admin/blog/BlogSettings";
@@ -27,7 +28,7 @@ export default function EditBlog() {
     control,
     formState: { errors },
     watch,
-    getValues,
+    // getValues,
     reset
   } = useBlogForm();
 
@@ -68,16 +69,16 @@ export default function EditBlog() {
     };
 
     fetchBlogPost();
-  }, [slug]); // ← Chỉ dependency slug
+  }, [slug, dataLoaded, reset]);
 
-  const onSubmit = async (data: any, publish?: boolean) => {
+  const onSubmit = async (data: Record<string, unknown>, publish?: boolean) => {
     if (!data.featuredImage) {
       toast.error('Vui lòng chọn ảnh đại diện');
       return;
     }
     try {
       setSaving(true);
-      const updateData: any = { ...data };
+      const updateData: Record<string, unknown> = { ...data };
       if (publish !== undefined) {
         updateData.isPublished = publish;
         if (publish) {

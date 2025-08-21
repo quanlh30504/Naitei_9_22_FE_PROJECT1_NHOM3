@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { IProduct } from "@/models/Product";
 import { ICategory } from "@/models/Category";
 import { useCompareStore } from "@/store/useCompareStore";
-import { FaTimes, FaBalanceScale } from "react-icons/fa";
+import { X, Scale } from "lucide-react";
 import { formatPrice } from "@/utils/formatPrice";
 import SafeImage from "@/Components/SafeImage";
 import CompareModal from "./CompareModal";
@@ -28,9 +28,11 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
     const res = await addItemToCart(String(product._id), 1);
     if (res.success) {
       toast.success('Đã thêm sản phẩm vào giỏ hàng!');
-      if (res.data && res.data.cart) {
-        syncCart(res.data.cart);
+      // Chỉ đồng bộ cart nếu API trả về cart mới
+      if (res.data && typeof res.data === 'object' && 'cart' in res.data && (res.data as any).cart) {
+        syncCart((res.data as any).cart);
       }
+      // Nếu không có cart trả về thì không gọi syncCart, tránh lỗi undefined
     } else {
       toast.error(res.message || 'Thêm vào giỏ hàng thất bại!');
     }
@@ -71,7 +73,7 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
 
         {!hasProducts ? (
           <div className="text-center py-8">
-            <FaBalanceScale className="mx-auto text-gray-300 dark:text-gray-600 text-2xl mb-2" />
+            <Scale className="mx-auto text-gray-300 dark:text-gray-600 text-2xl mb-2" />
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               Bạn chưa có sản phẩm để so sánh
             </p>
@@ -111,7 +113,7 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
                     onClick={() => handleRemoveFromCompare(String(product._id))}
                     className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                   >
-                    <FaTimes className="text-xs" />
+                    <X className="text-xs" />
                   </button>
                 </div>
               ))}
@@ -122,7 +124,7 @@ const CompareBox: React.FC<CompareBoxProps> = ({ categories }) => {
                 onClick={handleOpenModal}
                 className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white py-2 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-2"
               >
-                <FaBalanceScale className="text-xs" />
+                <Scale className="text-xs" />
                 So sánh chi tiết
               </button>
 

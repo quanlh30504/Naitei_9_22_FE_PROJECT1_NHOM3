@@ -37,7 +37,7 @@ export interface CreateBlogPostData {
   isFeatured: boolean;
 }
 
-export interface UpdateBlogPostData extends Partial<CreateBlogPostData> {}
+export type UpdateBlogPostData = Partial<CreateBlogPostData>;
 
 export interface BulkActionData {
   slugs: string[];

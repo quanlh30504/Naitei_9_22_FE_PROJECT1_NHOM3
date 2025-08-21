@@ -8,9 +8,9 @@ import { revalidatePath } from "next/cache";
 
 type ProfileUpdateState =
   | {
-      success?: boolean;
-      message: string;
-    }
+    success?: boolean;
+    message: string;
+  }
   | undefined;
 
 /**
@@ -39,7 +39,7 @@ export async function updateProfile(
     return { message: "Họ và tên phải có ít nhất 3 ký tự." };
   }
 
-  const updateData: { [key: string]: any } = {
+  const updateData: Record<string, string | Date> = {
     name: fullName,
   };
 
@@ -65,9 +65,9 @@ export async function updateProfile(
       success: true,
       message: "Cập nhật thông tin thành công!",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Lỗi cập nhật profile:", error);
-    if (error.name === "CastError") {
+    if (error instanceof Error && typeof (error as { name?: unknown }).name === 'string' && (error as { name: string }).name === "CastError") {
       return { message: `Lỗi định dạng dữ liệu: ${error.message}` };
     }
     return { message: "Đã có lỗi xảy ra phía máy chủ." };
@@ -100,18 +100,20 @@ export async function getUserForHeader(): Promise<UserHeaderData | null> {
     await connectToDB();
 
     // 2. Lấy thông tin user cơ bản
-    const user = await User.findById(userId).select("name email image").lean();
+    const user = await User.findById(userId).select("name email image").lean() as { _id: unknown; name?: string; email?: string; image?: string } | null;
 
-    if (!user) {
+    if (!user || Array.isArray(user)) {
       return null;
     }
 
     // 3. Tìm ví tương ứng với user
-    const wallet = await Wallet.findOne({ userId: user._id }).select("balance").lean();
+    const wallet = await Wallet.findOne({ userId: user._id }).select("balance").lean() as { balance: number } | null;
 
     // 4. Tổng hợp dữ liệu
     const userData: UserHeaderData = {
-      _id: user._id.toString(),
+      _id: typeof user._id === 'object' && user._id !== null && 'toString' in user._id
+        ? (user._id as { toString: () => string }).toString()
+        : String(user._id ?? ''),
       name: user.name || "User",
       email: user.email || "",
       image: user.image,

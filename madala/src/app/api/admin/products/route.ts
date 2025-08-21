@@ -6,21 +6,21 @@ export async function GET(request: NextRequest) {
   try {
     const client = await clientPromise;
     const db = client.db(process.env.MONGODB_DB);
-    
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
     const category = searchParams.get('category');
     const search = searchParams.get('search');
     const status = searchParams.get('status'); // active, inactive, all
-    
+
     // Tạo filter object
-    const filter: any = {};
-    
+    const filter: Record<string, unknown> = {};
+
     if (category) {
       filter.categoryIds = { $in: [category] };
     }
-    
+
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         { tags: { $in: [new RegExp(search, 'i')] } }
       ];
     }
-    
+
     // Filter theo trạng thái cho admin
     if (status === 'active') {
       filter.isActive = true;
@@ -37,20 +37,20 @@ export async function GET(request: NextRequest) {
       filter.isActive = false;
     }
     // Nếu status === 'all' hoặc không có, lấy tất cả
-    
+
     // Tính toán skip cho pagination
     const skip = (page - 1) * limit;
-    
+
     const products = await db.collection('products')
       .find(filter)
       .sort({ updatedAt: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .toArray();
-    
+
     const total = await db.collection('products').countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
-    
+
     return NextResponse.json({
       success: true,
       data: {
@@ -65,13 +65,13 @@ export async function GET(request: NextRequest) {
         }
       }
     });
-    
+
   } catch (error) {
     console.error('Error fetching admin products:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch products' 
+      {
+        success: false,
+        error: 'Failed to fetch products'
       },
       { status: 500 }
     );
@@ -83,23 +83,23 @@ export async function POST(request: NextRequest) {
   try {
     const client = await clientPromise;
     const db = client.db(process.env.MONGODB_DB);
-    
+
     const body = await request.json();
-    
+
     // Validate required fields
     const requiredFields = ['name', 'price', 'sku', 'categoryIds'];
     for (const field of requiredFields) {
       if (!body[field]) {
         return NextResponse.json(
-          { 
-            success: false, 
-            error: `Missing required field: ${field}` 
+          {
+            success: false,
+            error: `Missing required field: ${field}`
           },
           { status: 400 }
         );
       }
     }
-    
+
     // Generate slug from name
     const slug = body.name
       .toLowerCase()
@@ -109,49 +109,49 @@ export async function POST(request: NextRequest) {
       .replace(/\s+/g, '-') // replace spaces with hyphens
       .replace(/-+/g, '-') // replace multiple hyphens with single
       .trim();
-    
+
     // Check if slug already exists
     const existingSlug = await db.collection('products').findOne({ slug });
     if (existingSlug) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Product with this name (slug) already exists' 
+        {
+          success: false,
+          error: 'Product with this name (slug) already exists'
         },
         { status: 400 }
       );
     }
-    
+
     // Check if SKU already exists
     const existingSku = await db.collection('products').findOne({ sku: body.sku });
     if (existingSku) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Product with this SKU already exists' 
+        {
+          success: false,
+          error: 'Product with this SKU already exists'
         },
         { status: 400 }
       );
     }
-    
+
     // Generate productId - find the highest existing productId number
     const allProducts = await db.collection('products')
       .find({ productId: { $regex: /^prod-\d+$/ } }, { projection: { productId: 1 } })
       .toArray();
-    
+
     let nextId = 1;
     if (allProducts.length > 0) {
       const existingIds = allProducts
         .map(p => parseInt(p.productId.replace('prod-', '')))
         .filter(id => !isNaN(id));
-      
+
       if (existingIds.length > 0) {
         nextId = Math.max(...existingIds) + 1;
       }
     }
-    
+
     let productId = `prod-${nextId}`;
-    
+
     // Double check for uniqueness (in case of race condition)
     let attempts = 0;
     while (attempts < 10) {
@@ -163,17 +163,17 @@ export async function POST(request: NextRequest) {
       productId = `prod-${nextId}`;
       attempts++;
     }
-    
+
     if (attempts >= 10) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Unable to generate unique product ID' 
+        {
+          success: false,
+          error: 'Unable to generate unique product ID'
         },
         { status: 500 }
       );
     }
-    
+
     // Create product object
     const newProduct = {
       productId,
@@ -203,9 +203,9 @@ export async function POST(request: NextRequest) {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    
+
     const result = await db.collection('products').insertOne(newProduct);
-    
+
     return NextResponse.json({
       success: true,
       data: {
@@ -213,13 +213,13 @@ export async function POST(request: NextRequest) {
         ...newProduct
       }
     });
-    
+
   } catch (error) {
     console.error('Error creating product:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to create product' 
+      {
+        success: false,
+        error: 'Failed to create product'
       },
       { status: 500 }
     );

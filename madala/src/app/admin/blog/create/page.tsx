@@ -4,11 +4,11 @@ import { useState } from "react";
 import { ArrowLeft, Save, Eye } from "lucide-react";
 import { AdminLayout } from "@/Components/admin/AdminLayout";
 import { Button } from "@/Components/ui/button";
-import BlogFormHeader from "@/Components/admin/blog/BlogFormHeader";
 import toast from "react-hot-toast";
 import { useBlogForm } from "@/hooks/useBlogForm";
 import BlogBasicInfo from "@/Components/admin/blog/BlogBasicInfo";
-import BlogContentEditor from "@/Components/admin/blog/BlogContentEditor";
+import dynamic from "next/dynamic";
+const BlogContentEditor = dynamic(() => import("@/Components/admin/blog/BlogContentEditor"), { loading: () => <div>Đang tải trình soạn thảo...</div>, ssr: false });
 import BlogImageUpload from "@/Components/admin/blog/BlogImageUpload";
 import BlogTagsManager from "@/Components/admin/blog/BlogTagsManager";
 import BlogSettings from "@/Components/admin/blog/BlogSettings";
@@ -21,11 +21,11 @@ export default function CreateBlog() {
     control,
     formState: { errors },
     watch,
-    getValues,
-    reset
+  // getValues,
+  // reset
   } = useBlogForm();
 
-  const onSubmit = async (data: any, publish = false) => {
+  const onSubmit = async (data: Record<string, unknown>, publish = false) => {
     if (!data.featuredImage) {
       toast.error('Vui lòng chọn ảnh đại diện');
       return;

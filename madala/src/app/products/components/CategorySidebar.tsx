@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { ICategory } from '@/models/Category';
 import { Button } from "@/Components/ui/button";
 
@@ -114,9 +114,9 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
                     className="p-2 h-auto text-gray-400 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-full transition-all duration-200"
                   >
                     {isExpanded ? (
-                      <FaChevronDown className="text-xs" />
+                      <ChevronDown className="text-xs" />
                     ) : (
-                      <FaChevronRight className="text-xs" />
+                      <ChevronRight className="text-xs" />
                     )}
                   </Button>
                 )}

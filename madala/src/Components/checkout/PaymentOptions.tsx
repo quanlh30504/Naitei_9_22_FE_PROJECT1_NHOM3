@@ -12,7 +12,7 @@ import { Label } from "@/Components/ui/label";
 import { Input } from "@/Components/ui/input";
 import { Loader2 } from "lucide-react";
 import type { PaymentMethod } from "@/models/Order";
-import type { PopulatedCartItem } from "@/app/cart/context/CartContext";
+import type { PopulatedCartItem } from "@/store/useCartStore";
 import { formatCurrency } from "@/lib/utils";
 interface PaymentOptionsProps {
   selectedAddressId: string | undefined;

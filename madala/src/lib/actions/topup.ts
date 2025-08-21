@@ -75,16 +75,16 @@ async function generateVietQR(amount: number, requestCode: string) {
 // --- Type Definition cho State ---
 type InitialQrState =
   | {
-      success?: boolean;
-      message?: string;
-      data?: {
-        qrImageUrl: string;
-        amount: number;
-        requestCode: string;
-        expiresAt: Date;
-        bonusAmount: number;
-      };
-    }
+    success?: boolean;
+    message?: string;
+    data?: {
+      qrImageUrl: string;
+      amount: number;
+      requestCode: string;
+      expiresAt: Date;
+      bonusAmount: number;
+    };
+  }
   | undefined;
 
 // --- Server Action chính ---
@@ -113,7 +113,7 @@ export async function initiateQrTopUp(
     if (!user) return { success: false, message: "Không tìm thấy người dùng." };
 
     let bonusAmount = 0;
-    let promoCodeId: any = undefined;
+    let promoCodeId: string | undefined = undefined;
 
     // --- Logic xử lý Mã khuyến mãi ---
     if (promoCodeInput && promoCodeInput.trim() !== "") {
@@ -205,9 +205,9 @@ export async function initiateQrTopUp(
         bonusAmount,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Lỗi khi tạo yêu cầu nạp tiền:", error);
-    if (error.name === "ValidationError") {
+    if (error instanceof Error && typeof (error as { name?: unknown }).name === 'string' && (error as { name: string }).name === "ValidationError") {
       return { success: false, message: error.message };
     }
     return { success: false, message: "Lỗi hệ thống, không thể tạo mã QR." };

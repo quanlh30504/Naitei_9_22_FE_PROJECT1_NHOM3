@@ -11,29 +11,16 @@ import { formatCurrency } from "@/lib/utils";
 
 import { Button } from "@/Components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/Components/ui/card";
-import { Badge } from "@/Components/ui/badge";
+import StatusBadge from "./StatusBadge";
 import { Separator } from "@/Components/ui/separator";
 import { ArrowLeft, Pencil } from "lucide-react";
-import CancelOrderButton from "@/Components/order/CancelOrderButton";
-import SafeImage from "@/Components/SafeImage";
-import AddressSelectionModal from "@/Components/Profile/AddressSelectionModal";
+import dynamic from "next/dynamic";
 
-const getStatusBadge = (status: OrderStatus) => {
-    switch (status) {
-        case "pending":
-            return <Badge variant="secondary">Chờ thanh toán</Badge>;
-        case "processing":
-            return <Badge className="bg-blue-100 text-blue-800">Đang xử lý</Badge>;
-        case "shipped":
-            return <Badge className="bg-yellow-100 text-yellow-800">Đang vận chuyển</Badge>;
-        case "delivered":
-            return <Badge className="bg-green-100 text-green-800">Đã giao</Badge>;
-        case "cancelled":
-            return <Badge variant="destructive">Đã hủy</Badge>;
-        default:
-            return <Badge>{status}</Badge>;
-    }
-};
+const CancelOrderButton = dynamic(() => import("@/Components/order/CancelOrderButton"), { loading: () => <span>Đang tải...</span> });
+const SafeImage = dynamic(() => import("@/Components/SafeImage"), { loading: () => <div className="w-20 h-20 bg-gray-100 animate-pulse rounded-md border" /> });
+const AddressSelectionModal = dynamic(() => import("@/Components/Profile/AddressSelectionModal"), { loading: () => null, ssr: false });
+
+
 
 export default function OrderDetailsClient({ order }: { order: IOrder }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,7 +39,7 @@ export default function OrderDetailsClient({ order }: { order: IOrder }) {
   const handleAddressSelect = (selectedAddress: AddressType) => {
     startTransition(async () => {
       const result = await updateShippingAddress({
-        orderId: order._id.toString(),
+        orderId: order._id?.toString?.() || String(order._id),
         newAddress: {
           fullName: selectedAddress.fullName,
           phoneNumber: selectedAddress.phoneNumber,
@@ -84,10 +71,10 @@ export default function OrderDetailsClient({ order }: { order: IOrder }) {
         <h1 className="text-2xl font-bold text-gray-800">
           Chi tiết đơn hàng #{order.orderId}
         </h1>
-        {getStatusBadge(order.status)}
+        <StatusBadge status={order.status} />
       </div>
       <p className="text-sm text-muted-foreground mb-8">
-        Ngày đặt hàng: {new Date(order.createdAt).toLocaleString("vi-VN")}
+        Ngày đặt hàng: {order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "-"}
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -96,7 +83,7 @@ export default function OrderDetailsClient({ order }: { order: IOrder }) {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Địa chỉ người nhận</CardTitle>
             <Button variant="ghost" size="sm" className="h-auto p-1 text-primary" onClick={handleChangeAddressClick}>
-              <Pencil className="w-3.5 h-3.5 mr-1"/>
+              <Pencil className="w-3.5 h-3.5 mr-1" />
               Thay đổi
             </Button>
           </CardHeader>
@@ -147,7 +134,7 @@ export default function OrderDetailsClient({ order }: { order: IOrder }) {
             {order.items.map((item, index) => (
               <div key={index} className="grid grid-cols-12 items-center gap-4 py-4">
                 <div className="col-span-2">
-                  <SafeImage src={item.image} alt={item.name} width={80} height={80} className="rounded-md border"/>
+                  <SafeImage src={item.image} alt={item.name} width={80} height={80} className="rounded-md border" />
                 </div>
                 <div className="col-span-5">
                   <p className="font-medium text-sm">{item.name}</p>
@@ -183,7 +170,7 @@ export default function OrderDetailsClient({ order }: { order: IOrder }) {
         {/* Button hủy đơn hàng */}
         {(order.status === "processing" || order.status === "pending") && (
           <CardFooter className="justify-end">
-            <CancelOrderButton orderId={order._id.toString()} />
+            <CancelOrderButton orderId={order._id?.toString?.() || String(order._id)} />
           </CardFooter>
         )}
       </Card>

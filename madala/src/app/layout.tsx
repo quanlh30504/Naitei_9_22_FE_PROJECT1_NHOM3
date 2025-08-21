@@ -3,7 +3,6 @@ import BanWatcher from "@/Components/Auth/BanWatcher";
 import ToastProvider from "@/Components/ToastProvider";
 import { ConditionalLayout } from "@/Components/ConditionalLayout";
 import { ThemeProvider } from "@/Components/providers/ThemeProvider";
-
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";

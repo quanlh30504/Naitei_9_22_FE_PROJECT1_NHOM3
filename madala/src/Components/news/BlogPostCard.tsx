@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/Components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/Components/ui/card';
-import { BlogService, BlogPost, formatDate } from '@/services/blogService';
+import { formatDate } from '@/services/blogService';
+import type { BlogPost } from '@/types/blog';
 import { Button } from "@/Components/ui/button"
 import Image from 'next/image';
 
@@ -36,7 +37,7 @@ export const BlogPostCard = ({ post, viewMode }: BlogPostCardProps) => {
         <div className="flex flex-col flex-1 p-4">
           <CardHeader className="p-0 pb-3">
             <div className="flex flex-wrap gap-2 mb-2">
-              {post.tags.map((tag) => (
+              {post.tags.map((tag: string) => (
                 <Badge key={tag} variant="secondary" className="text-xs">
                   {tag}
                 </Badge>
@@ -54,7 +55,7 @@ export const BlogPostCard = ({ post, viewMode }: BlogPostCardProps) => {
               {post.excerpt}
             </p>
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-              <span>{formatDate(post.publishedAt)}</span>
+              <span>{formatDate(typeof post.publishedAt === 'string' ? post.publishedAt : post.publishedAt?.$date)}</span>
               <div className="flex items-center space-x-4">
                 <span>{post.viewCount} xem</span>
                 <span>{post.commentsCount} bình luận</span>

@@ -23,7 +23,7 @@ export interface ITransaction extends Document {
   type: (typeof TRANSACTION_TYPES)[number];
   status: (typeof TRANSACTION_STATUSES)[number];
   description: string;
-  metadata?: Record<string, any>; // Lưu các thông tin phụ
+  metadata?: Record<string, unknown>; // Lưu các thông tin phụ
   transactionTimestamp?: Date; // Thời gian giao dịch gốc từ ngân hàng
   createdAt: Date;
   updatedAt: Date;

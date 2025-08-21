@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import { updateOrderStatus } from '@/lib/actions/order';
 import { OrderStatus } from '@/models/Order';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
-import { cn } from '@/lib/utils'; 
+import { cn } from '@/lib/utils';
 
 // --- Cấu hình màu sắc và nhãn cho từng trạng thái ---
 const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string; dotClass: string }> = {

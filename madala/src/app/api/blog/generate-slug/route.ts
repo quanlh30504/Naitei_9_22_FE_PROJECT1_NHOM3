@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Convert title to slug
-    let baseSlug = title
+    const baseSlug = title
       .toLowerCase()
       .trim()
       .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, 'a')
@@ -40,13 +40,13 @@ export async function POST(request: NextRequest) {
 
     // Check if slug exists (excluding current post if editing)
     while (true) {
-      const query: any = { slug };
+      const query: Record<string, unknown> = { slug };
       if (excludeSlug) {
         query.slug = { $ne: excludeSlug };
       }
 
       const existingPost = await BlogPost.findOne(query);
-      
+
       if (!existingPost) {
         break;
       }

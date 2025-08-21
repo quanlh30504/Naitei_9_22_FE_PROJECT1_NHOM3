@@ -15,7 +15,7 @@ interface OrderSummaryProps {
 }
 
 export default function OrderSummary({ selectedAddress, onOpenAddressModal }: OrderSummaryProps) {
-       const router = useRouter(); 
+    const router = useRouter();
     const { items, selectedItemIds } = useCartStore();
     const [isPending, startTransition] = useTransition();
 

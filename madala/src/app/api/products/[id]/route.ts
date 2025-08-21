@@ -12,7 +12,7 @@ export async function GET(
     const db = client.db(process.env.MONGODB_DB);
 
     const { id } = await params;
-    let filter: any;
+    let filter: Record<string, unknown>;
 
     if (ObjectId.isValid(id) && id.length === 24) {
 

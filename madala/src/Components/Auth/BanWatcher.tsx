@@ -18,7 +18,7 @@ const BanWatcher = React.memo(function BanWatcher() {
     const router = useRouter();
     const pathname = usePathname();
 
-    const user = session?.user as SessionUser | undefined;
+    const user: SessionUser & { error?: string } | undefined = session?.user as SessionUser & { error?: string } | undefined;
 
     const searchParams = useSearchParams();
 
@@ -37,8 +37,8 @@ const BanWatcher = React.memo(function BanWatcher() {
     useEffect(() => {
         if (status !== "authenticated") return;
         // Nếu có lỗi xác thực thì redirect về /login?error=...
-        if ((user as any)?.error) {
-            router.replace(`/login?error=${encodeURIComponent((user as any).error)}`);
+        if (user?.error) {
+            router.replace(`/login?error=${encodeURIComponent(user.error)}`);
             return;
         }
         const isBanned = user?.isActive === false;

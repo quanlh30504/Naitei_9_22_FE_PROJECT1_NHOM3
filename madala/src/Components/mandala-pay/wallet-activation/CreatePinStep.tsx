@@ -43,7 +43,7 @@ export default function CreatePinStep({
       <CardHeader>
         <CardTitle>Bước 3: Tạo mã PIN bảo mật</CardTitle>
         <CardDescription>
-          Đây sẽ là "chìa khóa" cho mọi giao dịch của bạn.
+          Đây sẽ là &quot;chìa khóa&quot; cho mọi giao dịch của bạn.
         </CardDescription>
       </CardHeader>
       <CardContent>

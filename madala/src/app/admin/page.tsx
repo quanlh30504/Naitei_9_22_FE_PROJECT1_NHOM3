@@ -1,80 +1,14 @@
 import { AdminGuard } from '@/Components/admin/AdminGuard';
 import { AdminLayout } from '@/Components/admin/AdminLayout';
-import { StatsCard } from '@/Components/admin/StatsCard';
-import { ActivityItem } from '@/Components/admin/ActivityItem';
-import { ProgressBar } from '@/Components/admin/ProgressBar';
-import { statsData, activityData, progressData } from '@/constants/dashboardData';
+import ClientDashboard from './ClientDashboard';
 
 export default function AdminPage() {
   return (
     <AdminGuard>
       <AdminLayout>
-      <div className="space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-sm">Dashboard</h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
-              Chào mừng bạn đến với trang quản trị
-            </p>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {statsData.map((stat, index) => (
-            <StatsCard
-              key={index}
-              title={stat.title}
-              value={stat.value}
-              change={stat.change}
-              icon={stat.icon}
-              iconColor={stat.iconColor}
-            />
-          ))}
-        </div>
-
-        {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Hoạt động gần đây</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {activityData.map((activity, index) => (
-                  <ActivityItem
-                    key={index}
-                    title={activity.title}
-                    time={activity.time}
-                    icon={activity.icon}
-                    iconColor={activity.iconColor}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Thống kê nhanh</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-6">
-                {progressData.map((progress, index) => (
-                  <ProgressBar
-                    key={index}
-                    label={progress.label}
-                    percentage={progress.percentage}
-                    color={progress.color}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </AdminLayout>
+        <ClientDashboard />
+      </AdminLayout>
     </AdminGuard>
   );
 }
+

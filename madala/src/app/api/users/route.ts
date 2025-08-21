@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
         const isActive = searchParams.get('isActive');
 
         // Xây dựng filter
-        const filter: any = {};
+        const filter: Record<string, unknown> = {};
         
         if (search) {
             filter.$or = [
