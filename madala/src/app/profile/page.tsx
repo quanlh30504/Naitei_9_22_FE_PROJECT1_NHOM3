@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import UserInfoForm from "@/Components/Profile/UserInfoForm";
 import UserModel from "@/models/User";
 import connectToDB from "@/lib/db";
+import ProfileClientWrapper from "@/Components/Profile/ProfileClientWrapper";
+import { motion } from "framer-motion";
 
 
 export default async function ProfilePage() {
@@ -18,45 +20,16 @@ export default async function ProfilePage() {
     redirect("/login");
   }
   let safeUserData;
-    try {
-        safeUserData = JSON.parse(JSON.stringify(fullUserData));
-    } catch (error) {
-        console.error("Failed to parse user data:", error);
-        safeUserData = null; 
-    }
+  try {
+    safeUserData = JSON.parse(JSON.stringify(fullUserData));
+  } catch (error) {
+    console.error("Failed to parse user data:", error);
+    safeUserData = null;
+  }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-8">
-        Thông tin tài khoản
-      </h1>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <h2 className="text-lg font-semibold dark:text-gray-200 mb-6">Thông tin cá nhân</h2>
-          <UserInfoForm user={safeUserData} />
-        </div>
-
-        <div className="lg:col-span-1">
-          <h2 className="text-lg font-semibold dark:text-gray-200 mb-6">Số điện thoại và Email</h2>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="font-medium dark:text-gray-200">Số điện thoại</p>
-                <p className="text-gray-500 dark:text-gray-400">
-                  {fullUserData.phone || "Chưa có số điện thoại"}
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="font-medium dark:text-gray-200">Địa chỉ email</p>
-                <p className="text-gray-500 dark:text-gray-400">{fullUserData.email}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ProfileClientWrapper fullUserData={fullUserData}>
+      <UserInfoForm user={safeUserData} />
+    </ProfileClientWrapper>
   );
 }
