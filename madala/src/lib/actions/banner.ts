@@ -403,7 +403,7 @@ export async function getAllActiveBanners(): Promise<ActionResponse> {
 }
 
 /**
- * Toggle trạng thái active của banner (với logic chỉ 1 banner active cho mỗi type)
+ * Toggle trạng thái active của banner (cho phép nhiều banner active cùng lúc)
  */
 export async function toggleBannerActive(id: string): Promise<ActionResponse> {
     try {
@@ -419,16 +419,7 @@ export async function toggleBannerActive(id: string): Promise<ActionResponse> {
 
         const newActiveStatus = !banner.isActive;
 
-        // Nếu đang bật banner và là type sale/advertisement
-        if (newActiveStatus && (banner.type === 'sale' || banner.type === 'advertisement')) {
-            // Tắt tất cả banner cùng loại khác
-            await Banner.updateMany(
-                { type: banner.type, isActive: true, _id: { $ne: id } },
-                { isActive: false }
-            );
-        }
-
-        // Cập nhật trạng thái banner hiện tại
+        // Cập nhật trạng thái banner hiện tại (cho phép nhiều banner active)
         banner.isActive = newActiveStatus;
         await banner.save();
 
@@ -469,6 +460,30 @@ export async function getActiveBannerByType(type: string): Promise<ActionRespons
         return {
             success: false,
             message: "Lỗi khi lấy banner hoạt động"
+        };
+    }
+}
+
+/**
+ * Lấy tất cả banner hoạt động theo loại (cho slider)
+ */
+export async function getActiveBannersByType(type: string): Promise<ActionResponse> {
+    try {
+        await connectToDB();
+
+        const banners = await Banner.find({ type, isActive: true })
+            .sort({ displayOrder: 1, createdAt: -1 });
+
+        return {
+            success: true,
+            message: "Lấy các banner hoạt động thành công",
+            data: serializeBanners(banners)
+        };
+    } catch (error) {
+        console.error("Error getting active banners by type:", error);
+        return {
+            success: false,
+            message: "Lỗi khi lấy các banner hoạt động"
         };
     }
 }

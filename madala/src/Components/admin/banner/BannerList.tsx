@@ -30,6 +30,7 @@ import { useRouter } from "next/navigation";
 import { BANNER_TYPE_LABELS, BANNER_TYPE_COLORS } from "@/constants/bannerTypes";
 import EmptyBannerState from './EmptyBannerState';
 import DeleteBannerDialog from './DeleteBannerDialog';
+import BannerPreview from './BannerPreview';
 
 interface BannerListProps {
     banners: IBanner[];
@@ -142,13 +143,22 @@ export default function BannerList({ banners, onStatusChange }: BannerListProps)
         <>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Danh sách Banner ({banners.length})</CardTitle>
-                    <Link href="/admin/banners/create">
-                        <Button className="flex items-center gap-2">
-                            <Plus className="h-4 w-4" />
-                            Tạo Banner
-                        </Button>
-                    </Link>
+                    <div>
+                        <CardTitle>Danh sách Banner ({banners.length})</CardTitle>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Có thể kích hoạt nhiều banner cùng lúc. Tất cả banner active sẽ hiển thị dưới dạng slider.
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <BannerPreview type="sale" />
+                        <BannerPreview type="advertisement" />
+                        <Link href="/admin/banners/create">
+                            <Button className="flex items-center gap-2">
+                                <Plus className="h-4 w-4" />
+                                Tạo Banner
+                            </Button>
+                        </Link>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <div className="rounded-md border">
@@ -167,13 +177,13 @@ export default function BannerList({ banners, onStatusChange }: BannerListProps)
                                 {banners.map((banner, index) => (
                                     <TableRow key={String(banner._id)}>
                                         <TableCell>
-                                            <div className="relative w-16 h-10 rounded overflow-hidden border border-gray-200 dark:border-gray-700">
+                                            <div className="relative w-20 h-12 rounded overflow-hidden border border-gray-200 dark:border-gray-700">
                                                 <Image
                                                     src={banner.imageUrl}
                                                     alt={banner.title}
                                                     fill
                                                     className="object-cover"
-                                                    sizes="64px"
+                                                    sizes="80px"
                                                 />
                                             </div>
                                         </TableCell>
@@ -252,11 +262,6 @@ export default function BannerList({ banners, onStatusChange }: BannerListProps)
                                                         </>
                                                     )}
                                                 </Button>
-                                                {(banner.type === 'sale' || banner.type === 'advertisement') && banner.isActive && (
-                                                    <Badge variant="outline" className="text-xs">
-                                                        Duy nhất
-                                                    </Badge>
-                                                )}
                                             </div>
                                         </TableCell>
 

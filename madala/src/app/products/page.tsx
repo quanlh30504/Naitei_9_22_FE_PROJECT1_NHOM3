@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import ProductGrid from '@/app/products/components/ProductGrid';
 import ProductList from '@/app/products/components/ProductList';
 import CategorySidebar from '@/app/products/components/CategorySidebar';
@@ -28,6 +29,31 @@ const ProductPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortOption, setSortOption] = useState<SortOption>('default');
 
+    // Animation variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                duration: 0.6,
+                ease: [0.25, 0.46, 0.45, 0.94],
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, x: -50 },
+        visible: {
+            opacity: 1,
+            x: 0,
+            transition: {
+                duration: 0.5,
+                ease: [0.25, 0.46, 0.45, 0.94]
+            }
+        }
+    };
+
     // MAX prod được hiển thị
     const getProductsPerPage = () => {
         return viewMode === 'list' ? 3 : 6; // max 3 prod cho list mode, 6 prod cho grid mode
@@ -41,7 +67,7 @@ const ProductPage = () => {
     // Hàm sắp xếp sản phẩm
     const sortProducts = (products: IProduct[], sortOption: SortOption): IProduct[] => {
         const sortedProducts = [...products];
-        
+
         switch (sortOption) {
             case 'name-asc':
                 return sortedProducts.sort((a, b) => a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' }));
@@ -147,7 +173,7 @@ const ProductPage = () => {
     useEffect(() => {
         setFilteredProducts(sortProducts(products, sortOption));
         setCurrentPage(1); // reset về page 1 khi sort thay đổi
-    }, [sortOption, products]); 
+    }, [sortOption, products]);
 
 
     const handleCategorySelect = (category: string) => {
@@ -243,7 +269,7 @@ const ProductPage = () => {
     }
 
     return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Sale Banner at top - chỉ hiển thị ảnh */}
             <div className="mb-8">
                 <SimpleBanner type="sale" />
@@ -273,7 +299,7 @@ const ProductPage = () => {
                                     <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
                                     <ProductCounter count={filteredProducts.length} />
                                 </div>
-                                
+
                                 {/* Right side - Sort and pagination */}
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                                     <SortFilter
@@ -294,19 +320,26 @@ const ProductPage = () => {
                             </div>
                         </div>
 
-                        {viewMode === 'grid' ? (
-                            <ProductGrid
-                                products={currentProducts}
-                                onAddToCart={handleAddToCart}
-                                onToggleFavorite={handleToggleFavorite}
-                            />
-                        ) : (
-                            <ProductList
-                                products={currentProducts}
-                                onAddToCart={handleAddToCart}
-                                onToggleFavorite={handleToggleFavorite}
-                            />
-                        )}
+                        <motion.div
+                            key={`${viewMode}-${currentPage}-mobile`}
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                        >
+                            {viewMode === 'grid' ? (
+                                <ProductGrid
+                                    products={currentProducts}
+                                    onAddToCart={handleAddToCart}
+                                    onToggleFavorite={handleToggleFavorite}
+                                />
+                            ) : (
+                                <ProductList
+                                    products={currentProducts}
+                                    onAddToCart={handleAddToCart}
+                                    onToggleFavorite={handleToggleFavorite}
+                                />
+                            )}
+                        </motion.div>
 
                         {/* Bottom Pagination for mobile */}
                         <div className="lg:hidden">
@@ -362,7 +395,7 @@ const ProductPage = () => {
                                     <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
                                     <ProductCounter count={filteredProducts.length} />
                                 </div>
-                                
+
                                 {/* Right side - Sort and pagination */}
                                 <div className="flex items-center gap-4">
                                     <SortFilter
@@ -381,20 +414,27 @@ const ProductPage = () => {
                             </div>
                         </div>
 
-                        {viewMode === 'grid' ? (
-                            <ProductGrid
-                                products={currentProducts}
-                                onAddToCart={handleAddToCart}
-                                onToggleFavorite={handleToggleFavorite}
-                            />
-                        ) : (
-                            <ProductList
-                                products={currentProducts}
-                                onAddToCart={handleAddToCart}
-                                onToggleFavorite={handleToggleFavorite}
-                            />
-                        )}
-                        
+                        <motion.div
+                            key={`${viewMode}-${currentPage}-desktop`}
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                        >
+                            {viewMode === 'grid' ? (
+                                <ProductGrid
+                                    products={currentProducts}
+                                    onAddToCart={handleAddToCart}
+                                    onToggleFavorite={handleToggleFavorite}
+                                />
+                            ) : (
+                                <ProductList
+                                    products={currentProducts}
+                                    onAddToCart={handleAddToCart}
+                                    onToggleFavorite={handleToggleFavorite}
+                                />
+                            )}
+                        </motion.div>
+
                         {/* Bottom Pagination - Centered alignment */}
                         <div className="flex justify-center">
                             <PaginationWrapper

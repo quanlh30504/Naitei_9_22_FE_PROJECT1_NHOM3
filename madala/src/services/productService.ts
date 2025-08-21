@@ -1,14 +1,14 @@
 
-import { IProduct } from '@/models/Product';
+import { Product } from '@/types/product';
 
 export interface ProductsResponse {
-  products: IProduct[];
+  products: Product[];
   total?: number;
 }
 
 export interface ProductResponse {
-  product: IProduct;
-  relatedProducts?: IProduct[];
+  product: Product;
+  relatedProducts?: Product[];
 }
 
 export interface ProductQueryParams {
@@ -48,30 +48,32 @@ class ProductService {
   }
 
   // Lấy tất cả sản phẩm với các tùy chọn filter - Match với API route thực tế
-  async getProducts(params: ProductQueryParams = {}): Promise<IProduct[]> {
+  async getProducts(params: ProductQueryParams = {}): Promise<Product[]> {
     const searchParams = new URLSearchParams();
-    
+
     // Chỉ thêm params có giá trị
     if (params.category) searchParams.append('category', params.category);
     if (params.tags) searchParams.append('tags', params.tags);
     if (params.search) searchParams.append('search', params.search);
     if (params.featured) searchParams.append('featured', 'true');
     if (params.hotTrend) searchParams.append('hotTrend', 'true');
-    
+    if (params.page) searchParams.append('page', params.page.toString());
+    if (params.limit) searchParams.append('limit', params.limit.toString());
+
     const relativePath = `/api/products${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
     const url = this.getAbsoluteUrl(relativePath);
-    
+
     // Nếu không có filter, không cache để tránh stale data khi clear filters
-    const cacheOption = (params.category || params.tags || params.search || params.featured || params.hotTrend) 
-      ? { next: { revalidate: 60 } } 
+    const cacheOption = (params.category || params.tags || params.search || params.featured || params.hotTrend || params.limit)
+      ? { next: { revalidate: 60 } }
       : { cache: 'no-store' as RequestCache };
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       ...cacheOption
     });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch products: ${response.statusText}`);
     }
@@ -95,21 +97,21 @@ class ProductService {
   // Lấy sản phẩm với pagination support (tương thích với MongoDB client code cũ)
   async getProductsWithPagination(params: ProductQueryParams = {}): Promise<ProductsResponse> {
     const searchParams = new URLSearchParams();
-    
+
     // Thêm các filter params
     if (params.category) searchParams.append('category', params.category);
     if (params.tags) searchParams.append('tags', params.tags);
     if (params.search) searchParams.append('search', params.search);
     if (params.featured) searchParams.append('featured', 'true');
     if (params.hotTrend) searchParams.append('hotTrend', 'true');
-    
+
     // Thêm pagination params
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.limit) searchParams.append('limit', params.limit.toString());
-    
+
     const relativePath = `/api/products${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
     const url = this.getAbsoluteUrl(relativePath);
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -117,18 +119,18 @@ class ProductService {
       },
       next: { revalidate: 60 }
     });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch products: ${response.statusText}`);
     }
-    
+
     let result;
     try {
       result = await response.json();
     } catch (err) {
       throw new Error(`Failed to parse products response as JSON: ${err instanceof Error ? err.message : String(err)}`);
     }
-    
+
     // Nếu response có structure pagination, trả về như vậy (MongoDB client code)
     if (result.success && result.data) {
       return {
@@ -136,130 +138,130 @@ class ProductService {
         total: result.data.pagination?.total
       };
     }
-    
+
     // Nếu response là array (non-pagination), wrap trong ProductsResponse
     return {
-      products: result as IProduct[],
+      products: result as Product[],
       total: result.length
     };
   }
-  
+
   // Lấy tất cả sản phẩm (không filter) - cho trang chủ
-  async getAllProducts(): Promise<IProduct[]> {
+  async getAllProducts(): Promise<Product[]> {
     return this.getProducts();
   }
-  
+
   // Lấy sản phẩm theo category
-  async getProductsByCategory(categoryId: string): Promise<IProduct[]> {
+  async getProductsByCategory(categoryId: string): Promise<Product[]> {
     return this.getProducts({ category: categoryId });
   }
-  
+
   // Lấy sản phẩm theo tags (array)
-  async getProductsByTags(tags: string[]): Promise<IProduct[]> {
+  async getProductsByTags(tags: string[]): Promise<Product[]> {
     const tagsString = tags.join(',');
     return this.getProducts({ tags: tagsString });
   }
-  
+
   // Lấy sản phẩm theo category và tags
-  async getProductsByCategoryAndTags(categoryId: string, tags: string[]): Promise<IProduct[]> {
+  async getProductsByCategoryAndTags(categoryId: string, tags: string[]): Promise<Product[]> {
     const tagsString = tags.join(',');
-    return this.getProducts({ 
-      category: categoryId, 
-      tags: tagsString 
+    return this.getProducts({
+      category: categoryId,
+      tags: tagsString
     });
   }
-  
+
   // Lấy sản phẩm featured (sử dụng route API thay vì filter client-side)
-  async getFeaturedProducts(): Promise<IProduct[]> {
+  async getFeaturedProducts(): Promise<Product[]> {
     return this.getProducts({ featured: true });
   }
-  
+
   // Lấy sản phẩm hot trend (sử dụng route API thay vì filter client-side)
-  async getHotTrendProducts(): Promise<IProduct[]> {
-    return this.getProducts({ hotTrend: true });
+  async getHotTrendProducts(limit: number = 9): Promise<Product[]> {
+    return this.getProducts({ hotTrend: true, limit });
   }
-  
+
   // Các methods khác (nếu cần API routes riêng)
   // Lấy chi tiết sản phẩm theo ID
-  async getProductById(id: string): Promise<IProduct | null> {
+  async getProductById(id: string): Promise<Product | null> {
     try {
       const relativePath = `/api/products/${id}`;
       const url = this.getAbsoluteUrl(relativePath);
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        next: { revalidate: 300 } 
+        next: { revalidate: 300 }
       });
-      
+
       if (!response.ok) {
         if (response.status === 404) return null;
         throw new Error(`Failed to fetch product: ${response.statusText}`);
       }
-      
+
       return await response.json();
     } catch (error) {
       return null;
     }
   }
-  
+
   // Lấy chi tiết sản phẩm theo slug
-  async getProductBySlug(slug: string): Promise<IProduct | null> {
+  async getProductBySlug(slug: string): Promise<Product | null> {
     try {
       const relativePath = `/api/products/slug/${slug}`;
       const url = this.getAbsoluteUrl(relativePath);
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         next: { revalidate: 300 }
       });
-      
+
       if (!response.ok) {
         if (response.status === 404) return null;
         throw new Error(`Failed to fetch product: ${response.statusText}`);
       }
-      
+
       const result = await response.json();
-      
+
       if (result.success && result.data && result.data.product) {
-        return result.data.product as IProduct;
+        return result.data.product as Product;
       } else if (result._id || result.productId) {
-        return result as IProduct;
+        return result as Product;
       }
-      
+
       return null;
     } catch (error) {
       return null;
     }
   }
-  
+
   // Lấy chi tiết sản phẩm theo slug kèm related products
   async getProductBySlugWithRelated(slug: string): Promise<ProductResponse | null> {
     try {
       const relativePath = `/api/products/slug/${slug}`;
       const url = this.getAbsoluteUrl(relativePath);
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         next: { revalidate: 300 }
       });
-      
+
       if (!response.ok) {
         if (response.status === 404) return null;
         throw new Error(`Failed to fetch product: ${response.statusText}`);
       }
-      
+
       const result = await response.json();
-      
+
       if (result.success && result.data) {
         return {
-          product: result.data.product as IProduct,
-          relatedProducts: result.data.relatedProducts as IProduct[] || []
+          product: result.data.product as Product,
+          relatedProducts: result.data.relatedProducts as Product[] || []
         };
       }
-      
+
       return null;
     } catch (error) {
       return null;
@@ -267,7 +269,7 @@ class ProductService {
   }
 
   // Tìm kiếm sản phẩm (sử dụng route API với search filter)
-  async searchProducts(query: string): Promise<IProduct[]> {
+  async searchProducts(query: string): Promise<Product[]> {
     return this.getProducts({ search: query });
   }
 
@@ -277,14 +279,14 @@ class ProductService {
     tags?: string[];
     featured?: boolean;
     hotTrend?: boolean;
-  }): Promise<IProduct[]> {
+  }): Promise<Product[]> {
     return this.getProductsWithAdvancedFilters({
       search: query,
       ...params
     });
   }
 
-  
+
   // Unified method để handle response format
   async getProductsWithAdvancedFilters(params: {
     category?: string;
@@ -292,7 +294,7 @@ class ProductService {
     search?: string;
     featured?: boolean;
     hotTrend?: boolean;
-  }): Promise<IProduct[]> {
+  }): Promise<Product[]> {
     return this.getProducts({
       category: params.category,
       tags: params.tags?.join(','),
@@ -303,25 +305,25 @@ class ProductService {
   }
 
   // Lấy sản phẩm theo category (sử dụng logic từ route - level 1 sẽ include subcategories)
-  async getProductsByCategoryAdvanced(categoryId: string): Promise<IProduct[]> {
+  async getProductsByCategoryAdvanced(categoryId: string): Promise<Product[]> {
     return this.getProductsWithAdvancedFilters({ category: categoryId });
   }
 
   // Lấy sản phẩm theo tags (sử dụng logic từ route)
-  async getProductsByTagsAdvanced(tags: string[]): Promise<IProduct[]> {
+  async getProductsByTagsAdvanced(tags: string[]): Promise<Product[]> {
     return this.getProductsWithAdvancedFilters({ tags });
   }
 
   // Lấy sản phẩm theo cả category và tags (sử dụng logic từ route)
-  async getProductsByCategoryAndTagsAdvanced(categoryId: string, tags: string[]): Promise<IProduct[]> {
-    return this.getProductsWithAdvancedFilters({ 
-      category: categoryId, 
-      tags 
+  async getProductsByCategoryAndTagsAdvanced(categoryId: string, tags: string[]): Promise<Product[]> {
+    return this.getProductsWithAdvancedFilters({
+      category: categoryId,
+      tags
     });
   }
 
   // Method wrapper để tương thích với logic cũ nhưng sử dụng route mới
-  async getProductsByCategoryWithSubcategories(categoryId: string): Promise<IProduct[]> {
+  async getProductsByCategoryWithSubcategories(categoryId: string): Promise<Product[]> {
     // Route sẽ tự động handle logic level 1 includes subcategories
     return this.getProductsByCategoryAdvanced(categoryId);
   }

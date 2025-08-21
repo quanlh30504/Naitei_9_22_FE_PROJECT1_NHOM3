@@ -9,6 +9,42 @@ import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import { Phone, Mail, MessageCircle } from "lucide-react";
 import Breadcrumb from "@/Components/Breadcrumb";
+import { motion } from "framer-motion";
+
+// Animation variants
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 }
+};
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 40 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, ease: "easeOut" }
+};
+
+const fadeInLeft = {
+  initial: { opacity: 0, x: -40 },
+  animate: { opacity: 1, x: 0 },
+  transition: { duration: 0.7, ease: "easeOut" }
+};
+
+const fadeInRight = {
+  initial: { opacity: 0, x: 40 },
+  animate: { opacity: 1, x: 0 },
+  transition: { duration: 0.7, ease: "easeOut" }
+};
+
+const staggerContainer = {
+  initial: {},
+  animate: {
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.2
+    }
+  }
+};
 
 export default function ContactUsPage() {
   const [isPending, startTransition] = useTransition();
@@ -98,31 +134,67 @@ export default function ContactUsPage() {
   };
 
   return (
-    <main>
-      <div className="px-4 md:px-8 lg:px-20 py-10 bg-gray-50 dark:bg-gray-900 min-h-screen">
-        <Breadcrumb items={[{ label: "Liên hệ" }]} />
+    <motion.main
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.5 }}
+    >
+      <motion.div
+        className="px-4 md:px-8 lg:px-20 py-10 bg-gray-50 dark:bg-gray-900 min-h-screen"
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
+        <motion.div variants={fadeInUp}>
+          <Breadcrumb items={[{ label: "Liên hệ" }]} />
+        </motion.div>
 
-        <div className="max-w-4xl mx-auto">
+        <motion.div
+          className="max-w-4xl mx-auto"
+          variants={staggerContainer}
+        >
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">
+          <motion.div
+            className="text-center mb-12"
+            variants={fadeInUp}
+          >
+            <motion.h1
+              className="text-3xl font-bold text-gray-800 dark:text-white mb-4"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
               LIÊN HỆ VỚI CHÚNG TÔI
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            </motion.h1>
+            <motion.p
+              className="text-gray-600 dark:text-gray-400"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
               Chọn phương thức liên lạc phù hợp với bạn
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
 
           {/* Contact Method Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            {contactMethods.map((method) => (
-              <label
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10"
+            variants={staggerContainer}
+          >
+            {contactMethods.map((method, index) => (
+              <motion.label
                 key={method.id}
-                className={`p-6 rounded-lg border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 flex flex-col items-center ${
-                  selectedMethod === method.id
+                className={`p-6 rounded-lg border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 flex flex-col items-center ${selectedMethod === method.id
                     ? `${method.activeColor} shadow-lg`
                     : `${method.color} hover:shadow-md`
-                }`}
+                  }`}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                whileTap={{ scale: 0.98 }}
               >
                 <input
                   type="radio"
@@ -149,12 +221,12 @@ export default function ContactUsPage() {
                     </div>
                   )}
                 </div>
-              </label>
+              </motion.label>
             ))}
-          </div>
+          </motion.div>
 
           {/* Dynamic Form */}
-          <div
+          <motion.div
             className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 ${currentMethod?.formBg
               } border-l-4 ${selectedMethod === "phone"
                 ? "border-green-400"
@@ -162,6 +234,9 @@ export default function ContactUsPage() {
                   ? "border-red-400"
                   : "border-blue-400"
               }`}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.6 }}
           >
             {/* Form Header */}
             <div className="text-center mb-8">
@@ -172,10 +247,10 @@ export default function ContactUsPage() {
               <div className="flex justify-center mt-2">
                 <div
                   className={`w-24 h-1 rounded-full ${selectedMethod === "phone"
-                      ? "bg-green-400"
-                      : selectedMethod === "email"
-                        ? "bg-red-400"
-                        : "bg-blue-400"
+                    ? "bg-green-400"
+                    : selectedMethod === "email"
+                      ? "bg-red-400"
+                      : "bg-blue-400"
                     }`}
                 ></div>
               </div>
@@ -229,10 +304,10 @@ export default function ContactUsPage() {
                   {...form.register("message")}
                   rows={6}
                   className={`w-full min-h-[120px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 resize-vertical transition-all duration-300 ${selectedMethod === "phone"
-                      ? "focus:ring-green-400 focus:border-green-400"
-                      : selectedMethod === "email"
-                        ? "focus:ring-red-400 focus:border-red-400"
-                        : "focus:ring-blue-400 focus:border-blue-400"
+                    ? "focus:ring-green-400 focus:border-green-400"
+                    : selectedMethod === "email"
+                      ? "focus:ring-red-400 focus:border-red-400"
+                      : "focus:ring-blue-400 focus:border-blue-400"
                     }`}
                   placeholder={formContent?.placeholder}
                   disabled={isPending}
@@ -248,10 +323,10 @@ export default function ContactUsPage() {
                   type="submit"
                   disabled={isPending}
                   className={`px-8 py-2 font-medium text-white transition-all duration-300 transform hover:scale-105 ${selectedMethod === "phone"
-                      ? "bg-green-600 hover:bg-green-700"
-                      : selectedMethod === "email"
-                        ? "bg-red-600 hover:bg-red-700"
-                        : "bg-blue-600 hover:bg-blue-700"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : selectedMethod === "email"
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-blue-600 hover:bg-blue-700"
                     }`}
                 >
                   <span className="flex items-center gap-2">
@@ -270,9 +345,9 @@ export default function ContactUsPage() {
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
-      </div>
-    </main>
+          </motion.div>
+        </motion.div>
+      </motion.div>
+    </motion.main>
   );
 }

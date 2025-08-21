@@ -24,9 +24,6 @@ export default function BannerActiveStats({
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <span>Trạng thái Banner Active</span>
-                    <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                        (Chỉ 1 banner active cho Sale & Advertisement)
-                    </span>
                 </CardTitle>
             </CardHeader>
             <CardContent>

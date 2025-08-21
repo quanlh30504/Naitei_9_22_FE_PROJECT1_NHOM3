@@ -33,6 +33,7 @@ const BANNER_TYPES = [
 export default function BannerForm({ banner, mode }: BannerFormProps) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
+    // Always keep the latest selected file for upload
     const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = React.useState<string | null>(banner?.imageUrl || null);
 
@@ -53,6 +54,7 @@ export default function BannerForm({ banner, mode }: BannerFormProps) {
         },
     });
 
+    // Ensure selectedFile is always the latest file chosen
     const onImageChange = (file: File | null, preview: string | null) => {
         setSelectedFile(file);
         setPreviewUrl(preview);
@@ -96,6 +98,8 @@ export default function BannerForm({ banner, mode }: BannerFormProps) {
             }
         });
     };
+
+    // Remove displayWidth and displayHeight, use responsive container instead
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -195,7 +199,7 @@ export default function BannerForm({ banner, mode }: BannerFormProps) {
                         onImageChange={onImageChange}
                         maxSizeInMB={5}
                         acceptedTypes={['image/jpeg', 'image/png', 'image/webp']}
-                        aspectRatio="16/9"
+                        aspectRatio={banner?.type === 'advertisement' || (!banner && control._defaultValues.type === 'advertisement') ? "320/280" : "1380/320"}
                         showPreview={true}
                     />
                 </div>
