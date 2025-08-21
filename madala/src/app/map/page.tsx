@@ -6,24 +6,82 @@ import LocationIcon from "@/Components/icons/LocationIcon";
 import ClockIcon from "@/Components/icons/ClockIcon";
 import CalendarIcon from "@/Components/icons/CalendarIcon";
 import { Star } from "lucide-react";
+import { motion } from "framer-motion";
+
+// Animation variants
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 }
+};
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 40 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, ease: "easeOut" }
+};
+
+const fadeInLeft = {
+  initial: { opacity: 0, x: -40 },
+  animate: { opacity: 1, x: 0 },
+  transition: { duration: 0.7, ease: "easeOut" }
+};
+
+const fadeInRight = {
+  initial: { opacity: 0, x: 40 },
+  animate: { opacity: 1, x: 0 },
+  transition: { duration: 0.7, ease: "easeOut" }
+};
+
+const staggerContainer = {
+  initial: {},
+  animate: {
+    transition: {
+      staggerChildren: 0.2,
+      delayChildren: 0.3
+    }
+  }
+};
 
 export default function MapPage() {
   // URL Google Maps từ biến môi trường
   const mapSrc = process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_URL || "";
 
   return (
-    <main>
-      <div className="px-4 md:px-8 lg:px-12 py-6 bg-white dark:bg-gray-900 min-h-screen">
-        <Breadcrumb items={[{ label: "Bản đồ" }]} />
+    <motion.main
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.5 }}
+    >
+      <motion.div
+        className="px-4 md:px-8 lg:px-12 py-6 bg-white dark:bg-gray-900 min-h-screen"
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
+        <motion.div variants={fadeInUp}>
+          <Breadcrumb items={[{ label: "Bản đồ" }]} />
+        </motion.div>
 
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
+        <motion.h1
+          className="text-3xl font-bold text-gray-800 dark:text-white mb-8"
+          variants={fadeInUp}
+        >
           VỊ TRÍ CỬA HÀNG
-        </h1>
+        </motion.h1>
 
         {/* Main */}
-        <div className="flex flex-col lg:flex-row gap-8 h-full">
+        <motion.div
+          className="flex flex-col lg:flex-row gap-8 h-full"
+          variants={staggerContainer}
+        >
           {/* Left stuff */}
-          <div className="w-full lg:w-1/4 space-y-6">
+          <motion.div
+            className="w-full lg:w-1/4 space-y-6"
+            variants={fadeInLeft}
+          >
             {/* Contact Information */}
             <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-6 rounded-xl shadow-lg">
               <h2 className="text-xl font-semibold text-green-800 dark:text-green-400 mb-4 flex items-center">
@@ -102,11 +160,19 @@ export default function MapPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Google Map */}
-          <div className="w-full lg:w-3/4">
-            <div className="h-full">
+          <motion.div
+            className="w-full lg:w-3/4"
+            variants={fadeInRight}
+          >
+            <motion.div
+              className="h-full"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.4 }}
+            >
               <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-4">
                 <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-2 lg:mb-0">
                   Bản đồ vị trí cửa hàng
@@ -138,18 +204,23 @@ export default function MapPage() {
                   </div>
                 </div>
               </div>
-              <div className="h-[70vh] lg:h-[80vh]">
+              <motion.div
+                className="h-[70vh] lg:h-[80vh]"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+              >
                 <GoogleMap
                   src={mapSrc}
                   height="100%"
                   title="Vị trí cửa hàng Mandala Store"
                   className="w-full h-full"
                 />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
+    </motion.main>
   );
 }

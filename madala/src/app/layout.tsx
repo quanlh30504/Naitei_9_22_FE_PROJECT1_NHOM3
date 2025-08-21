@@ -5,7 +5,7 @@ import { ConditionalLayout } from "@/Components/ConditionalLayout";
 import { ThemeProvider } from "@/Components/providers/ThemeProvider";
 
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Footer from "@/Components/footer";
 import SiteHeader from "@/Components/SiteHeader";
@@ -13,14 +13,10 @@ import { getCart } from "@/lib/actions/cart";
 import CartStateSyncer from "@/Components/CartStateSyncer";
 import AblyClientProvider from "@/Components/providers/AblyClientProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -42,7 +38,7 @@ export default async function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} antialiased font-sans`}
       >
         <ThemeProvider
           attribute="class"
