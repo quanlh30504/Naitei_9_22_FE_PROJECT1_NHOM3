@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import clientPromise from '@/lib/mongodb';
+import { normalizeStr } from '@/lib/normalize';
 
 // GET /api/admin/products/[id] - Lấy chi tiết sản phẩm cho admin (bao gồm inactive)
 export async function GET(
@@ -160,6 +161,29 @@ export async function PUT(
           },
           { status: 400 }
         );
+      }
+    }
+
+    // update trường normalize trong db
+    if (updateData.name) {
+      try {
+        updateData.name_normalized = normalizeStr(String(updateData.name));
+      } catch (_) {
+        // ignore
+      }
+    }
+
+    if (updateData.attributes && typeof updateData.attributes === 'object' && !Array.isArray(updateData.attributes)) {
+      try {
+        const attrs = updateData.attributes as Record<string, unknown>;
+        const brand = typeof attrs.brand === 'string' ? attrs.brand : '';
+        const newAttrs: Record<string, unknown> = {
+          ...attrs,
+          brand_normalized: normalizeStr(brand)
+        };
+        updateData.attributes = newAttrs;
+      } catch (_) {
+        // ignore
       }
     }
 

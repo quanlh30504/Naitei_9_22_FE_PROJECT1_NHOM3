@@ -2,7 +2,10 @@
 import React, { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Product } from "@/types/product";
-import { Heart, ShoppingCart, Scale } from "lucide-react";
+import { ShoppingCart, Scale } from "lucide-react";
+import FavoriteButton from "@/Components/products/FavoriteButton";
+import { useFavorite } from "@/hooks/useFavorite";
+import toast from "react-hot-toast";
 import { Button } from "@/Components/ui/button";
 import SafeImage from "@/Components/SafeImage";
 import StarRating from "@/Components/products/StarRating";
@@ -22,26 +25,26 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
   onAddToCart,
   onToggleFavorite,
 }) => {
+  const { favoriteIds, refreshFavorites, setFavoriteIds, toggleFavorite } = useFavorite();
   const router = useRouter();
   const { isInCompare, addToCompare, removeFromCompare } = useCompareStore();
 
   const discountInfo = useMemo(() => getProductDiscount(product), [product]);
   const { hasDiscount, discountPercent } = discountInfo;
 
-  const isProductInCompare = useMemo(() =>
-    isInCompare(String(product._id))
-    , [isInCompare, product._id]);
+  const isProductInCompare = isInCompare(String(product._id));
 
   const handleCompareClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     const productId = String(product._id) || product.productId;
 
-    if (isProductInCompare) {
+    const currentlyIn = isInCompare(String(product._id));
+    if (currentlyIn) {
       removeFromCompare(productId);
     } else {
       addToCompare(product);
     }
-  }, [isProductInCompare, removeFromCompare, addToCompare, product]);
+  }, [isInCompare, removeFromCompare, addToCompare, product]);
 
   const handleProductClick = useCallback(() => {
     if (product.slug) {
@@ -54,15 +57,26 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
     onAddToCart?.(product);
   }, [onAddToCart, product]);
 
-  const handleToggleFavorite = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggleFavorite?.(product);
-  }, [onToggleFavorite, product]);
+  const handleToggleFavorite = useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    // prefer parent handler
+    if (onToggleFavorite) {
+      onToggleFavorite(product);
+      return;
+    }
+
+    (async () => {
+      try {
+  await toggleFavorite(product);
+      } catch (err: any) {
+  // handled in hook
+      }
+    })();
+  }, [onToggleFavorite, product, favoriteIds, setFavoriteIds, refreshFavorites]);
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden p-4 mb-4 ${isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
-        }`}
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden p-4 mb-4 ${isProductInCompare ? 'ring-2 ring-green-600/50' : ''}`}
       onClick={handleProductClick}
     >
       <div className="flex flex-col md:flex-row gap-4">
@@ -93,8 +107,8 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
             variant={isProductInCompare ? "default" : "secondary"}
             onClick={handleCompareClick}
             className={`absolute top-2 right-2 w-8 h-8 rounded-full transition-all duration-300 ${isProductInCompare
-              ? "bg-[#8ba63a] text-white hover:bg-red-500"
-              : "bg-white dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-90 text-gray-600 dark:text-gray-300 hover:bg-[#8ba63a] hover:text-white"
+              ? "bg-green-600 text-white hover:bg-red-500"
+              : "bg-white dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-90 text-gray-600 dark:text-gray-300 hover:bg-green-600 hover:text-white"
               }`}
             title={
               isProductInCompare
@@ -117,7 +131,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
 
             {/* Product Name */}
             <h3
-              className="font-semibold text-lg text-gray-800 dark:text-gray-200 mb-2 cursor-pointer hover:text-[#8ba63a] dark:hover:text-[#9CCC65] transition-colors"
+              className="font-semibold text-lg text-gray-800 dark:text-gray-200 mb-2 cursor-pointer hover:text-green-600 dark:hover:text-lime-400 transition-colors"
               onClick={handleProductClick}
             >
               {product.name}
@@ -141,7 +155,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
             {/* Price */}
             <div className="mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-xl font-bold text-[#8ba63a] dark:text-[#9CCC65]">
+                <span className="text-xl font-bold text-green-600 dark:text-lime-400">
                   {product.salePrice.toLocaleString("vi-VN")}₫
                 </span>
                 {hasDiscount && (
@@ -157,20 +171,17 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
           <div className="flex gap-2 mt-auto">
             <Button
               onClick={handleAddToCart}
-              className="flex-1 bg-[#8ba63a] hover:bg-[#7a942c] dark:bg-[#9CCC65] dark:hover:bg-[#8ba63a] text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
+              className="flex-1 bg-green-600 hover:bg-green-700 dark:bg-lime-400 dark:hover:bg-green-600 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
             >
               <ShoppingCart className="w-3 h-3 mr-1" />
               MUA HÀNG
             </Button>
 
-            <Button
-              size="icon"
-              variant="outline"
+            <FavoriteButton
+              isFavorite={favoriteIds.includes(String(product._id))}
               onClick={handleToggleFavorite}
-              className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <Heart className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors" />
-            </Button>
+              title={favoriteIds.includes(String(product._id)) ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích'}
+            />
           </div>
         </div>
       </div>

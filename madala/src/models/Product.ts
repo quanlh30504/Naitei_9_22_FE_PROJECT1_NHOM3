@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { normalizeStr } from '@/lib/normalize';
 
 /**
  * Định nghĩa Interface (IProduct) cho Product document để đảm bảo an toàn kiểu dữ liệu.
@@ -7,6 +8,8 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IProduct extends Document {
     productId: string;
     name: string;
+    // normalized name for accent-insensitive search
+    name_normalized?: string;
     slug: string;
     description: string;
     shortDescription: string;
@@ -21,6 +24,8 @@ export interface IProduct extends Document {
         color: string[];
         material: string;
         brand: string;
+    // normalized brand for accent-insensitive search
+    brand_normalized?: string;
         size: string[];
         weight: string;
     };
@@ -62,6 +67,8 @@ const ProductSchema = new Schema<IProduct>(
             color: [{ type: String }],
             material: { type: String, default: null },
             brand: { type: String, default: null },
+            // normalized brand for diacritics-insensitive search
+            brand_normalized: { type: String, default: '' },
             size: [{ type: String }],
             weight: { type: String, default: null }
         },
@@ -100,6 +107,102 @@ ProductSchema.index({ categoryIds: 1 });
 ProductSchema.index({ 'rating.average': -1 });
 ProductSchema.index({ viewCount: -1 });
 ProductSchema.index({ createdAt: -1 });
+
+// Indexes to accelerate prefix/pattern searches used by the suggest endpoint
+// Prefix regex (e.g. /^query/i) can use a simple ascending index on the field.
+ProductSchema.index({ name: 1 });
+ProductSchema.index({ 'attributes.brand': 1 });
+// Normalized fields for accent-insensitive search
+ProductSchema.add({ name_normalized: { type: String, default: '' } });
+ProductSchema.index({ name_normalized: 1 });
+ProductSchema.index({ 'attributes.brand_normalized': 1 });
+
+// Pre-save hook: populate normalized fields automatically
+ProductSchema.pre('save', function (next) {
+    // @ts-ignore
+    const doc: any = this;
+    try {
+        doc.name_normalized = normalizeStr(doc.name || '');
+        if (!doc.attributes) doc.attributes = {};
+        doc.attributes.brand_normalized = normalizeStr(doc.attributes.brand || '');
+    } catch (e) {
+        // ignore normalization errors
+    }
+    next();
+});
+
+// Ensure normalized fields are populated when updates use update operators (findOneAndUpdate, updateOne, updateMany)
+function applyNormalizeToUpdate(this: any) {
+    const update = this.getUpdate && this.getUpdate();
+    if (!update) return;
+
+    // normalize $set and top-level fields
+    const set = update.$set = update.$set || {};
+
+    // name could be provided at top-level or inside $set
+    const nameVal = (update.name !== undefined) ? update.name : set.name;
+    if (nameVal !== undefined) {
+        set.name_normalized = normalizeStr(nameVal || '');
+    }
+
+    // attributes.brand can come in many shapes
+    let brandVal;
+    if (update['attributes.brand'] !== undefined) brandVal = update['attributes.brand'];
+    else if (set['attributes.brand'] !== undefined) brandVal = set['attributes.brand'];
+    else if (update.attributes && update.attributes.brand !== undefined) brandVal = update.attributes.brand;
+    else if (set.attributes && set.attributes.brand !== undefined) brandVal = set.attributes.brand;
+
+    if (brandVal !== undefined) {
+        set['attributes.brand_normalized'] = normalizeStr(brandVal || '');
+    }
+}
+
+ProductSchema.pre('findOneAndUpdate', function (next) {
+    try {
+        applyNormalizeToUpdate.call(this);
+    } catch (e) {
+        // ignore
+    }
+    next();
+});
+
+ProductSchema.pre('updateOne', function (next) {
+    try {
+        applyNormalizeToUpdate.call(this);
+    } catch (e) {
+        // ignore
+    }
+    next();
+});
+
+ProductSchema.pre('updateMany', function (next) {
+    try {
+        applyNormalizeToUpdate.call(this);
+    } catch (e) {
+        // ignore
+    }
+    next();
+});
+
+// insertMany middleware: normalize docs before bulk insert
+ProductSchema.pre('insertMany', function (next, docs: any[]) {
+    try {
+        if (Array.isArray(docs)) {
+            docs.forEach((doc) => {
+                try {
+                    doc.name_normalized = normalizeStr(doc.name || '');
+                    if (!doc.attributes) doc.attributes = {};
+                    doc.attributes.brand_normalized = normalizeStr(doc.attributes.brand || '');
+                } catch (_) {
+                    // ignore per-doc errors
+                }
+            });
+        }
+    } catch (e) {
+        // ignore
+    }
+    next();
+});
 
 //---
 

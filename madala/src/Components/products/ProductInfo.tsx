@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
+import FavoriteButton from "./FavoriteButton";
 import { useFavorite } from "@/hooks/useFavorite";
 import { Card } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
 import { Badge } from "@/Components/ui/badge";
-import { Star, Heart, Share2, ShoppingCart, Minus, Plus } from "lucide-react";
+import { Star, Share2, ShoppingCart, Minus, Plus } from "lucide-react";
 import { addItemToCart, buyNowAndRedirect } from "@/lib/actions/cart";
 import { toast } from "react-hot-toast";
-import { toggleFavorite } from "@/services/favoritesService";
 import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 
@@ -62,7 +62,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   discountPercentage,
 }) => {
   const [quantity, setQuantity] = useState(1);
-  const { favoriteIds, refreshFavorites, setFavoriteIds } = useFavorite();
+  const { favoriteIds, refreshFavorites, setFavoriteIds, toggleFavorite } = useFavorite();
   const isFavorite = favoriteIds.includes(productId);
 
   const [isPending, startTransition] = useTransition();
@@ -83,12 +83,9 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   // Favorite click button
   const handleFavoriteClick = async () => {
     try {
-      const favorites = await toggleFavorite(productId, isFavorite);
-      setFavoriteIds(favorites);
-      toast.success(isFavorite ? 'Đã bỏ khỏi yêu thích' : 'Đã thêm vào yêu thích');
-      refreshFavorites();
-    } catch (err: any) {
-      toast.error(err?.message || 'Có lỗi xảy ra');
+      await toggleFavorite(productId);
+    } catch (err) {
+      // handled in hook
     }
   };
 
@@ -284,15 +281,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
           >
             Thêm vào giỏ
           </Button>
-          <Button
-            variant={isFavorite ? "default" : "outline"}
-            size="icon"
-            onClick={handleFavoriteClick}
-            className={`border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors w-9 h-9 flex items-center justify-center ${isFavorite ? 'bg-red-600' : ''}`}
-            title={isFavorite ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích'}
-          >
-            <Heart className={`w-5 h-5 transition-colors ${isFavorite ? 'text-white fill-white' : 'text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400'}`} fill={isFavorite ? 'currentColor' : 'none'} />
-          </Button>
+          <FavoriteButton isFavorite={isFavorite} onClick={handleFavoriteClick} title={isFavorite ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích'} />
           <Button variant="outline" size="icon">
             <Share2 className="w-4 h-4" />
           </Button>

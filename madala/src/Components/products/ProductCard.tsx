@@ -3,7 +3,9 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, Heart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
+import FavoriteButton from "./FavoriteButton";
+import { useFavorite } from "@/hooks/useFavorite";
 import StarRating from "@/Components/products/StarRating";
 import { Button } from "@/Components/ui/button";
 import { Badge } from "@/Components/ui/badge";
@@ -58,6 +60,24 @@ const ProductCard = React.memo(function ProductCard({
     return salePrice ? Math.round(((price - salePrice) / price) * 100) : 0;
   }, [price, salePrice]);
 
+  // wishlist logic
+  const { favoriteIds, toggleFavorite } = useFavorite();
+  const isFavorite = favoriteIds.includes(String(id));
+  const [favPending, setFavPending] = useState(false);
+
+  const handleFavoriteClick = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (favPending) return;
+      try {
+      setFavPending(true);
+      await toggleFavorite(id);
+    } catch (err) {
+      // handled in hook
+    } finally {
+      setFavPending(false);
+    }
+  };
+
   return (
     <Card className="group hover:shadow-medium transition-all duration-300 overflow-hidden h-full flex flex-col bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
       <div className="relative flex-shrink-0">
@@ -88,13 +108,13 @@ const ProductCard = React.memo(function ProductCard({
         </div>
 
         {/* Wishlist Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800"
-        >
-          <Heart className="h-4 w-4" />
-        </Button>
+        <div className="absolute top-2 right-2">
+          <FavoriteButton
+            isFavorite={isFavorite}
+            onClick={handleFavoriteClick}
+            title={isFavorite ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích'}
+          />
+        </div>
 
         {/* Quick Actions */}
         <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
