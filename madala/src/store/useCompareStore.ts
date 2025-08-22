@@ -1,14 +1,14 @@
 import { create } from 'zustand';
 import type { StateCreator } from 'zustand';
-import type { IProduct } from '@/models/Product';
+import type { Product } from '@/types/product';
 
 // Định nghĩa đầy đủ state và actions, tương tự như Context cũ
 interface CompareState {
-  compareProducts: IProduct[];
-  addToCompare: (product: IProduct) => void;
+  compareProducts: Product[];
+  addToCompare: (product: Product) => void;
   removeFromCompare: (productId: string) => void;
   clearCompare: () => void;
-  isInCompare: (productId: string) => boolean; 
+  isInCompare: (productId: string) => boolean;
 }
 
 const compareStateCreator: StateCreator<CompareState> = (set, get) => ({
@@ -18,7 +18,7 @@ const compareStateCreator: StateCreator<CompareState> = (set, get) => ({
   // --- ACTIONS ---
   addToCompare: (product) => {
     set((state) => {
-      if (get().isInCompare(product.id)) {
+  if (get().isInCompare(product._id)) {
         return {}; // Không làm gì nếu sản phẩm đã tồn tại
       }
       

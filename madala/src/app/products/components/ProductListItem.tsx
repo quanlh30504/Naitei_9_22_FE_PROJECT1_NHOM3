@@ -1,19 +1,21 @@
 "use client";
 import React, { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { IProduct } from "@/models/Product";
+import { Product } from "@/types/product";
 import { Heart, ShoppingCart, Scale } from "lucide-react";
 import { Button } from "@/Components/ui/button";
 import SafeImage from "@/Components/SafeImage";
 import StarRating from "@/Components/products/StarRating";
 import { useCompareStore } from "@/store/useCompareStore";
-import { getProductDiscount } from "@/lib/utils";
 
 interface ProductListItemProps {
-  product: IProduct;
-  onAddToCart?: (product: IProduct) => void;
-  onToggleFavorite?: (product: IProduct) => void;
+  product: Product;
+  onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (product: Product) => void;
 }
+
+
+import { getProductDiscount } from "@/lib/utils";
 
 const ProductListItem: React.FC<ProductListItemProps> = ({
   product,
@@ -32,7 +34,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
 
   const handleCompareClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    const productId = String(product._id) || product.productId || product.id;
+    const productId = String(product._id) || product.productId;
 
     if (isProductInCompare) {
       removeFromCompare(productId);
@@ -91,8 +93,8 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
             variant={isProductInCompare ? "default" : "secondary"}
             onClick={handleCompareClick}
             className={`absolute top-2 right-2 w-8 h-8 rounded-full transition-all duration-300 ${isProductInCompare
-                ? "bg-[#8ba63a] text-white hover:bg-red-500"
-                : "bg-white dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-90 text-gray-600 dark:text-gray-300 hover:bg-[#8ba63a] hover:text-white"
+              ? "bg-[#8ba63a] text-white hover:bg-red-500"
+              : "bg-white dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-90 text-gray-600 dark:text-gray-300 hover:bg-[#8ba63a] hover:text-white"
               }`}
             title={
               isProductInCompare

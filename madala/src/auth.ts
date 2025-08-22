@@ -28,7 +28,7 @@ import bcrypt from "bcrypt";
 import connectToDB from "@/lib/db";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
-import type { User as NextAuthUser, Session } from "next-auth";
+import type { User as NextAuthUser, Session as NextAuthSession } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 
 interface DBUser {
@@ -48,7 +48,18 @@ interface User extends NextAuthUser {
   isActive?: boolean;
 }
 
-
+// Mở rộng interface Session để user có isActive
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      email: string;
+      name?: string;
+      role?: "user" | "admin";
+      isActive?: boolean;
+    };
+  }
+}
 
 export const authConfig = {
   providers: [
@@ -112,7 +123,6 @@ export const authConfig = {
   session: {
     strategy: "jwt" as const,
   },
-
   callbacks: {
     jwt: async ({ token, user, account }: { token: JWT; user?: User | null; account?: Record<string, unknown> }) => {
       // Lần đầu sau login
@@ -125,15 +135,13 @@ export const authConfig = {
         token.lastCheckedAt = Date.now();
         return token;
       }
-
-      // Tuỳ chọn: refresh isActive tối đa mỗi 10 phút
-      const TEN_MIN = 10 * 60 * 1000;
-      if (!token.lastCheckedAt || Date.now() - (token.lastCheckedAt as number) > TEN_MIN) {
+      // Chỉ kiểm tra DB mỗi 2 phút để giảm tải
+      const TWO_MIN = 2 * 60 * 1000;
+      if (!token.lastCheckedAt || Date.now() - (token.lastCheckedAt as number) > TWO_MIN) {
         await connectToDB();
         const email = token.email;
         if (email) {
           const u = await User.findOne({ email }).select('isActive').lean();
-          // Nếu u là mảng (trường hợp bất thường), lấy phần tử đầu tiên
           const userObj = Array.isArray(u) ? u[0] : u;
           if (userObj && typeof (userObj as { isActive?: boolean }).isActive !== 'undefined') {
             token.isActive = (userObj as { isActive?: boolean }).isActive !== false;
@@ -143,12 +151,13 @@ export const authConfig = {
       }
       return token;
     },
-    session: async ({ session, token }: { session: Session; token: JWT }) => {
+    session: async ({ session, token }: { session: NextAuthSession; token: JWT }) => {
       if (session.user) {
         session.user.id = typeof token.id === 'string' ? token.id : '';
         session.user.role = typeof token.role === 'string' ? token.role : 'user';
         session.user.name = typeof token.name === 'string' ? token.name : undefined;
         session.user.email = typeof token.email === 'string' ? token.email : '';
+        session.user.isActive = typeof token.isActive === 'boolean' ? token.isActive : true;
       }
       return session;
     },

@@ -12,7 +12,8 @@ export interface IUser extends Document {
   country?: string;
   birthDate?: Date;
   isActive?: boolean;
-  mandalaPayBalance: number; 
+  mandalaPayBalance: number;
+  favorites?: string[]; // Danh sách id sản phẩm yêu thích
 }
 
 const UserSchema: Schema = new Schema(
@@ -61,6 +62,10 @@ const UserSchema: Schema = new Schema(
       type: Number,
       required: true,
       default: 5000000, // Demo: mỗi user mới vó 5.000.000đ trong ví 
+    },
+    favorites: {
+      type: [String],
+      default: [],
     },
   },
   { timestamps: true }
