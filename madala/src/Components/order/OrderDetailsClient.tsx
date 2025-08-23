@@ -19,15 +19,14 @@ import {
 } from "@/Components/ui/card";
 import StatusBadge from "./StatusBadge";
 import { Separator } from "@/Components/ui/separator";
-import { ArrowLeft, Pencil, Info  } from "lucide-react";
+import { ArrowLeft, Pencil, Info, Star  } from "lucide-react";
 import dynamic from "next/dynamic";
 import OrderStatusProgress from "./OrderStatusProgress";
 import UserOrderActions from "./UserOrderActions";
+import ProductReviewModal from "@/Components/products/ProductReviewModal";
 
-const CancelOrderButton = dynamic(
-  () => import("@/Components/order/CancelOrderButton"),
-  { loading: () => <span>Đang tải...</span> }
-);
+// Dynamic import các component nặng hoặc không cần SSR
+
 const SafeImage = dynamic(() => import("@/Components/SafeImage"), {
   loading: () => (
     <div className="w-20 h-20 bg-gray-100 animate-pulse rounded-md border" />
@@ -46,6 +45,13 @@ export default function OrderDetailsClient({ order: initialOrder  }: { order: IO
   useEffect(() => {
     setOrder(initialOrder);
   }, [initialOrder]);
+  
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<{
+    id: string;
+    name: string;
+    image: string;
+  } | null>(null);
 
   const handleChangeAddressClick = () => {
     // Kiểm tra trạng thái đơn hàng
@@ -81,6 +87,23 @@ export default function OrderDetailsClient({ order: initialOrder  }: { order: IO
         toast.error(result.message || "Đã có lỗi xảy ra khi cập nhật.");
       }
     });
+  };
+
+  // Xử lý mở modal đánh giá sản phẩm
+  const handleReviewProduct = (item: any) => {
+    // Thử sử dụng sku làm slug trước (nhiều khi chúng giống nhau)
+    setSelectedProduct({
+      id: item.sku,
+      name: item.name,
+      image: item.image
+    });
+    setIsReviewModalOpen(true);
+  };
+
+  // Đóng modal đánh giá
+  const handleCloseReviewModal = () => {
+    setIsReviewModalOpen(false);
+    setSelectedProduct(null);
   };
 
   return (
@@ -134,6 +157,15 @@ export default function OrderDetailsClient({ order: initialOrder  }: { order: IO
       <UserOrderActions
         order={order}
         onOrderUpdate={(updatedOrder) => setOrder(updatedOrder)}
+        reviewButtonSlot={
+        <Button
+            variant="outline"
+            className="w-full justify-center"
+            onClick={() => handleReviewProduct(order.items[0])}
+        >
+            Đánh giá
+        </Button>
+    }
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -209,21 +241,17 @@ export default function OrderDetailsClient({ order: initialOrder  }: { order: IO
                     className="rounded-md border"
                   />
                 </div>
-                <div className="col-span-5">
+                <div className="col-span-4">
                   <p className="font-medium text-sm">{item.name}</p>
                   <p className="text-xs text-muted-foreground">
                     SKU: {item.sku}
                   </p>
                 </div>
-                <p className="col-span-2 text-sm text-center">
-                  {formatCurrency(item.price)}
-                </p>
-                <p className="col-span-1 text-sm text-center">
-                  x{item.quantity}
-                </p>
-                <p className="col-span-2 text-sm font-semibold text-right">
-                  {formatCurrency(item.price * item.quantity)}
-                </p>
+                <p className="col-span-2 text-sm text-center">{formatCurrency(item.price)}</p>
+                <p className="col-span-1 text-sm text-center">x{item.quantity}</p>
+                <div className="col-span-3 text-right">
+                  <p className="text-sm font-semibold mb-2">{formatCurrency(item.price * item.quantity)}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -258,6 +286,18 @@ export default function OrderDetailsClient({ order: initialOrder  }: { order: IO
         onClose={() => setIsModalOpen(false)}
         onAddressSelect={handleAddressSelect}
       />
+
+      {/* Modal đánh giá sản phẩm */}
+      {selectedProduct && (
+        <ProductReviewModal
+          isOpen={isReviewModalOpen}
+          onClose={handleCloseReviewModal}
+          productId={selectedProduct.id}
+          productName={selectedProduct.name}
+          productImage={selectedProduct.image}
+          orderId={order._id?.toString?.() || String(order._id)}
+        />
+      )}
     </>
   );
 }

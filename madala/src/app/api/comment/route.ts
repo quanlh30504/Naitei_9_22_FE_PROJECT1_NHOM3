@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   try {
     await connectToDB();
 
-    const { slug, userId, userName, comment } = await request.json();
+    const { slug, userId, userName, comment, media } = await request.json();
 
     // Validate dữ liệu đầu vào
     if (!slug || !userId || !userName || !comment) {
@@ -32,8 +32,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Kiểm tra sản phẩm có tồn tại không
-    const product = await Product.findOne({ slug });
+    // Validate media URLs nếu có
+    if (media && Array.isArray(media) && media.length > 3) {
+      return NextResponse.json(
+        { error: 'Không được upload quá 3 file media' },
+        { status: 400 }
+      );
+    }
+
+    // Kiểm tra sản phẩm có tồn tại không và lấy slug thật sự
+    const product = await Product.findOne({
+      $or: [{ slug }, { sku: slug }]
+    }).select('slug');
+
     if (!product) {
       return NextResponse.json(
         { error: 'Sản phẩm không tồn tại' },
@@ -41,12 +52,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const actualSlug = product.slug;
+
     // Tạo comment mới
     const newComment = new Comment({
-      slug,
+      slug: actualSlug,
       userId,
       userName,
-      comment: comment.trim()
+      comment: comment.trim(),
+      media: media || [] // Thêm field media
     });
 
     await newComment.save();
@@ -83,6 +97,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Tìm product để lấy slug thật sự
+    const product = await Product.findOne({
+      $or: [{ slug }, { sku: slug }]
+    }).select('slug');
+
+    const actualSlug = product ? product.slug : slug;
+
     // Tính toán offset
     const skip = (page - 1) * limit;
 
@@ -91,14 +112,14 @@ export async function GET(request: NextRequest) {
     sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     // Lấy comments với phân trang
-    const comments = await Comment.find({ slug })
+    const comments = await Comment.find({ slug: actualSlug })
       .sort(sortOptions)
       .skip(skip)
       .limit(limit)
       .lean();
 
     // Đếm tổng số comments
-    const totalComments = await Comment.countDocuments({ slug });
+    const totalComments = await Comment.countDocuments({ slug: actualSlug });
     const totalPages = Math.ceil(totalComments / limit);
 
     return NextResponse.json({
