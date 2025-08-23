@@ -39,9 +39,9 @@ const StarRating = React.memo(function StarRating({
     const renderDisplayStar = useCallback((index: number) => {
         const difference = rating - index;
         if (difference >= 1) {
-            return <Star key={index} className={`${sizeClasses[size]} text-yellow-400`} />;
+            return <Star key={index} className={`${sizeClasses[size]} fill-yellow-400 text-yellow-400`} />;
         } else if (difference >= 0.5) {
-            return <StarHalf key={index} className={`${sizeClasses[size]} text-yellow-400`} />;
+            return <StarHalf key={index} className={`${sizeClasses[size]} fill-yellow-400 text-yellow-400`} />;
         } else {
             return <Star key={index} className={`${sizeClasses[size]} text-gray-300`} />;
         }

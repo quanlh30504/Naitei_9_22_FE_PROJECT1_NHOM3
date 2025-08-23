@@ -1,24 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { uploadToCloudinary, UPLOAD_CONFIGS } from '@/lib/cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 /**
- * POST /api/upload?type=blog|product|payment
+ * POST /api/upload - Upload files to Cloudinary
  */
 export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') as keyof typeof UPLOAD_CONFIGS;
-
-    if (!type || !UPLOAD_CONFIGS[type]) {
-      return NextResponse.json(
-        { success: false, error: 'Loại upload không hợp lệ. Sử dụng: blog, product, hoặc payment' },
-        { status: 400 }
-      );
-    }
-
     const formData = await request.formData();
-    const file = formData.get('image') as File;
-    const fileName = formData.get('fileName') as string;
+    const file = formData.get('file') as File;
+    const folder = formData.get('folder') as string || 'uploads';
 
     if (!file) {
       return NextResponse.json(
@@ -27,44 +24,62 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!file.type.startsWith('image/')) {
+    // Validate file type
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+      'video/mp4', 'video/webm', 'video/ogg', 'video/avi'
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { success: false, error: 'File phải là định dạng ảnh' },
+        { success: false, error: 'Định dạng file không được hỗ trợ' },
         { status: 400 }
       );
     }
 
-    const sizeLimits = {
-      blog: 5 * 1024 * 1024,    
-      product: 3 * 1024 * 1024,  
-      payment: 1 * 1024 * 1024  
-    };
-
-    if (file.size > sizeLimits[type]) {
-      const limitMB = sizeLimits[type] / (1024 * 1024);
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
       return NextResponse.json(
-        { success: false, error: `File không được vượt quá ${limitMB}MB` },
+        { success: false, error: 'File không được vượt quá 10MB' },
         { status: 400 }
       );
     }
 
-    const result = await uploadToCloudinary(file, type, fileName);
+    // Convert file to buffer
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Upload to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const resourceType = file.type.startsWith('video/') ? 'video' : 'image';
+
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: resourceType,
+          folder: `mandala/${folder}`, // Upload to mandala/comments folder
+          public_id: `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(buffer);
+    });
+
+    const result = uploadResult as any;
 
     return NextResponse.json({
       success: true,
-      data: {
-        url: result.url,
-        publicId: result.publicId,
-        fileName: fileName || file.name,
-        type: type
-      },
-      message: `Upload ảnh ${type} thành công`
+      url: result.secure_url,
+      public_id: result.public_id,
+      filename: result.original_filename
     });
 
   } catch (error) {
-    console.error('Error uploading image:', error);
+    console.error('Upload error:', error);
     return NextResponse.json(
-      { success: false, error: 'Lỗi server khi upload ảnh' },
+      { success: false, error: 'Lỗi khi tải lên file' },
       { status: 500 }
     );
   }

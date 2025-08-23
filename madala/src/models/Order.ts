@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 
-export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
+export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned' | 'completed';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 export type PaymentMethod = 'COD' | 'VNPAY' | 'MOMO' | 'CreditCard' | 'MandalaPay';
 
@@ -84,7 +84,7 @@ const OrderSchema = new Schema<IOrder>(
             status: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
             transactionId: { type: String },
         },
-        status: { type: String, enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'], default: 'pending' },
+        status: { type: String, enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'completed'], default: 'pending' },
         shipping: {
             method: { type: String, default: 'Giao hàng tiêu chuẩn' },
             fee: { type: Number, required: true, default: 0 },
