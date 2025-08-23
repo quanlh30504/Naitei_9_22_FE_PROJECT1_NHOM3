@@ -44,7 +44,7 @@ export default function UpdateStatusSelect({ orderId, currentStatus, onStatusUpd
             }
         });
     };
-    
+
     // Lấy style của trạng thái hiện tại
     const currentStatusStyle = STATUS_CONFIG[currentStatus];
 

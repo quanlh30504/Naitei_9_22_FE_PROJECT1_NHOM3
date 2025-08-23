@@ -12,11 +12,14 @@ import CancelOrderDialog from './CancelOrderDialog';
 interface UserOrderActionsProps {
   order: IOrder;
   onOrderUpdate: (updatedOrder: IOrder) => void;
+    reviewButtonSlot?: React.ReactNode; // "Slot" cho button đánh giá
+
 }
 
 export default function UserOrderActions({
   order,
   onOrderUpdate,
+  reviewButtonSlot
 }: UserOrderActionsProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -91,18 +94,20 @@ export default function UserOrderActions({
               Đã nhận được hàng
             </PrimaryButton>
             <SecondaryButton>Yêu cầu Trả hàng/Hoàn tiền</SecondaryButton>
-            <SecondaryButton>Đánh giá sản phẩm</SecondaryButton>
           </div>
         );
       case "completed":
+         return (
+          <div className={actionListClasses}>
+            <PrimaryButton>Mua lại</PrimaryButton>
+            {reviewButtonSlot}
+          </div>
+        );
       case "cancelled":
       case "returned":
         return (
           <div className={actionListClasses}>
             <PrimaryButton>Mua lại</PrimaryButton>
-            {order.status === "completed" && (
-              <SecondaryButton>Đánh giá</SecondaryButton>
-            )}
           </div>
         );
       default: 

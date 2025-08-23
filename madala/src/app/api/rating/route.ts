@@ -7,8 +7,8 @@ import Product from '@/models/Product';
 export async function POST(request: NextRequest) {
   try {
     await connectToDB();
-    
-    const body = await request.json();    
+
+    const body = await request.json();
     const { slug, userId, rating } = body;
     if (!slug || !userId || !rating) {
       return NextResponse.json(
@@ -16,50 +16,56 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     if (rating < 1 || rating > 5) {
       return NextResponse.json(
         { error: 'Rating phải từ 1 đến 5' },
         { status: 400 }
       );
     }
-    
-    const product = await Product.findOne({ slug }).select('_id');
+
+    const product = await Product.findOne({
+      $or: [{ slug }, { sku: slug }]
+    }).select('_id slug');
+
     if (!product) {
       return NextResponse.json(
         { error: 'Sản phẩm không tồn tại' },
         { status: 404 }
       );
     }
-    
-    const existingRating = await Rating.findOne({ slug, userId });
-    
+
+    // Sử dụng slug thật sự của product cho rating
+    const actualSlug = product.slug;
+
+    const existingRating = await Rating.findOne({ slug: actualSlug, userId });
+
     if (existingRating) {
       const oldRating = existingRating.rating;
       existingRating.rating = rating;
       await existingRating.save();
-      await updateProductRating(slug, oldRating, rating, false);
-      
+      await updateProductRating(actualSlug, oldRating, rating, false);
+
       return NextResponse.json({
         message: 'Cập nhật rating thành công',
         rating: existingRating
       });
-    } else {      
+    } else {
       const newRating = new Rating({
-        slug,
+        slug: actualSlug,
         userId,
         rating
       });
-      
-      await newRating.save();      
-      await updateProductRating(slug, null, rating, true);
-      
+
+      await newRating.save();
+      await updateProductRating(actualSlug, null, rating, true);
+
       return NextResponse.json({
         message: 'Thêm rating thành công',
         rating: newRating
       }, { status: 201 });
     }
-    
+
   } catch (error) {
     return NextResponse.json(
       { error: 'Lỗi server nội bộ', details: error instanceof Error ? error.message : 'Unknown error' },
@@ -72,29 +78,36 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     await connectToDB();
-    
+
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
     const userId = searchParams.get('userId');
-    
+
     if (!slug || !userId) {
       return NextResponse.json(
         { error: 'Slug và userId là bắt buộc' },
         { status: 400 }
       );
     }
-    
-    const rating = await Rating.findOne({ slug, userId });
-    
+
+    // Tìm product để lấy slug thật sự
+    const product = await Product.findOne({
+      $or: [{ slug }, { sku: slug }]
+    }).select('slug');
+
+    const actualSlug = product ? product.slug : slug;
+
+    const rating = await Rating.findOne({ slug: actualSlug, userId });
+
     if (!rating) {
       return NextResponse.json(
         { message: 'Chưa có rating cho sản phẩm này' },
         { status: 404 }
       );
     }
-    
+
     return NextResponse.json({ rating });
-    
+
   } catch (error) {
     return NextResponse.json(
       { error: 'Lỗi server nội bộ' },
@@ -107,31 +120,38 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     await connectToDB();
-    
+
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
     const userId = searchParams.get('userId');
-    
+
     if (!slug || !userId) {
       return NextResponse.json(
         { error: 'Slug và userId là bắt buộc' },
         { status: 400 }
       );
     }
-    
-    const rating = await Rating.findOneAndDelete({ slug, userId });
-    
+
+    // Tìm product để lấy slug thật sự
+    const product = await Product.findOne({
+      $or: [{ slug }, { sku: slug }]
+    }).select('slug');
+
+    const actualSlug = product ? product.slug : slug;
+
+    const rating = await Rating.findOneAndDelete({ slug: actualSlug, userId });
+
     if (!rating) {
       return NextResponse.json(
         { error: 'Không tìm thấy rating để xóa' },
         { status: 404 }
       );
     }
-    
-    await updateProductRating(slug, rating.rating, null, false, true);
-    
+
+    await updateProductRating(actualSlug, rating.rating, null, false, true);
+
     return NextResponse.json({ message: 'Xóa rating thành công' });
-    
+
   } catch (error) {
     return NextResponse.json(
       { error: 'Lỗi server nội bộ' },
@@ -142,17 +162,17 @@ export async function DELETE(request: NextRequest) {
 
 // Hàm helper để cập nhật rating trong Product
 async function updateProductRating(
-  slug: string, 
-  oldRating: number | null, 
-  newRating: number | null, 
-  isNew: boolean, 
+  slug: string,
+  oldRating: number | null,
+  newRating: number | null,
+  isNew: boolean,
   isDelete: boolean = false
 ) {
   const product = await Product.findOne({ slug }).select('rating');
   if (!product) return;
-  
+
   const currentDetails = product.rating.details || new Map();
-  
+
   if (isDelete && oldRating) {
     const oldCount = currentDetails.get(oldRating.toString()) || 0;
     if (oldCount > 0) {
@@ -166,28 +186,28 @@ async function updateProductRating(
   } else if (oldRating && newRating) {
     const oldCount = currentDetails.get(oldRating.toString()) || 0;
     const newCount = currentDetails.get(newRating.toString()) || 0;
-    
+
     if (oldCount > 0) {
       currentDetails.set(oldRating.toString(), oldCount - 1);
     }
     currentDetails.set(newRating.toString(), newCount + 1);
   }
-  
+
   let totalRating = 0;
   let totalCount = 0;
-  
+
   for (let i = 1; i <= 5; i++) {
     const count = currentDetails.get(i.toString()) || 0;
     totalRating += i * count;
     totalCount += count;
   }
-  
+
   product.rating.average = totalCount > 0 ? totalRating / totalCount : 0;
   product.rating.details = currentDetails;
-  
+
   await Product.findOneAndUpdate(
     { slug },
-    { 
+    {
       'rating.average': product.rating.average,
       'rating.details': product.rating.details,
       'rating.count': totalCount

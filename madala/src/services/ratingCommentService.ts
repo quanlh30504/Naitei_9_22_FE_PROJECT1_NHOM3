@@ -1,12 +1,12 @@
-import { 
-  RatingRequest, 
-  RatingResponse, 
-  CommentRequest, 
+import {
+  RatingRequest,
+  RatingResponse,
+  CommentRequest,
   CommentUpdateRequest,
-  CommentResponse, 
-  CommentsListResponse, 
+  CommentResponse,
+  CommentsListResponse,
   ProductStatsResponse,
-  ApiErrorResponse 
+  ApiErrorResponse
 } from '@/types/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
@@ -14,7 +14,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 // Rating Services
 export class RatingService {
   // Thêm hoặc cập nhật rating
-  static async submitRating(data: RatingRequest): Promise<RatingResponse> {    
+  static async submitRating(data: RatingRequest): Promise<RatingResponse> {
     const response = await fetch(`${API_BASE_URL}/api/rating`, {
       method: 'POST',
       headers: {
@@ -60,6 +60,19 @@ export class RatingService {
     }
 
     return response.json();
+  }
+
+  // Lấy tất cả ratings cho sản phẩm
+  static async getAllRatings(slug: string): Promise<any[]> {
+    const response = await fetch(`${API_BASE_URL}/api/rating/all?slug=${slug}`);
+
+    if (!response.ok) {
+      const errorData: ApiErrorResponse = await response.json();
+      throw new Error(errorData.error || 'Lỗi khi lấy tất cả ratings');
+    }
+
+    const data = await response.json();
+    return data.ratings || [];
   }
 }
 
@@ -152,6 +165,21 @@ export class ProductStatsService {
     if (!response.ok) {
       const errorData: ApiErrorResponse = await response.json();
       throw new Error(errorData.error || 'Lỗi khi lấy thống kê sản phẩm');
+    }
+
+    return response.json();
+  }
+}
+
+// Order Services
+export class OrderService {
+  // Kiểm tra xem user có thể đánh giá sản phẩm không (đã mua và delivered)
+  static async checkReviewPermission(userId: string, productSlug: string): Promise<{ canReview: boolean, message: string }> {
+    const response = await fetch(`${API_BASE_URL}/api/order/check-review-permission?userId=${userId}&productSlug=${productSlug}`);
+
+    if (!response.ok) {
+      const errorData: ApiErrorResponse = await response.json();
+      throw new Error(errorData.error || 'Lỗi khi kiểm tra quyền đánh giá');
     }
 
     return response.json();

@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 const ProductImageGallery = dynamic(() => import("@/Components/products/ProductImageGallery"), { loading: () => <div className="h-80 flex items-center justify-center">Đang tải hình ảnh...</div> });
 const ProductInfo = dynamic(() => import("@/Components/products/ProductInfo"), { loading: () => <div className="h-80 flex items-center justify-center">Đang tải thông tin...</div> });
-const ProductTabs = dynamic(() => import("@/Components/products/ProductTabs"), { loading: () => <div className="h-80 flex items-center justify-center">Đang tải đánh giá...</div> });
+const ProductTabs = dynamic(() => import("@/Components/products/ProductTabs"), { loading: () => <div className="h-80 flex items-center justify-center">Đang tải thông tin...</div> });
 const RelatedProducts = dynamic(() => import("@/Components/products/RelatedProducts"), { loading: () => <div className="h-40 flex items-center justify-center">Đang tải sản phẩm liên quan...</div> });
 
 import { IProduct } from '@/models/Product';

@@ -23,6 +23,7 @@ export interface CommentRequest {
   userId: string;
   userName: string;
   comment: string;
+  media?: string[]; // Thêm field media
 }
 
 export interface CommentUpdateRequest {
@@ -39,6 +40,7 @@ export interface CommentResponse {
     userId: string;
     userName: string;
     comment: string;
+    media?: string[]; // Thêm field media
     createdAt: string;
     updatedAt: string;
   };
@@ -51,6 +53,7 @@ export interface CommentsListResponse {
     userId: string;
     userName: string;
     comment: string;
+    media?: string[]; // Thêm field media
     createdAt: string;
     updatedAt: string;
   }>;
