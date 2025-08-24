@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 
@@ -10,26 +10,49 @@ import type { AddressType } from "@/types/address";
 import { formatCurrency } from "@/lib/utils";
 
 import { Button } from "@/Components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/Components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/Components/ui/card";
 import StatusBadge from "./StatusBadge";
 import { Separator } from "@/Components/ui/separator";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, Info  } from "lucide-react";
 import dynamic from "next/dynamic";
+import OrderStatusProgress from "./OrderStatusProgress";
+import UserOrderActions from "./UserOrderActions";
 
-const CancelOrderButton = dynamic(() => import("@/Components/order/CancelOrderButton"), { loading: () => <span>Đang tải...</span> });
-const SafeImage = dynamic(() => import("@/Components/SafeImage"), { loading: () => <div className="w-20 h-20 bg-gray-100 animate-pulse rounded-md border" /> });
-const AddressSelectionModal = dynamic(() => import("@/Components/Profile/AddressSelectionModal"), { loading: () => null, ssr: false });
+const CancelOrderButton = dynamic(
+  () => import("@/Components/order/CancelOrderButton"),
+  { loading: () => <span>Đang tải...</span> }
+);
+const SafeImage = dynamic(() => import("@/Components/SafeImage"), {
+  loading: () => (
+    <div className="w-20 h-20 bg-gray-100 animate-pulse rounded-md border" />
+  ),
+});
+const AddressSelectionModal = dynamic(
+  () => import("@/Components/Profile/AddressSelectionModal"),
+  { loading: () => null, ssr: false }
+);
 
-
-
-export default function OrderDetailsClient({ order }: { order: IOrder }) {
+export default function OrderDetailsClient({ order: initialOrder  }: { order: IOrder }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [order, setOrder] = useState(initialOrder);
+
+  useEffect(() => {
+    setOrder(initialOrder);
+  }, [initialOrder]);
 
   const handleChangeAddressClick = () => {
     // Kiểm tra trạng thái đơn hàng
-    if (order.status !== 'processing') {
-      toast.error("Chỉ có thể thay đổi địa chỉ cho đơn hàng đang 'Đang xử lý'.");
+    if (order.status !== "pending") {
+      toast.error(
+        "Chỉ có thể thay đổi địa chỉ cho đơn hàng đang 'Chờ xác nhận'."
+      );
       return;
     }
     setIsModalOpen(true);
@@ -71,18 +94,59 @@ export default function OrderDetailsClient({ order }: { order: IOrder }) {
         <h1 className="text-2xl font-bold text-gray-800">
           Chi tiết đơn hàng #{order.orderId}
         </h1>
-        <StatusBadge status={order.status} />
       </div>
       <p className="text-sm text-muted-foreground mb-8">
-        Ngày đặt hàng: {order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "-"}
+        Ngày đặt hàng:{" "}
+        {order.createdAt
+          ? new Date(order.createdAt).toLocaleString("vi-VN")
+          : "-"}
       </p>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Tiến trình Đơn hàng</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 flex justify-center items-center">
+          <OrderStatusProgress status={order.status} />
+        </CardContent>
+      </Card>
+
+      {order.status === 'cancelled' && order.cancellationDetails && (
+          <Card className="mb-6 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-500/30">
+              <CardHeader className="flex-row items-center gap-3 space-y-0">
+                  <Info className="w-5 h-5 text-red-600"/>
+                  <CardTitle className="text-base text-red-700 dark:text-red-300">Thông tin Hủy đơn hàng</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-1 pl-12">
+                  <p>
+                      <span className="font-semibold">Người hủy:</span> {order.cancellationDetails.cancelledBy === 'USER' ? 'Khách hàng' : 'Quản trị viên'}
+                  </p>
+                  <p>
+                      <span className="font-semibold">Thời gian:</span> {new Date(order.cancellationDetails.cancelledAt).toLocaleString('vi-VN')}
+                  </p>
+                  <p>
+                      <span className="font-semibold">Lý do:</span> {order.cancellationDetails.reason}
+                  </p>
+              </CardContent>
+          </Card>
+      )}
+
+      <UserOrderActions
+        order={order}
+        onOrderUpdate={(updatedOrder) => setOrder(updatedOrder)}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Card Địa chỉ người nhận */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Địa chỉ người nhận</CardTitle>
-            <Button variant="ghost" size="sm" className="h-auto p-1 text-primary" onClick={handleChangeAddressClick}>
+            <CardTitle className="text-base">Địa chỉ nhận</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-1 text-primary"
+              onClick={handleChangeAddressClick}
+            >
               <Pencil className="w-3.5 h-3.5 mr-1" />
               Thay đổi
             </Button>
@@ -132,17 +196,34 @@ export default function OrderDetailsClient({ order }: { order: IOrder }) {
         <CardContent className="p-0">
           <div className="p-6">
             {order.items.map((item, index) => (
-              <div key={index} className="grid grid-cols-12 items-center gap-4 py-4">
+              <div
+                key={index}
+                className="grid grid-cols-12 items-center gap-4 py-4"
+              >
                 <div className="col-span-2">
-                  <SafeImage src={item.image} alt={item.name} width={80} height={80} className="rounded-md border" />
+                  <SafeImage
+                    src={item.image}
+                    alt={item.name}
+                    width={80}
+                    height={80}
+                    className="rounded-md border"
+                  />
                 </div>
                 <div className="col-span-5">
                   <p className="font-medium text-sm">{item.name}</p>
-                  <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
+                  <p className="text-xs text-muted-foreground">
+                    SKU: {item.sku}
+                  </p>
                 </div>
-                <p className="col-span-2 text-sm text-center">{formatCurrency(item.price)}</p>
-                <p className="col-span-1 text-sm text-center">x{item.quantity}</p>
-                <p className="col-span-2 text-sm font-semibold text-right">{formatCurrency(item.price * item.quantity)}</p>
+                <p className="col-span-2 text-sm text-center">
+                  {formatCurrency(item.price)}
+                </p>
+                <p className="col-span-1 text-sm text-center">
+                  x{item.quantity}
+                </p>
+                <p className="col-span-2 text-sm font-semibold text-right">
+                  {formatCurrency(item.price * item.quantity)}
+                </p>
               </div>
             ))}
           </div>
@@ -163,16 +244,12 @@ export default function OrderDetailsClient({ order }: { order: IOrder }) {
             <Separator className="my-2" />
             <div className="flex justify-between font-bold text-base">
               <p>Tổng cộng</p>
-              <p className="text-red-600">{formatCurrency(order.totals.grandTotal)}</p>
+              <p className="text-red-600">
+                {formatCurrency(order.totals.grandTotal)}
+              </p>
             </div>
           </div>
         </CardContent>
-        {/* Button hủy đơn hàng */}
-        {(order.status === "processing" || order.status === "pending") && (
-          <CardFooter className="justify-end">
-            <CancelOrderButton orderId={order._id?.toString?.() || String(order._id)} />
-          </CardFooter>
-        )}
       </Card>
 
       {/* Modal address select */}

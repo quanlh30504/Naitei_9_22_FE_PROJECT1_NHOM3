@@ -18,8 +18,9 @@ import CartItem, { ICartItem } from "@/models/CartItem";
 import Wallet from "@/models/Wallet";
 import bcrypt from "bcryptjs";
 import Transaction from "@/models/Transaction";
-import { IWallet } from '@/models/Wallet'; 
-
+import { IWallet } from "@/models/Wallet";
+import { createAndPublishNotification } from "@/lib/ably";
+import { NotificationEntity } from "@/models/Notification";
 
 type ActionResponse<T = unknown> = {
   success: boolean;
@@ -171,7 +172,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<{
     let paymentStatus: "pending" | "paid" = "pending";
     let transactionId: string | undefined = undefined;
 
-    let wallet: (mongoose.Document<unknown, {}, IWallet> & IWallet) | null = null;
+    let wallet: (mongoose.Document<unknown, {}, IWallet> & IWallet) | null =
+      null;
     let balanceBefore = 0;
 
     switch (paymentMethod) {
@@ -187,12 +189,14 @@ export async function placeOrder(input: PlaceOrderInput): Promise<{
 
         // 2. GÁN GIÁ TRỊ CHO BIẾN WALLET
         wallet = await Wallet.findOne({ userId }).session(mongoSession);
-        if (!wallet || !wallet.pinHash) throw new Error("Ví Mandala Pay chưa được kích hoạt.");
-        
+        if (!wallet || !wallet.pinHash)
+          throw new Error("Ví Mandala Pay chưa được kích hoạt.");
+
         const isPinCorrect = await bcrypt.compare(pin, wallet.pinHash);
         if (!isPinCorrect) throw new Error("Mã PIN không chính xác.");
-        
-        if (wallet.balance < grandTotal) throw new Error("Số dư trong ví không đủ.");
+
+        if (wallet.balance < grandTotal)
+          throw new Error("Số dư trong ví không đủ.");
 
         balanceBefore = wallet.balance;
         wallet.balance -= grandTotal;
@@ -237,7 +241,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<{
         status: paymentStatus,
         transactionId: transactionId,
       },
-      status: "processing",
+      status: "pending",
       shipping: { fee: shippingFee },
       totals: {
         subtotal,
@@ -250,20 +254,25 @@ export async function placeOrder(input: PlaceOrderInput): Promise<{
 
     await newOrder.save({ session: mongoSession });
 
-    if (paymentMethod === 'MandalaPay' && wallet) {
-        await Transaction.create([{
+    if (paymentMethod === "MandalaPay" && wallet) {
+      await Transaction.create(
+        [
+          {
             walletId: wallet._id,
             amount: -grandTotal,
             balanceBefore: balanceBefore,
             balanceAfter: wallet.balance,
-            type: 'PAYMENT',
-            status: 'COMPLETED',
+            type: "PAYMENT",
+            status: "COMPLETED",
             description: `Thanh toán cho đơn hàng ${newOrder.orderId}`,
-            metadata: { 
-                orderId: newOrder._id,
-                orderCode: newOrder.orderId,
-            }
-        }], { session: mongoSession });
+            metadata: {
+              orderId: newOrder._id,
+              orderCode: newOrder.orderId,
+            },
+          },
+        ],
+        { session: mongoSession }
+      );
     }
 
     // --- Hoàn tất các thao tác ---
@@ -341,14 +350,16 @@ export async function getMyOrders({
       ];
     }
 
-    const orders = await Order.find(filter)
-      .sort({ createdAt: -1 }) // Sắp xếp đơn hàng mới nhất lên đầu
+    const ordersFromDB = await Order.find(filter)
+      .sort({ createdAt: -1 })
       .lean();
+
+    const plainOrders = JSON.parse(JSON.stringify(ordersFromDB));
 
     return {
       success: true,
       message: "Lấy danh sách đơn hàng thành công.",
-      data: orders.map((o: unknown) => toPlain(o) as IOrder),
+      data: plainOrders,
     };
   } catch (error) {
     console.error("[GET_MY_ORDERS_ERROR]", error);
@@ -385,11 +396,13 @@ export async function getOrderDetails(
       return { success: false, message: "Không tìm thấy đơn hàng." };
     }
 
+    const plainOrder = JSON.parse(JSON.stringify(order));
+
     // Đảm bảo trả về plain object cho client
     return {
       success: true,
       message: "Lấy chi tiết đơn hàng thành công.",
-      data: toPlain(order) as Record<string, unknown>,
+      data: plainOrder,
     };
   } catch (error) {
     console.error("[GET_ORDER_DETAILS_ERROR]", error);
@@ -573,20 +586,12 @@ export async function getAllOrdersPaginated({
 
     const query: mongoose.FilterQuery<IOrder> = {};
 
-    // Thêm bộ lọc trạng thái
-    // Lấy enum status đúng cách
-    const statusPath = Order.schema.path("status");
-    const validStatuses: string[] =
-      (statusPath &&
-        (statusPath as { options?: { enum?: string[] } }).options?.enum) ||
-      [];
-    if (status && validStatuses.includes(status)) {
+    if (status) {
       query.status = status;
     }
 
-    // **LOGIC TÌM KIẾM MỚI**
     if (search) {
-      const searchRegex = new RegExp(search, "i"); // 'i' for case-insensitive
+      const searchRegex = new RegExp(search, "i");
       query.$or = [
         { orderId: { $regex: searchRegex } },
         { "shippingAddress.fullName": { $regex: searchRegex } },
@@ -598,40 +603,14 @@ export async function getAllOrdersPaginated({
     const totalOrders = await Order.countDocuments(query);
     const totalPages = Math.ceil(totalOrders / limit);
 
-    const orders = await Order.find(query)
+    const ordersFromDB = await Order.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
 
-    // Chuyển đổi từng order sang đúng type IOrder (nếu cần)
-    // Convert all ObjectId fields to string recursively for each order
-    function toPlain(obj: unknown): unknown {
-      if (Array.isArray(obj)) return (obj as unknown[]).map(toPlain);
-      if (obj && typeof obj === "object") {
-        const result: Record<string, unknown> = {};
-        for (const key in obj) {
-          const value = (obj as Record<string, unknown>)[key];
-          if (
-            value &&
-            typeof value === "object" &&
-            typeof (value as { toHexString?: unknown }).toHexString ===
-              "function"
-          ) {
-            result[key] = (
-              value as { toHexString: () => string }
-            ).toHexString();
-          } else {
-            result[key] = toPlain(value);
-          }
-        }
-        return result;
-      }
-      return obj;
-    }
-    const plainOrders: IOrder[] = orders.map(
-      (o: unknown) => toPlain(o) as IOrder
-    );
+    const plainOrders = JSON.parse(JSON.stringify(ordersFromDB));
+
     return {
       success: true,
       message: "Lấy danh sách đơn hàng thành công.",
@@ -642,6 +621,7 @@ export async function getAllOrdersPaginated({
     return { success: false, message: "Lỗi khi lấy danh sách đơn hàng." };
   }
 }
+
 /**
  * [Admin] Cập nhật trạng thái của một đơn hàng.
  */
@@ -705,256 +685,158 @@ export async function getAdminOrderDetails(
       return { success: false, message: "Không tìm thấy đơn hàng." };
     }
 
-    // Đảm bảo order là object, không phải mảng
-    if (order && !Array.isArray(order)) {
-      // Convert all ObjectId fields to string recursively for the order
-      function toPlain(obj: unknown): unknown {
-        if (Array.isArray(obj)) return (obj as unknown[]).map(toPlain);
-        if (obj && typeof obj === "object") {
-          const result: Record<string, unknown> = {};
-          for (const key in obj) {
-            const value = (obj as Record<string, unknown>)[key];
-            if (
-              value &&
-              typeof value === "object" &&
-              typeof (value as { toHexString?: unknown }).toHexString ===
-                "function"
-            ) {
-              result[key] = (
-                value as { toHexString: () => string }
-              ).toHexString();
-            } else {
-              result[key] = toPlain(value);
-            }
-          }
-          return result;
-        }
-        return obj;
-      }
-      return {
-        success: true,
-        message: "Lấy chi tiết đơn hàng thành công.",
-        data: toPlain(order) as IOrder,
-      };
-    } else {
-      return { success: false, message: "Không tìm thấy đơn hàng." };
-    }
+    const plainOrder = JSON.parse(JSON.stringify(order));
+
+    return {
+      success: true,
+      message: "Lấy chi tiết đơn hàng thành công.",
+      data: plainOrder,
+    };
   } catch (error) {
     console.error("[GET_ADMIN_ORDER_DETAILS_ERROR]", error);
     return { success: false, message: "Lỗi khi lấy chi tiết đơn hàng." };
   }
 }
 
-// Interface cho input
-interface PlaceOrderWithWalletInput {
-  selectedCartItemIds: string[];
-  shippingAddressId: string;
-  pin: string;
-  notes?: string;
-}
+// Hàm helper để xác thực và lấy đúng đơn hàng của user
+async function verifyAndGetOrder(orderId: string) {
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) throw new Error("Lỗi xác thực.");
 
-export async function placeOrderWithWallet(
-  input: PlaceOrderWithWalletInput
-): Promise<{ success: boolean; message: string; orderId?: string }> {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) {
-    return { success: false, message: "Bạn cần đăng nhập để đặt hàng." };
-  }
-
-  const { selectedCartItemIds, shippingAddressId, pin, notes } = input;
-  if (
-    !selectedCartItemIds ||
-    selectedCartItemIds.length === 0 ||
-    !shippingAddressId ||
-    !pin
-  ) {
-    return { success: false, message: "Thông tin đặt hàng không hợp lệ." };
-  }
-
-  const mongoSession = await mongoose.startSession();
-  mongoSession.startTransaction();
-
-  try {
     await connectToDB();
 
-    // --- BƯỚC 1: XÁC THỰC VÍ VÀ MÃ PIN ---
-    const wallet = await Wallet.findOne({ userId }).session(mongoSession);
-    if (!wallet || !wallet.pinHash) {
-      throw new Error(
-        "Ví Mandala Pay chưa được kích hoạt hoặc không tìm thấy."
-      );
-    }
-    const isPinCorrect = await bcrypt.compare(pin, wallet.pinHash);
-    if (!isPinCorrect) {
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Chống brute-force
-      throw new Error("Mã PIN không chính xác.");
-    }
+    const order = await Order.findOne({ _id: orderId, userId: userId });
+    if (!order) throw new Error("Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập.");
 
-    // --- BƯỚC 2: TÍNH TOÁN ĐƠN HÀNG (Tương tự hàm cũ) ---
-    // Lấy dữ liệu giỏ hàng, địa chỉ...
-    const cartItemsToOrder = await CartItem.find({
-      _id: { $in: selectedCartItemIds },
-      user: userId,
-    })
-      .populate<{ product: IProduct }>("product")
-      .session(mongoSession);
+    return order;
+}
 
-    const userAddress = await Address.findOne({
-      _id: shippingAddressId,
-      userId,
-    }).session(mongoSession);
-    if (!userAddress) throw new Error("Địa chỉ giao hàng không hợp lệ.");
 
-    // Tính toán tổng tiền và kiểm tra tồn kho
-    let subtotal = 0;
-    let subdiscount = 0;
-    const orderItems: IOrderItem[] = [];
-    const stockUpdates = [] as any[];
+/**
+ * Action cho phép người dùng tự hủy đơn hàng, kèm theo hoàn tiền và hoàn kho.
+ */
+export async function cancelOrderByUser(orderId: string, reason: string) {
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) return { success: false, message: 'Lỗi xác thực.' };
 
-    for (const item of cartItemsToOrder) {
-      if (!item.product)
-        throw new Error("Sản phẩm trong giỏ hàng không tồn tại.");
-      if (item.product.stock < item.quantity)
-        throw new Error(`Sản phẩm "${item.product.name}" không đủ hàng.`);
-
-      const price = item.product.price;
-      const priceSale = item.product.salePrice ?? item.product.price;
-      subtotal += price * item.quantity;
-      subdiscount += (price - priceSale) * item.quantity;
-
-      if (
-        typeof item.product._id === "string" ||
-        typeof item.product._id === "object"
-      ) {
-        orderItems.push({
-          productId: new mongoose.Types.ObjectId(String(item.product._id)),
-          name: item.product.name,
-          sku: item.product.sku,
-          image: item.product.images[0] || "",
-          price: priceSale,
-          quantity: item.quantity,
-          attributes: {
-            color: undefined,
-            size: undefined,
-          },
-        });
-      }
-
-      stockUpdates.push({
-        updateOne: {
-          filter: {
-            _id: item.product._id,
-            stock: { $gte: item.quantity },
-          },
-          update: { $inc: { stock: -item.quantity } },
-        },
-      });
-    }
-    const shippingFee = 30000;
-    const grandTotal = subtotal - subdiscount + shippingFee;
-
-    // --- BƯỚC 3: KIỂM TRA SỐ DƯ VÀ TRỪ TIỀN ---
-    if (wallet.balance < grandTotal) {
-      throw new Error(
-        "Số dư trong ví MandalaPay không đủ để thực hiện thanh toán."
-      );
+    if (!reason) {
+        return { success: false, message: 'Vui lòng cung cấp lý do hủy đơn.' };
     }
 
-    const balanceBefore = wallet.balance;
-    wallet.balance -= grandTotal;
-    await wallet.save({ session: mongoSession });
-    const balanceAfter = wallet.balance;
+    // Sử dụng Mongoose Transaction để đảm bảo tất cả các bước thành công hoặc thất bại cùng nhau
+    const mongoSession = await mongoose.startSession();
+    mongoSession.startTransaction();
 
-    // --- BƯỚC 4: TẠO ĐƠN HÀNG VÀ CÁC BẢN GHI LIÊN QUAN ---
-    // Cập nhật tồn kho
-    const stockUpdateResult = await Product.bulkWrite(stockUpdates, {
-      session: mongoSession,
-    });
-    if (stockUpdateResult.modifiedCount < stockUpdates.length) {
-      throw new Error("Một sản phẩm trong giỏ hàng vừa hết hàng.");
+    try {
+        await connectToDB();
+
+        const order = await Order.findOne({ _id: orderId, userId: userId }).session(mongoSession);
+
+        if (!order) {
+            throw new Error("Không tìm thấy đơn hàng hoặc bạn không có quyền truy-cập.");
+        }
+        
+        if (order.status !== 'pending') {
+            return { success: false, message: 'Đã quá thời gian cho phép hủy đơn hàng.' };
+        }
+
+        // --- BƯỚC 1: HOÀN TIỀN VÀO VÍ MANDALAPAY (NẾU CẦN) ---
+        if (order.payment.method === 'MandalaPay' && order.payment.status === 'paid') {
+            const wallet = await Wallet.findOne({ userId: order.userId }).session(mongoSession);
+            if (!wallet) throw new Error(`Không tìm thấy ví cho người dùng.`);
+            
+            const balanceBefore = wallet.balance;
+            const refundAmount = order.totals.grandTotal;
+            
+            // Cộng tiền lại vào ví
+            wallet.balance += refundAmount;
+            await wallet.save({ session: mongoSession });
+
+            // Tạo một bản ghi giao dịch 'REFUND' để theo dõi
+            await Transaction.create([{
+                walletId: wallet._id,
+                amount: refundAmount, // Số dương vì là tiền hoàn lại
+                balanceBefore: balanceBefore,
+                balanceAfter: wallet.balance,
+                type: 'REFUND',
+                status: 'COMPLETED',
+                description: `Hoàn tiền cho đơn hàng #${order.orderId} đã hủy.`,
+                metadata: { orderId: order._id, orderCode: order.orderId }
+            }], { session: mongoSession });
+            
+            // Gửi thông báo hoàn tiền cho user
+            await createAndPublishNotification({
+                recipient: order.userId.toString(),
+                channel: 'user',
+                event: 'wallet.refund_success',
+                actor: { id: process.env.SYSTEM_USER_ID!, model: NotificationEntity.User },
+                entity: { id: order._id.toString(), model: NotificationEntity.Order },
+                message: `Số tiền ${refundAmount.toLocaleString('vi-VN')}đ đã được hoàn lại vào ví Mandala Pay của bạn.`,
+                link: `/mandala-pay/history` // Link đến lịch sử ví
+            });
+        }
+
+        // --- BƯỚC 2: CỘNG LẠI SỐ LƯỢNG SẢN PHẨM VÀO KHO ---
+        if (order.items && order.items.length > 0) {
+            const stockUpdates = order.items.map(item => ({
+                updateOne: {
+                    filter: { _id: item.productId },
+                    update: { $inc: { stock: item.quantity } }
+                }
+            }));
+            await Product.bulkWrite(stockUpdates, { session: mongoSession });
+            console.log(`[STOCK_RESTORED] Restored stock for cancelled order #${order.orderId}`);
+        }
+
+        // --- BƯỚC 3: CẬP NHẬT TRẠNG THÁI VÀ LÝ DO HỦY ĐƠN ---
+        order.status = 'cancelled';
+        order.cancellationDetails = {
+            reason: reason,
+            cancelledBy: 'USER',
+            cancelledAt: new Date(),
+        };
+        const updatedOrder = await order.save({ session: mongoSession });
+        
+        // --- HOÀN TẤT ---
+        await mongoSession.commitTransaction();
+        
+        revalidatePath(`/profile/orders/${orderId}`);
+        return { 
+            success: true, 
+            message: 'Đã hủy đơn hàng thành công.', 
+            data: JSON.parse(JSON.stringify(updatedOrder)) 
+        };
+
+    } catch (error: any) {
+        await mongoSession.abortTransaction(); // Hoàn tác tất cả nếu có lỗi
+        console.error("[CANCEL_ORDER_BY_USER_ERROR]", error);
+        return { success: false, message: error.message };
+    } finally {
+        await mongoSession.endSession();
     }
+}
 
-    // Tạo đơn hàng
-    const newOrder = new Order({
-      orderId: `DH-${Date.now()}`,
-      userId: userId,
-      items: orderItems,
-      shippingAddress: {
-        fullName: userAddress.fullName,
-        phoneNumber: userAddress.phoneNumber,
-        street: userAddress.street,
-        city: userAddress.city,
-        district: userAddress.district,
-        ward: userAddress.ward,
-      },
-      payment: {
-        method: "MandalaPay",
-        status: "paid", // Thanh toán bằng ví luôn là "paid"
-        transactionId: `MDPAY-${Date.now()}`, // Tạo mã giao dịch nội bộ
-      },
-      status: "processing",
-      shipping: { fee: shippingFee },
-      totals: {
-        subtotal,
-        shippingTotal: shippingFee,
-        discount: subdiscount,
-        grandTotal,
-      },
-      notes: notes,
-    });
-    await newOrder.save({ session: mongoSession });
 
-    // Tạo bản ghi giao dịch cho ví
-    await Transaction.create(
-      [
-        {
-          walletId: wallet._id,
-          amount: -grandTotal, // Ghi số âm vì đây là giao dịch chi tiêu
-          balanceBefore: balanceBefore,
-          balanceAfter: balanceAfter,
-          type: "PAYMENT",
-          status: "COMPLETED",
-          description: `Thanh toán cho đơn hàng ${newOrder.orderId}`,
-          metadata: {
-            orderId: newOrder._id,
-            orderCode: newOrder.orderId,
-          },
-        },
-      ],
-      { session: mongoSession }
-    );
+/**
+ * Action cho phép người dùng xác nhận đã nhận hàng, chuyển status sang 'completed'.
+ */
+export async function confirmDelivery(orderId: string) {
+    try {
+        const order = await verifyAndGetOrder(orderId);
 
-    // Xóa sản phẩm khỏi giỏ hàng
-    await Cart.updateOne(
-      { user: userId },
-      { $pull: { items: { $in: selectedCartItemIds } } },
-      { session: mongoSession }
-    );
-    await CartItem.deleteMany(
-      { _id: { $in: selectedCartItemIds } },
-      { session: mongoSession }
-    );
+        if (order.status !== 'delivered') {
+            return { success: false, message: 'Trạng thái đơn hàng không hợp lệ.' };
+        }
 
-    // --- HOÀN TẤT GIAO DỊCH DATABASE ---
-    await mongoSession.commitTransaction();
+        order.status = 'completed';
+        const updatedOrder = await order.save();
 
-    revalidatePath("/cart");
-    revalidatePath("/profile/orders");
+        revalidatePath(`/profile/orders/${orderId}`);
+        return { success: true, message: 'Cảm ơn bạn đã xác nhận!', data: JSON.parse(JSON.stringify(updatedOrder)) };
 
-    return {
-      success: true,
-      message: "Đặt hàng và thanh toán bằng ví MandalaPay thành công!",
-      orderId: newOrder._id.toString(),
-    };
-  } catch (error: any) {
-    await mongoSession.abortTransaction();
-    console.error("[PLACE_ORDER_WALLET_ERROR]", error);
-    return {
-      success: false,
-      message: error.message || "Đã xảy ra lỗi khi đặt hàng bằng ví.",
-    };
-  } finally {
-    mongoSession.endSession();
-  }
+    } catch (error: any) {
+        return { success: false, message: error.message };
+    }
 }
