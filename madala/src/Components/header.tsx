@@ -39,70 +39,38 @@ function HeaderComponent({
   initialUserData,
 }: HeaderProps) {
   const [search, setSearch] = useState("");
-  const pathname = usePathname();
   const router = useRouter();
-
-  const { data: session, status, update } = useSession();
-
-  // State mới để lưu dữ liệu người dùng lấy từ DB
-  const [userData, setUserData] = useState(initialUserData);
-
-  // dữ liệu giỏ hàng
+  const pathname = usePathname();
+  const { data: session } = useSession();
   const { totalItems } = useCartStore();
-
-  useEffect(() => {
-    setUserData(initialUserData);
-  }, [initialUserData]);
-  // useEffect này chỉ để xử lý khi người dùng logout trên client
-  useEffect(() => {
-    if (status === "authenticated") {
-      getUserForHeader().then((data) => {
-        if (data) {
-          setUserData(data);
-        }
-      });
-    } else {
-      setUserData(null);
-    }
-  }, [status]); // Phụ thuộc duy nhất vào 'status'
-
+  
   const currentMenuItems = useMemo(() => {
     return session?.user ? userMenuItems : guestMenuItems;
-  }, [session?.user]);
-
-  const getDisplayText = useCallback(() => {
-    if (userData) {
-      return userData.name || userData.email || "User";
+  }, [session]);
+  
+  const getDisplayText = () => {
+    // Luôn sử dụng dữ liệu được server-fetch để hiển thị nhanh nhất
+    if (initialUserData) {
+      return initialUserData.name || initialUserData.email || "User";
     }
     return "Tài khoản";
-  }, [userData]);
-
-  const handleLogout = useCallback(() => {
+  };
+  
+  const handleLogout = () => {
     signOut({ callbackUrl: "/" });
-  }, []);
-
-  const handleSearch = useCallback((e: React.FormEvent) => {
+  };
+  
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (search.trim()) {
       router.push(`/search?query=${encodeURIComponent(search.trim())}`);
     }
-  }, [search, router]);
+  };
 
+  // Xóa nội dung thanh tìm kiếm khi chuyển trang
   useEffect(() => {
     setSearch("");
   }, [pathname]);
-
-  useEffect(() => {
-    const handleLoginSuccess = () => {
-      update();
-    };
-
-    window.addEventListener("loginSuccess", handleLoginSuccess);
-
-    return () => {
-      window.removeEventListener("loginSuccess", handleLoginSuccess);
-    };
-  }, [update]);
 
   return (
     <header className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-700">
@@ -189,7 +157,7 @@ function HeaderComponent({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {session?.user && <MandalaPayButton userData={userData} />}
+            {session?.user && <MandalaPayButton userData={initialUserData} />}
 
             <Link
               href="/cart"

@@ -185,3 +185,67 @@ export async function resendActivationOtp() {
     };
   }
 }
+
+
+// Định nghĩa kiểu dữ liệu trả về cho form state
+type VerifyPinState = { 
+    success?: boolean; 
+    message: string; 
+} | undefined;
+
+/**
+ * Xác thực mã PIN của người dùng đang đăng nhập.
+ * Được gọi từ một form ở phía client.
+ * @param prevState - Trạng thái trước đó từ useFormState (không dùng đến nhưng bắt buộc có).
+ * @param formData - Dữ liệu form chứa mã PIN.
+ * @returns Một object chứa trạng thái thành công/thất bại và thông báo.
+ */
+export async function verifyPin(
+    prevState: VerifyPinState, 
+    formData: FormData
+): Promise<VerifyPinState> {
+    // 1. Lấy session để xác định người dùng
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+        return { message: 'Lỗi xác thực. Vui lòng đăng nhập lại.' };
+    }
+
+    // 2. Lấy mã PIN từ form
+    const pin = formData.get('pin') as string;
+
+     // Kiểm tra mã PIN có đúng định dạng không
+
+    if (!pin || pin.length !== 6) {
+        return { message: 'Vui lòng nhập đủ 6 chữ số của mã PIN.' };
+    }
+
+    try {
+        await connectToDB();
+        
+        // 3. Tìm ví của người dùng
+        const wallet = await Wallet.findOne({ userId });
+
+        if (!wallet || !wallet.pinHash) {
+            // Trường hợp người dùng chưa kích hoạt ví hoặc ví không có mã PIN
+            return { message: 'Lỗi: Không tìm thấy ví hoặc mã PIN chưa được thiết lập.' };
+        }
+
+        // 4. So sánh PIN người dùng nhập với hash trong database
+        const isPinCorrect = await bcrypt.compare(pin, wallet.pinHash);
+
+        if (!isPinCorrect) {
+            // Thêm một chút độ trễ để chống lại các cuộc tấn công brute-force
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return { message: 'Mã PIN không chính xác.' };
+        }
+
+        // 5. PIN chính xác, trả về thành công
+        return { success: true, message: 'Xác thực thành công.' };
+        
+    } catch (error) {
+        console.error("Lỗi khi xác thực mã PIN:", error);
+        return { message: 'Đã có lỗi xảy ra ở phía máy chủ.' };
+    }
+}

@@ -7,9 +7,19 @@ import connectToDB from "@/lib/db";
 import User, { IUser } from "@/models/User";
 import Product, { IProduct } from "@/models/Product";
 import Address, { IAddress } from "@/models/Address";
-import Order, { PaymentMethod, IOrderItem, OrderStatus, IOrder } from "@/models/Order";
+import Order, {
+  PaymentMethod,
+  IOrderItem,
+  OrderStatus,
+  IOrder,
+} from "@/models/Order";
 import Cart from "@/models/Cart";
 import CartItem, { ICartItem } from "@/models/CartItem";
+import Wallet from "@/models/Wallet";
+import bcrypt from "bcryptjs";
+import Transaction from "@/models/Transaction";
+import { IWallet } from '@/models/Wallet'; 
+
 
 type ActionResponse<T = unknown> = {
   success: boolean;
@@ -22,6 +32,7 @@ interface PlaceOrderInput {
   shippingAddressId: string;
   paymentMethod: PaymentMethod;
   notes?: string;
+  pin?: string;
 }
 
 type ShippingAddressPayload = {
@@ -36,11 +47,15 @@ type ShippingAddressPayload = {
 // Convert all ObjectId fields to string recursively for any object
 function toPlain(obj: unknown): unknown {
   if (Array.isArray(obj)) return (obj as unknown[]).map(toPlain);
-  if (obj && typeof obj === 'object') {
+  if (obj && typeof obj === "object") {
     const result: Record<string, unknown> = {};
     for (const key in obj) {
       const value = (obj as Record<string, unknown>)[key];
-      if (value && typeof value === 'object' && typeof (value as { toHexString?: unknown }).toHexString === 'function') {
+      if (
+        value &&
+        typeof value === "object" &&
+        typeof (value as { toHexString?: unknown }).toHexString === "function"
+      ) {
         result[key] = (value as { toHexString: () => string }).toHexString();
       } else {
         result[key] = toPlain(value);
@@ -51,15 +66,20 @@ function toPlain(obj: unknown): unknown {
   return obj;
 }
 
-export async function placeOrder(
-  input: PlaceOrderInput
-): Promise<{ success: boolean; message: string; orderId?: string; data?: unknown }> {
+export async function placeOrder(input: PlaceOrderInput): Promise<{
+  success: boolean;
+  message: string;
+  orderId?: string;
+  data?: unknown;
+}> {
   const session = await auth();
+  const userId = session?.user?.id;
+
   if (!session?.user?.id) {
     return { success: false, message: "Bạn cần đăng nhập để đặt hàng." };
   }
 
-  const { selectedCartItemIds, shippingAddressId, paymentMethod } = input;
+  const { selectedCartItemIds, shippingAddressId, paymentMethod, pin } = input;
   if (
     !selectedCartItemIds ||
     selectedCartItemIds.length === 0 ||
@@ -76,9 +96,9 @@ export async function placeOrder(
     await connectToDB();
 
     // --- Lấy dữ liệu gốc ---
-    const userCart = await Cart.findOne({ user: new mongoose.Types.ObjectId(session.user.id) }).session(
-      mongoSession
-    );
+    const userCart = await Cart.findOne({
+      user: new mongoose.Types.ObjectId(session.user.id),
+    }).session(mongoSession);
     if (!userCart) throw new Error("Không tìm thấy giỏ hàng.");
 
     const validCartItemIds = selectedCartItemIds.filter((id) =>
@@ -116,8 +136,10 @@ export async function placeOrder(
       subtotal += price * item.quantity;
       subdiscount += (price - priceSale) * item.quantity;
 
-
-      if (typeof item.product._id === 'string' || typeof item.product._id === 'object') {
+      if (
+        typeof item.product._id === "string" ||
+        typeof item.product._id === "object"
+      ) {
         orderItems.push({
           productId: new mongoose.Types.ObjectId(String(item.product._id)),
           name: item.product.name,
@@ -149,25 +171,35 @@ export async function placeOrder(
     let paymentStatus: "pending" | "paid" = "pending";
     let transactionId: string | undefined = undefined;
 
+    let wallet: (mongoose.Document<unknown, {}, IWallet> & IWallet) | null = null;
+    let balanceBefore = 0;
+
     switch (paymentMethod) {
       case "COD":
+        paymentStatus = "pending";
         break;
       case "CreditCard":
         paymentStatus = "paid";
         transactionId = `card_demo_${Date.now()}`;
         break;
       case "MandalaPay":
-        const user = await User.findById(session.user.id).session(mongoSession);
-        if (!user) throw new Error("Không tìm thấy người dùng.");
-        if (user.mandalaPayBalance < grandTotal) {
-          throw new Error(
-            "Số dư trong ví MandalaPay không đủ để thực hiện thanh toán."
-          );
-        }
-        user.mandalaPayBalance -= grandTotal;
-        await user.save({ session: mongoSession });
+        if (!pin) throw new Error("Vui lòng nhập mã PIN.");
+
+        // 2. GÁN GIÁ TRỊ CHO BIẾN WALLET
+        wallet = await Wallet.findOne({ userId }).session(mongoSession);
+        if (!wallet || !wallet.pinHash) throw new Error("Ví Mandala Pay chưa được kích hoạt.");
+        
+        const isPinCorrect = await bcrypt.compare(pin, wallet.pinHash);
+        if (!isPinCorrect) throw new Error("Mã PIN không chính xác.");
+        
+        if (wallet.balance < grandTotal) throw new Error("Số dư trong ví không đủ.");
+
+        balanceBefore = wallet.balance;
+        wallet.balance -= grandTotal;
+        await wallet.save({ session: mongoSession });
+
         paymentStatus = "paid";
-        transactionId = `mandala_pay_demo_${Date.now()}`;
+        transactionId = `MDPAY-${Date.now()}`;
         break;
       default:
         throw new Error("Phương thức thanh toán không được hỗ trợ.");
@@ -188,9 +220,9 @@ export async function placeOrder(
     const newOrder = new Order({
       orderId: `DH-${Date.now()}`,
       userId: new mongoose.Types.ObjectId(session.user.id),
-      items: orderItems.map(item => ({
+      items: orderItems.map((item) => ({
         ...item,
-        productId: new mongoose.Types.ObjectId(item.productId)
+        productId: new mongoose.Types.ObjectId(item.productId),
       })),
       shippingAddress: {
         fullName: userAddress.fullName,
@@ -217,6 +249,22 @@ export async function placeOrder(
     });
 
     await newOrder.save({ session: mongoSession });
+
+    if (paymentMethod === 'MandalaPay' && wallet) {
+        await Transaction.create([{
+            walletId: wallet._id,
+            amount: -grandTotal,
+            balanceBefore: balanceBefore,
+            balanceAfter: wallet.balance,
+            type: 'PAYMENT',
+            status: 'COMPLETED',
+            description: `Thanh toán cho đơn hàng ${newOrder.orderId}`,
+            metadata: { 
+                orderId: newOrder._id,
+                orderCode: newOrder.orderId,
+            }
+        }], { session: mongoSession });
+    }
 
     // --- Hoàn tất các thao tác ---
     await Cart.updateOne(
@@ -246,13 +294,13 @@ export async function placeOrder(
     console.error("[PLACE_ORDER_ERROR]", error);
     return {
       success: false,
-      message: (error instanceof Error ? error.message : "Đã xảy ra lỗi khi đặt hàng."),
+      message:
+        error instanceof Error ? error.message : "Đã xảy ra lỗi khi đặt hàng.",
     };
   } finally {
     mongoSession.endSession();
   }
 }
-
 
 /**
  * Lấy danh sách các đơn hàng của người dùng đang đăng nhập.
@@ -415,13 +463,12 @@ export async function cancelOrder(orderId: string): Promise<ActionResponse> {
     console.error("[CANCEL_ORDER_ERROR]", error);
     return {
       success: false,
-      message: (error instanceof Error ? error.message : "Lỗi khi hủy đơn hàng."),
+      message: error instanceof Error ? error.message : "Lỗi khi hủy đơn hàng.",
     };
   } finally {
     mongoSession.endSession();
   }
 }
-
 
 /**
  * Cập nhật địa chỉ giao hàng cho một đơn hàng cụ thể.
@@ -440,7 +487,10 @@ export async function updateShippingAddress({
   // 1. Xác thực người dùng
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, message: "Vui lòng đăng nhập để thực hiện hành động này." };
+    return {
+      success: false,
+      message: "Vui lòng đăng nhập để thực hiện hành động này.",
+    };
   }
 
   // Kiểm tra xem orderId có phải là một ObjectId hợp lệ không
@@ -465,7 +515,7 @@ export async function updateShippingAddress({
     }
 
     // 3. Kiểm tra trạng thái đơn hàng
-    if (order.status !== 'processing') {
+    if (order.status !== "processing") {
       return {
         success: false,
         message: `Chỉ có thể thay đổi địa chỉ cho đơn hàng đang ở trạng thái 'Đang xử lý'. Trạng thái hiện tại: ${order.status}`,
@@ -484,7 +534,6 @@ export async function updateShippingAddress({
       message: "Cập nhật địa chỉ giao hàng thành công.",
       data: toPlain(updatedOrder.toObject()) as IOrder,
     };
-
   } catch (error) {
     console.error("[UPDATE_SHIPPING_ADDRESS_ERROR]", error);
     return { success: false, message: "Đã xảy ra lỗi khi cập nhật địa chỉ." };
@@ -494,7 +543,7 @@ export async function updateShippingAddress({
 async function isAdmin() {
   const session = await auth();
   // Thay 'admin' bằng vai trò thực tế của bạn trong database
-  return session?.user?.role === 'admin';
+  return session?.user?.role === "admin";
 }
 
 type PaginatedOrdersResponse = {
@@ -508,14 +557,14 @@ export async function getAllOrdersPaginated({
   status,
   page = 1,
   limit = 10,
-  search = ''
+  search = "",
 }: {
-  status?: OrderStatus,
-  page?: number,
-  limit?: number,
-  search?: string
+  status?: OrderStatus;
+  page?: number;
+  limit?: number;
+  search?: string;
 }): Promise<ActionResponse<PaginatedOrdersResponse>> {
-  if (!await isAdmin()) {
+  if (!(await isAdmin())) {
     return { success: false, message: "Không có quyền truy cập." };
   }
 
@@ -526,19 +575,22 @@ export async function getAllOrdersPaginated({
 
     // Thêm bộ lọc trạng thái
     // Lấy enum status đúng cách
-    const statusPath = Order.schema.path('status');
-    const validStatuses: string[] = (statusPath && (statusPath as { options?: { enum?: string[] } }).options?.enum) || [];
+    const statusPath = Order.schema.path("status");
+    const validStatuses: string[] =
+      (statusPath &&
+        (statusPath as { options?: { enum?: string[] } }).options?.enum) ||
+      [];
     if (status && validStatuses.includes(status)) {
       query.status = status;
     }
 
     // **LOGIC TÌM KIẾM MỚI**
     if (search) {
-      const searchRegex = new RegExp(search, 'i'); // 'i' for case-insensitive
+      const searchRegex = new RegExp(search, "i"); // 'i' for case-insensitive
       query.$or = [
         { orderId: { $regex: searchRegex } },
-        { 'shippingAddress.fullName': { $regex: searchRegex } },
-        { 'shippingAddress.phoneNumber': { $regex: searchRegex } }
+        { "shippingAddress.fullName": { $regex: searchRegex } },
+        { "shippingAddress.phoneNumber": { $regex: searchRegex } },
       ];
     }
 
@@ -556,12 +608,19 @@ export async function getAllOrdersPaginated({
     // Convert all ObjectId fields to string recursively for each order
     function toPlain(obj: unknown): unknown {
       if (Array.isArray(obj)) return (obj as unknown[]).map(toPlain);
-      if (obj && typeof obj === 'object') {
+      if (obj && typeof obj === "object") {
         const result: Record<string, unknown> = {};
         for (const key in obj) {
           const value = (obj as Record<string, unknown>)[key];
-          if (value && typeof value === 'object' && typeof (value as { toHexString?: unknown }).toHexString === 'function') {
-            result[key] = (value as { toHexString: () => string }).toHexString();
+          if (
+            value &&
+            typeof value === "object" &&
+            typeof (value as { toHexString?: unknown }).toHexString ===
+              "function"
+          ) {
+            result[key] = (
+              value as { toHexString: () => string }
+            ).toHexString();
           } else {
             result[key] = toPlain(value);
           }
@@ -570,11 +629,13 @@ export async function getAllOrdersPaginated({
       }
       return obj;
     }
-    const plainOrders: IOrder[] = orders.map((o: unknown) => toPlain(o) as IOrder);
+    const plainOrders: IOrder[] = orders.map(
+      (o: unknown) => toPlain(o) as IOrder
+    );
     return {
       success: true,
       message: "Lấy danh sách đơn hàng thành công.",
-      data: { orders: plainOrders, totalPages, currentPage: page, totalOrders }
+      data: { orders: plainOrders, totalPages, currentPage: page, totalOrders },
     };
   } catch (error) {
     console.error("[GET_ALL_ORDERS_PAGINATED_ERROR]", error);
@@ -584,8 +645,11 @@ export async function getAllOrdersPaginated({
 /**
  * [Admin] Cập nhật trạng thái của một đơn hàng.
  */
-export async function updateOrderStatus(orderId: string, newStatus: OrderStatus): Promise<ActionResponse> {
-  if (!await isAdmin()) {
+export async function updateOrderStatus(
+  orderId: string,
+  newStatus: OrderStatus
+): Promise<ActionResponse> {
+  if (!(await isAdmin())) {
     return { success: false, message: "Không có quyền truy cập." };
   }
 
@@ -605,7 +669,10 @@ export async function updateOrderStatus(orderId: string, newStatus: OrderStatus)
 
     revalidatePath("/admin/orders");
 
-    return { success: true, message: `Cập nhật trạng thái đơn hàng thành công.` };
+    return {
+      success: true,
+      message: `Cập nhật trạng thái đơn hàng thành công.`,
+    };
   } catch (error) {
     console.error("[UPDATE_ORDER_STATUS_ERROR]", error);
     return { success: false, message: "Lỗi khi cập nhật trạng thái đơn hàng." };
@@ -618,8 +685,10 @@ export async function updateOrderStatus(orderId: string, newStatus: OrderStatus)
  * @param {string} orderId - ID của đơn hàng cần lấy.
  * @returns {Promise<ActionResponse<IOrder>>} Chi tiết đơn hàng.
  */
-export async function getAdminOrderDetails(orderId: string): Promise<ActionResponse<IOrder>> {
-  if (!await isAdmin()) {
+export async function getAdminOrderDetails(
+  orderId: string
+): Promise<ActionResponse<IOrder>> {
+  if (!(await isAdmin())) {
     return { success: false, message: "Không có quyền truy cập." };
   }
 
@@ -641,12 +710,19 @@ export async function getAdminOrderDetails(orderId: string): Promise<ActionRespo
       // Convert all ObjectId fields to string recursively for the order
       function toPlain(obj: unknown): unknown {
         if (Array.isArray(obj)) return (obj as unknown[]).map(toPlain);
-        if (obj && typeof obj === 'object') {
+        if (obj && typeof obj === "object") {
           const result: Record<string, unknown> = {};
           for (const key in obj) {
             const value = (obj as Record<string, unknown>)[key];
-            if (value && typeof value === 'object' && typeof (value as { toHexString?: unknown }).toHexString === 'function') {
-              result[key] = (value as { toHexString: () => string }).toHexString();
+            if (
+              value &&
+              typeof value === "object" &&
+              typeof (value as { toHexString?: unknown }).toHexString ===
+                "function"
+            ) {
+              result[key] = (
+                value as { toHexString: () => string }
+              ).toHexString();
             } else {
               result[key] = toPlain(value);
             }
@@ -666,5 +742,219 @@ export async function getAdminOrderDetails(orderId: string): Promise<ActionRespo
   } catch (error) {
     console.error("[GET_ADMIN_ORDER_DETAILS_ERROR]", error);
     return { success: false, message: "Lỗi khi lấy chi tiết đơn hàng." };
+  }
+}
+
+// Interface cho input
+interface PlaceOrderWithWalletInput {
+  selectedCartItemIds: string[];
+  shippingAddressId: string;
+  pin: string;
+  notes?: string;
+}
+
+export async function placeOrderWithWallet(
+  input: PlaceOrderWithWalletInput
+): Promise<{ success: boolean; message: string; orderId?: string }> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { success: false, message: "Bạn cần đăng nhập để đặt hàng." };
+  }
+
+  const { selectedCartItemIds, shippingAddressId, pin, notes } = input;
+  if (
+    !selectedCartItemIds ||
+    selectedCartItemIds.length === 0 ||
+    !shippingAddressId ||
+    !pin
+  ) {
+    return { success: false, message: "Thông tin đặt hàng không hợp lệ." };
+  }
+
+  const mongoSession = await mongoose.startSession();
+  mongoSession.startTransaction();
+
+  try {
+    await connectToDB();
+
+    // --- BƯỚC 1: XÁC THỰC VÍ VÀ MÃ PIN ---
+    const wallet = await Wallet.findOne({ userId }).session(mongoSession);
+    if (!wallet || !wallet.pinHash) {
+      throw new Error(
+        "Ví Mandala Pay chưa được kích hoạt hoặc không tìm thấy."
+      );
+    }
+    const isPinCorrect = await bcrypt.compare(pin, wallet.pinHash);
+    if (!isPinCorrect) {
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Chống brute-force
+      throw new Error("Mã PIN không chính xác.");
+    }
+
+    // --- BƯỚC 2: TÍNH TOÁN ĐƠN HÀNG (Tương tự hàm cũ) ---
+    // Lấy dữ liệu giỏ hàng, địa chỉ...
+    const cartItemsToOrder = await CartItem.find({
+      _id: { $in: selectedCartItemIds },
+      user: userId,
+    })
+      .populate<{ product: IProduct }>("product")
+      .session(mongoSession);
+
+    const userAddress = await Address.findOne({
+      _id: shippingAddressId,
+      userId,
+    }).session(mongoSession);
+    if (!userAddress) throw new Error("Địa chỉ giao hàng không hợp lệ.");
+
+    // Tính toán tổng tiền và kiểm tra tồn kho
+    let subtotal = 0;
+    let subdiscount = 0;
+    const orderItems: IOrderItem[] = [];
+    const stockUpdates = [] as any[];
+
+    for (const item of cartItemsToOrder) {
+      if (!item.product)
+        throw new Error("Sản phẩm trong giỏ hàng không tồn tại.");
+      if (item.product.stock < item.quantity)
+        throw new Error(`Sản phẩm "${item.product.name}" không đủ hàng.`);
+
+      const price = item.product.price;
+      const priceSale = item.product.salePrice ?? item.product.price;
+      subtotal += price * item.quantity;
+      subdiscount += (price - priceSale) * item.quantity;
+
+      if (
+        typeof item.product._id === "string" ||
+        typeof item.product._id === "object"
+      ) {
+        orderItems.push({
+          productId: new mongoose.Types.ObjectId(String(item.product._id)),
+          name: item.product.name,
+          sku: item.product.sku,
+          image: item.product.images[0] || "",
+          price: priceSale,
+          quantity: item.quantity,
+          attributes: {
+            color: undefined,
+            size: undefined,
+          },
+        });
+      }
+
+      stockUpdates.push({
+        updateOne: {
+          filter: {
+            _id: item.product._id,
+            stock: { $gte: item.quantity },
+          },
+          update: { $inc: { stock: -item.quantity } },
+        },
+      });
+    }
+    const shippingFee = 30000;
+    const grandTotal = subtotal - subdiscount + shippingFee;
+
+    // --- BƯỚC 3: KIỂM TRA SỐ DƯ VÀ TRỪ TIỀN ---
+    if (wallet.balance < grandTotal) {
+      throw new Error(
+        "Số dư trong ví MandalaPay không đủ để thực hiện thanh toán."
+      );
+    }
+
+    const balanceBefore = wallet.balance;
+    wallet.balance -= grandTotal;
+    await wallet.save({ session: mongoSession });
+    const balanceAfter = wallet.balance;
+
+    // --- BƯỚC 4: TẠO ĐƠN HÀNG VÀ CÁC BẢN GHI LIÊN QUAN ---
+    // Cập nhật tồn kho
+    const stockUpdateResult = await Product.bulkWrite(stockUpdates, {
+      session: mongoSession,
+    });
+    if (stockUpdateResult.modifiedCount < stockUpdates.length) {
+      throw new Error("Một sản phẩm trong giỏ hàng vừa hết hàng.");
+    }
+
+    // Tạo đơn hàng
+    const newOrder = new Order({
+      orderId: `DH-${Date.now()}`,
+      userId: userId,
+      items: orderItems,
+      shippingAddress: {
+        fullName: userAddress.fullName,
+        phoneNumber: userAddress.phoneNumber,
+        street: userAddress.street,
+        city: userAddress.city,
+        district: userAddress.district,
+        ward: userAddress.ward,
+      },
+      payment: {
+        method: "MandalaPay",
+        status: "paid", // Thanh toán bằng ví luôn là "paid"
+        transactionId: `MDPAY-${Date.now()}`, // Tạo mã giao dịch nội bộ
+      },
+      status: "processing",
+      shipping: { fee: shippingFee },
+      totals: {
+        subtotal,
+        shippingTotal: shippingFee,
+        discount: subdiscount,
+        grandTotal,
+      },
+      notes: notes,
+    });
+    await newOrder.save({ session: mongoSession });
+
+    // Tạo bản ghi giao dịch cho ví
+    await Transaction.create(
+      [
+        {
+          walletId: wallet._id,
+          amount: -grandTotal, // Ghi số âm vì đây là giao dịch chi tiêu
+          balanceBefore: balanceBefore,
+          balanceAfter: balanceAfter,
+          type: "PAYMENT",
+          status: "COMPLETED",
+          description: `Thanh toán cho đơn hàng ${newOrder.orderId}`,
+          metadata: {
+            orderId: newOrder._id,
+            orderCode: newOrder.orderId,
+          },
+        },
+      ],
+      { session: mongoSession }
+    );
+
+    // Xóa sản phẩm khỏi giỏ hàng
+    await Cart.updateOne(
+      { user: userId },
+      { $pull: { items: { $in: selectedCartItemIds } } },
+      { session: mongoSession }
+    );
+    await CartItem.deleteMany(
+      { _id: { $in: selectedCartItemIds } },
+      { session: mongoSession }
+    );
+
+    // --- HOÀN TẤT GIAO DỊCH DATABASE ---
+    await mongoSession.commitTransaction();
+
+    revalidatePath("/cart");
+    revalidatePath("/profile/orders");
+
+    return {
+      success: true,
+      message: "Đặt hàng và thanh toán bằng ví MandalaPay thành công!",
+      orderId: newOrder._id.toString(),
+    };
+  } catch (error: any) {
+    await mongoSession.abortTransaction();
+    console.error("[PLACE_ORDER_WALLET_ERROR]", error);
+    return {
+      success: false,
+      message: error.message || "Đã xảy ra lỗi khi đặt hàng bằng ví.",
+    };
+  } finally {
+    mongoSession.endSession();
   }
 }

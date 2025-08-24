@@ -4,7 +4,7 @@ import { useState, useMemo, useTransition } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/useCartStore";
-import { placeOrder } from "@/lib/actions/order";
+import { placeOrder, placeOrderWithWallet } from "@/lib/actions/order";
 import { Button } from "@/Components/ui/button";
 import { Card, CardContent } from "@/Components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/Components/ui/radio-group";
@@ -14,16 +14,20 @@ import { Loader2 } from "lucide-react";
 import type { PaymentMethod } from "@/models/Order";
 import type { PopulatedCartItem } from "@/store/useCartStore";
 import { formatCurrency } from "@/lib/utils";
+import PinVerificationModal from "@/Components/mandala-pay/PinVerificationModal";
+import type { UserHeaderData } from "@/lib/actions/user";
+import Link from "next/link";
+
 interface PaymentOptionsProps {
   selectedAddressId: string | undefined;
-  mandalaPayBalance: number;
+  userData: UserHeaderData | null; // Thay thế mandalaPayBalance bằng userData
   checkoutItems: PopulatedCartItem[];
   shippingFee: number;
 }
 
 export default function PaymentOptions({
   selectedAddressId,
-  mandalaPayBalance,
+  userData,
   checkoutItems = [],
   shippingFee,
 }: PaymentOptionsProps) {
@@ -31,6 +35,10 @@ export default function PaymentOptions({
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
   const [isPending, startTransition] = useTransition();
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+
+  const hasWallet = !!userData?.wallet;
+  const currentBalance = userData?.wallet?.balance ?? 0;
 
   const { totalOriginal, totalDiscount, grandTotal } = useMemo(() => {
     const original = checkoutItems.reduce(
@@ -50,18 +58,15 @@ export default function PaymentOptions({
     };
   }, [checkoutItems, shippingFee]);
 
-  const handlePlaceOrder = () => {
-    if (!selectedAddressId) {
-      toast.error("Vui lòng chọn địa chỉ giao hàng.");
-      return;
-    }
-
+  
+  const executePlaceOrder = (pin?: string) => {
     startTransition(async () => {
       const itemIds = checkoutItems.map((item) => item._id);
       const result = await placeOrder({
         selectedCartItemIds: itemIds,
-        shippingAddressId: selectedAddressId,
+        shippingAddressId: selectedAddressId!,
         paymentMethod: paymentMethod,
+        pin: pin, // Truyền mã PIN vào action
       });
 
       if (result.success) {
@@ -74,8 +79,35 @@ export default function PaymentOptions({
     });
   };
 
+  // 3. HÀM XỬ LÝ NÚT ĐẶT HÀNG CHÍNH
+  const handlePlaceOrderClick = () => {
+    if (!selectedAddressId) {
+      toast.error("Vui lòng chọn địa chỉ giao hàng.");
+      return;
+    }
+
+    if (paymentMethod === "MandalaPay") {
+      // Nếu là MandalaPay, chỉ mở modal để lấy PIN
+      setIsPinModalOpen(true);
+    } else {
+      // Với các phương thức khác, gọi thẳng action không cần PIN
+      executePlaceOrder();
+    }
+  };
+
   return (
     <div className="space-y-6">
+      <PinVerificationModal
+        isOpen={isPinModalOpen}
+        onClose={() => setIsPinModalOpen(false)}
+        // Khi xác nhận PIN, modal sẽ gọi lại hàm executePlaceOrder với mã PIN
+        onSuccess={(pin) => {
+            setIsPinModalOpen(false);
+            executePlaceOrder(pin);
+        }}
+        title="Xác nhận Thanh toán"
+        description={`Bạn sắp thanh toán ${formatCurrency(grandTotal)} cho đơn hàng.`}
+      />
       {/* Card Tóm tắt đơn hàng */}
       <Card>
         <CardContent className="p-6">
@@ -114,31 +146,55 @@ export default function PaymentOptions({
               Thanh toán khi nhận hàng (COD)
             </Label>
             <Label
-              className={`flex flex-col items-start p-4 border rounded-lg cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:ring-1 has-[:checked]:ring-blue-500 ${
-                mandalaPayBalance < grandTotal
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }`}
+              // Luôn hiển thị Label, nhưng style và hành vi sẽ thay đổi
+              className={`flex flex-col items-start p-4 border rounded-lg transition-colors
+        ${
+          !hasWallet || currentBalance < grandTotal
+            ? "bg-muted/50 opacity-70" // Làm mờ nếu chưa có ví hoặc không đủ tiền
+            : "cursor-pointer has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary"
+        }`}
             >
               <div className="flex items-center w-full">
                 <RadioGroupItem
                   value="MandalaPay"
                   id="mandala"
                   className="mr-3"
-                  disabled={mandalaPayBalance < grandTotal}
+                  // Vô hiệu hóa nút radio nếu chưa có ví hoặc không đủ tiền
+                  disabled={!hasWallet || currentBalance < grandTotal}
                 />
                 Thanh toán bằng ví MandalaPay
               </div>
-              <p
-                className={`text-sm ml-8 ${
-                  mandalaPayBalance < grandTotal
-                    ? "text-red-500"
-                    : "text-muted-foreground"
-                }`}
-              >
-                Số dư: {formatCurrency(mandalaPayBalance)}
-                {mandalaPayBalance < grandTotal && " (Không đủ)"}
-              </p>
+
+              {/* --- LOGIC HIỂN THỊ CÓ ĐIỀU KIỆN --- */}
+              {hasWallet ? (
+                // TRƯỜNG HỢP 1: ĐÃ CÓ VÍ
+                <p
+                  className={`text-sm ml-8 ${
+                    currentBalance < grandTotal
+                      ? "text-red-500"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  Số dư: {formatCurrency(currentBalance)}
+                  {currentBalance < grandTotal && " (Không đủ)"}
+                </p>
+              ) : (
+                // TRƯỜNG HỢP 2: CHƯA CÓ VÍ
+                <div className="text-sm ml-8">
+                  <span className="text-muted-foreground">
+                    Bạn chưa có ví Mandala Pay.
+                  </span>
+                  {/* Link sẽ mở trang kích hoạt trong một tab mới */}
+                  <Link
+                    href="/mandala-pay"
+                    target="_blank"
+                    className="font-semibold text-primary hover:underline ml-1"
+                    onClick={(e) => e.stopPropagation()} // Ngăn không cho việc click vào link làm chọn radio button
+                  >
+                    Kích hoạt ngay
+                  </Link>
+                </div>
+              )}
             </Label>
             <Label className="flex items-center p-4 border rounded-lg cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:ring-1 has-[:checked]:ring-blue-500">
               <RadioGroupItem value="CreditCard" id="card" className="mr-3" />
@@ -160,9 +216,9 @@ export default function PaymentOptions({
               isPending ||
               checkoutItems.length === 0 ||
               !selectedAddressId ||
-              (paymentMethod === "MandalaPay" && mandalaPayBalance < grandTotal)
+              (paymentMethod === "MandalaPay" && currentBalance < grandTotal)
             }
-            onClick={handlePlaceOrder}
+            onClick={handlePlaceOrderClick}
           >
             {isPending ? (
               <Loader2 className="h-6 w-6 animate-spin" />

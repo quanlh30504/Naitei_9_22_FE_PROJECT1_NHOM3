@@ -10,17 +10,19 @@ import type { AddressType } from "@/types/address";
 import type { PopulatedCartItem } from "@/store/useCartStore";
 import SafeImage from "@/Components/SafeImage";
 import { formatCurrency } from "@/lib/utils";
+import type { UserHeaderData } from "@/lib/actions/user";
 
 interface CheckoutViewProps {
   initialAddresses: AddressType[];
   checkoutItems: PopulatedCartItem[];
-  mandalaPayBalance: number;
+  userData: UserHeaderData | null; 
 }
+
 
 export default function CheckoutView({
   initialAddresses,
   checkoutItems,
-  mandalaPayBalance,
+  userData,
 }: CheckoutViewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -123,8 +125,8 @@ export default function CheckoutView({
         {/* Thanh toán */}
         <div className="lg:col-span-1 sticky top-6">
           <PaymentOptions
-            selectedAddressId={selectedAddress?._id}
-            mandalaPayBalance={mandalaPayBalance}
+            selectedAddressId={selectedAddress?._id.toString()} // Chuyển sang string cho an toàn
+            userData={userData}
             checkoutItems={checkoutItems}
             shippingFee={shippingFee}
           />
