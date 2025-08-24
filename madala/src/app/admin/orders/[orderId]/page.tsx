@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getAdminOrderDetails } from "@/lib/actions/order";
@@ -17,12 +17,13 @@ import {
 } from "@/Components/ui/card";
 import OrderStatusBadge from "@/Components/order/OrderStatusBadge";
 import { Separator } from "@/Components/ui/separator";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Info } from "lucide-react";
 import CancelOrderButton from "@/Components/order/CancelOrderButton";
 import SafeImage from "@/Components/SafeImage";
 import { formatCurrency } from "@/lib/utils";
 import { AdminLayout } from "@/Components/admin/AdminLayout";
-
+import OrderStatusProgress from "@/Components/order/OrderStatusProgress";
+import AdminOrderActions from "@/Components/admin/orders/AdminOrderActions";
 
 export default function AdminOrderDetailPage() {
   const params = useParams();
@@ -33,23 +34,27 @@ export default function AdminOrderDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchOrderDetails = useCallback(async () => {
     if (!orderId) return;
-
-    const fetchOrderDetails = async () => {
-      setIsLoading(true);
-      setError(null);
-      const response = await getAdminOrderDetails(orderId);
-      if (response.success && response.data) {
-        setOrder(response.data);
-      } else {
-        setError(response.message || "Không tìm thấy đơn hàng.");
-      }
-      setIsLoading(false);
-    };
-
-    fetchOrderDetails();
+    setIsLoading(true);
+    setError(null);
+    const response = await getAdminOrderDetails(orderId);
+    if (response.success && response.data) {
+      setOrder(response.data);
+    } else {
+      setError(response.message || "Không tìm thấy đơn hàng.");
+    }
+    setIsLoading(false);
   }, [orderId]);
+
+  useEffect(() => {
+    fetchOrderDetails();
+  }, [fetchOrderDetails]);
+
+  // Hàm callback để cập nhật state sau khi action thành công
+  const handleStatusUpdate = (updatedOrder: IOrder) => {
+    setOrder(updatedOrder);
+  };
 
   if (isLoading) {
     return (
@@ -80,27 +85,67 @@ export default function AdminOrderDetailPage() {
   return (
     <AdminLayout>
       <div>
-        <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="outline"
-            size="icon"
-            asChild
-            className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-black dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700 dark:hover:text-yellow-300"
-          >
-            <Link href="/admin/orders">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div className="flex justify-start gap-5">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white drop-shadow-sm">
-              Chi tiết đơn hàng #{order.orderId}
-            </h1>
-            <div className="flex justify-center content-center"><OrderStatusBadge status={order.status} /></div>
+        <div className="flex items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" asChild>
+              <Link href="/admin/orders">
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">Đơn hàng #{order.orderId}</h1>
+              <p className="text-sm text-muted-foreground">
+                Ngày đặt hàng:{" "}
+                {order.createdAt
+                  ? new Date(order.createdAt).toLocaleString("vi-VN")
+                  : "N/A"}
+              </p>
+            </div>
           </div>
+          <AdminOrderActions
+            order={order}
+            onStatusUpdate={handleStatusUpdate}
+          />
         </div>
-        <p className="text-sm text-muted-foreground mb-8">
-          Ngày đặt hàng: {order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "N/A"}
-        </p>
+
+        {/* 1. HIỂN THỊ TIẾN TRÌNH TRẠNG THÁI TRỰC QUAN */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Tiến trình Đơn hàng</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <OrderStatusProgress status={order.status} />
+          </CardContent>
+        </Card>
+
+        {order.status === "cancelled" && order.cancellationDetails && (
+          <Card className="mb-6 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-500/30">
+            <CardHeader className="flex-row items-center gap-3 space-y-0">
+              <Info className="w-5 h-5 text-red-600" />
+              <CardTitle className="text-base text-red-700 dark:text-red-300">
+                Thông tin Hủy đơn hàng
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm space-y-1 pl-12">
+              <p>
+                <span className="font-semibold">Người hủy:</span>{" "}
+                {order.cancellationDetails.cancelledBy === "USER"
+                  ? "Khách hàng"
+                  : "Quản trị viên"}
+              </p>
+              <p>
+                <span className="font-semibold">Thời gian:</span>{" "}
+                {new Date(order.cancellationDetails.cancelledAt).toLocaleString(
+                  "vi-VN"
+                )}
+              </p>
+              <p>
+                <span className="font-semibold">Lý do:</span>{" "}
+                {order.cancellationDetails.reason}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Các Card thông tin */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -203,15 +248,6 @@ export default function AdminOrderDetailPage() {
               </div>
             </div>
           </CardContent>
-          {order.status === "processing" && order._id ? (
-            <CardFooter className="justify-end">
-              <CancelOrderButton orderId={
-                typeof order._id === 'object' && order._id !== null && 'toString' in order._id
-                  ? order._id.toString()
-                  : String(order._id)
-              } />
-            </CardFooter>
-          ) : null}
         </Card>
       </div>
     </AdminLayout>

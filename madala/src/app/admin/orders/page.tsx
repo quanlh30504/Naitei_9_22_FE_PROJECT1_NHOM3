@@ -5,12 +5,23 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { getAllOrdersPaginated } from "@/lib/actions/order";
 import { IOrder, OrderStatus } from "@/models/Order";
 
-import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
-const OrderTabs = dynamic(() => import('@/Components/order/OrderTabs'), { ssr: false });
-const AdminOrderTable = dynamic(() => import('@/Components/admin/AdminOrderTable'), { ssr: false });
-const PaginationWrapper = dynamic(() => import('@/Components/PaginationWrapper').then(mod => mod.PaginationWrapper), { ssr: false });
+const OrderTabs = dynamic(() => import("@/Components/order/OrderTabs"), {
+  ssr: false,
+});
+const AdminOrderTable = dynamic(
+  () => import("@/Components/admin/orders/AdminOrderTable"),
+  { ssr: false }
+);
+const PaginationWrapper = dynamic(
+  () =>
+    import("@/Components/PaginationWrapper").then(
+      (mod) => mod.PaginationWrapper
+    ),
+  { ssr: false }
+);
 import { Input } from "@/Components/ui/input";
 import { Search, Loader2 } from "lucide-react";
 import { AdminLayout } from "@/Components/admin/AdminLayout";
@@ -35,8 +46,8 @@ function AdminOrdersPageContent() {
     // và searchQuery chưa đồng bộ với searchTerm
     // -> đồng bộ
     if (searchQuery !== searchTerm) {
-        // Nếu URL chưa cập nhật -> đợi
-        return;
+      // Nếu URL chưa cập nhật -> đợi
+      return;
     }
 
     const fetchOrders = async () => {
@@ -59,17 +70,17 @@ function AdminOrdersPageContent() {
     fetchOrders();
   }, [status, page, searchQuery, searchTerm]);
 
-  // useEffect cập nhật URL sau một khoảng trễ 
+  // useEffect cập nhật URL sau một khoảng trễ
   useEffect(() => {
     const handler = setTimeout(() => {
       // Chỉ cập nhật URL nếu giá trị nhập khác với giá trị trên URL
       if (searchTerm !== searchQuery) {
         const params = new URLSearchParams(searchParams);
-        params.set('search', searchTerm);
-        params.set('page', '1'); // Luôn reset về trang 1 khi tìm kiếm
+        params.set("search", searchTerm);
+        params.set("page", "1"); // Luôn reset về trang 1 khi tìm kiếm
         router.push(`${pathname}?${params.toString()}`);
       }
-    }, 200); 
+    }, 200);
 
     return () => {
       clearTimeout(handler);
@@ -80,7 +91,9 @@ function AdminOrdersPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-sm">Quản lý đơn hàng</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-sm">
+            Quản lý đơn hàng
+          </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
             Xem và cập nhật trạng thái các đơn hàng trong hệ thống.
           </p>
@@ -107,7 +120,7 @@ function AdminOrdersPageContent() {
         ) : (
           <>
             <Suspense fallback={<div>Đang tải bảng đơn hàng...</div>}>
-              <AdminOrderTable orders={orders} setOrders={setOrders} />
+              <AdminOrderTable orders={orders} />
             </Suspense>
             <Suspense fallback={<div>Đang tải phân trang...</div>}>
               <PaginationWrapper
@@ -115,7 +128,7 @@ function AdminOrdersPageContent() {
                 totalPages={totalPages}
                 onPageChange={(newPage) => {
                   const params = new URLSearchParams(searchParams);
-                  params.set('page', newPage.toString());
+                  params.set("page", newPage.toString());
                   router.push(`${pathname}?${params.toString()}`);
                 }}
               />
@@ -129,11 +142,13 @@ function AdminOrdersPageContent() {
 
 export default function AdminOrdersPage() {
   return (
-    <Suspense fallback={
-      <div className="flex h-full w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex h-full w-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      }
+    >
       <AdminOrdersPageContent />
     </Suspense>
   );

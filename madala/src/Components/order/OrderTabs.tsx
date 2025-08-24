@@ -6,7 +6,7 @@ import { OrderStatus } from '@/models/Order';
 
 const TABS: { label: string; value?: OrderStatus }[] = [
     { label: "Tất cả đơn", value: undefined },
-    { label: "Chờ thanh toán", value: "pending" },
+    { label: "Chờ xác nhận", value: "pending" },
     { label: "Đang xử lý", value: "processing" },
     { label: "Đang vận chuyển", value: "shipped" },
     { label: "Đã giao", value: "delivered" },
