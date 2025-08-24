@@ -3,6 +3,7 @@ import ActivateWalletFlow from "@/Components/mandala-pay/ActivateWalletFlow";
 import WalletDashboard from "@/Components/mandala-pay/WalletDashboard";
 import { redirect } from 'next/navigation';
 import { auth } from "@/auth";
+import WalletGatekeeper from "@/Components/mandala-pay/WalletGatekeeper";
 
 export default async function MandalaPayPage() {
   const session = await auth();
@@ -16,7 +17,7 @@ export default async function MandalaPayPage() {
   return (
     <>
       {wallet ? (
-        <WalletDashboard walletData={JSON.parse(JSON.stringify(wallet))} />
+        <WalletGatekeeper walletData={JSON.parse(JSON.stringify(wallet))} />
       ) : (
         <div className="flex items-center justify-center min-h-screen bg-muted/40">
           <ActivateWalletFlow />

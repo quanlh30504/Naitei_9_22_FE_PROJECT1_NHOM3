@@ -154,6 +154,12 @@ export async function POST(req: Request) {
   const amountReceived = typeof transactionData?.amount === 'number' ? transactionData.amount : 0;
   const bankTransactionId = (typeof transactionData?.tid === 'string' ? transactionData.tid : undefined)
     || (typeof transactionData?.reference === 'string' ? transactionData.reference : undefined);
+  const transactionDateTime =
+    typeof transactionData?.transactionDate === 'string'
+      ? transactionData.transactionDate
+      : new Date().toISOString();
+
+  // Nếu không có requestCode thì không liên quan đến nạp tiền, bỏ qua
   if (!requestCode) {
     return NextResponse.json({ message: "OK" }, { status: 200 });
   }
