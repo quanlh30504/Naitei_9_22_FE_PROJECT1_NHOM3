@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDB from '@/lib/db';
 import Product from '@/models/Product';
+import { normalizedQuery, prefixRegexNormalized, substringRegexNormalized, rawCaseInsensitiveRegex } from '@/lib/search';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,13 +63,34 @@ export async function GET(request: NextRequest) {
             if (tagArray.length > 0) filter.tags = { $in: tagArray };
         }
 
-        // Xử lý search filter (giữ nguyên logic)
+        // Xử lý search filter: ưu tiên tìm kiếm theo trường đã chuẩn hoá (không dấu)
+        // - Thực hiện prefix search (dùng các trường *_normalized có index)
+        // - Nếu không có kết quả prefix, fallback sang substring search (giữa từ)
         if (search) {
-            filter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
-                { tags: { $in: [new RegExp(search, 'i')] } }
-            ];
+            const raw = String(search);
+
+            const prefixSearchCondition = {
+                $or: [
+                    { name_normalized: { $regex: prefixRegexNormalized(raw) } },
+                    { 'attributes.brand_normalized': { $regex: prefixRegexNormalized(raw) } }
+                ]
+            };
+
+            const fallbackSearchCondition = {
+                $or: [
+                    { name_normalized: { $regex: substringRegexNormalized(raw) } },
+                    { 'attributes.brand_normalized': { $regex: substringRegexNormalized(raw) } },
+                    { name: { $regex: rawCaseInsensitiveRegex(raw) } },
+                    { description: { $regex: rawCaseInsensitiveRegex(raw) } },
+                    { tags: { $in: [rawCaseInsensitiveRegex(raw)] } }
+                ]
+            };
+
+            // Check if prefix search returns any documents with current filters
+            const prefixCombined = Object.keys(filter).length ? { $and: [filter, prefixSearchCondition] } : prefixSearchCondition;
+            const prefixCount = await Product.countDocuments(prefixCombined);
+
+            filter.$and = filter.$and ? [...(filter.$and as any), (prefixCount > 0 ? prefixSearchCondition : fallbackSearchCondition)] : [(prefixCount > 0 ? prefixSearchCondition : fallbackSearchCondition)];
         }
 
         if (isFeatured === 'true') filter.isFeatured = true;

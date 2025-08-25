@@ -18,6 +18,8 @@ import { Product } from '@/types/product';
 import { ICategory } from '@/models/Category';
 import { productService } from '@/services/productService';
 import { categoryService } from '@/services/categoryService';
+import { useFavorite } from '@/hooks/useFavorite';
+import toast from 'react-hot-toast';
 import { SortOption } from './components/SortFilter';
 
 const ProductPage = () => {
@@ -244,8 +246,15 @@ const ProductPage = () => {
     };
 
     // Chức năng yêu thích
-    const handleToggleFavorite = () => {
-        // TODO: Implement favorite functionality
+    // favorite context
+    const { favoriteIds, setFavoriteIds, refreshFavorites, toggleFavorite } = useFavorite();
+
+    const handleToggleFavorite = async (product: Product) => {
+        try {
+            await toggleFavorite(product);
+        } catch (err: any) {
+            toast.error(err?.message || 'Có lỗi xảy ra');
+        }
     };
 
     // Phân trang

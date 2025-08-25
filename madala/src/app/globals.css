@@ -315,3 +315,13 @@
   -webkit-text-security: disc;
   text-security: disc;
 }
+
+/* Simple fade-in animation for suggestions */
+.animate-fade {
+  animation: fadeIn 160ms ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

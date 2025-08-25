@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { normalizeStr } from '@/lib/normalize';
 
 // GET /api/admin/products - Lấy tất cả sản phẩm cho admin (bao gồm cả inactive)
 export async function GET(request: NextRequest) {
@@ -174,11 +175,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create product object
+    // Prepare normalized attributes and create product object
+    const attributes = body.attributes || {};
+    attributes.brand_normalized = normalizeStr(attributes.brand || '');
+
     const newProduct = {
       productId,
       slug,
       name: body.name,
+      name_normalized: normalizeStr(body.name || ''),
       description: body.description || '',
       shortDescription: body.shortDescription || '',
       price: parseInt(body.price),
@@ -188,7 +193,7 @@ export async function POST(request: NextRequest) {
       images: body.images || [],
       categoryIds: Array.isArray(body.categoryIds) ? body.categoryIds : [body.categoryIds],
       tags: body.tags || [],
-      attributes: body.attributes || {},
+      attributes,
       rating: {
         average: 0,
         count: 0,
