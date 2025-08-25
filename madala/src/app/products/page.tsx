@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, cubicBezier } from 'framer-motion';
 import dynamic from 'next/dynamic';
 
 const ProductGrid = dynamic(() => import('@/app/products/components/ProductGrid'));
@@ -14,16 +14,16 @@ const PaginationWrapper = dynamic(() => import('@/Components/PaginationWrapper')
 const ProductCounter = dynamic(() => import('./components/ProductCounter'));
 const SortFilter = dynamic(() => import('./components/SortFilter'));
 
-import { IProduct } from '@/models/Product';
+import { Product } from '@/types/product';
 import { ICategory } from '@/models/Category';
 import { productService } from '@/services/productService';
 import { categoryService } from '@/services/categoryService';
 import { SortOption } from './components/SortFilter';
 
 const ProductPage = () => {
-    const [products, setProducts] = useState<IProduct[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<ICategory[]>([]);
-    const [filteredProducts, setFilteredProducts] = useState<IProduct[]>([]);
+    const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ const ProductPage = () => {
             opacity: 1,
             transition: {
                 duration: 0.6,
-                ease: [0.25, 0.46, 0.45, 0.94],
+                ease: cubicBezier(0.25, 0.46, 0.45, 0.94),
                 staggerChildren: 0.1
             }
         }
@@ -68,7 +68,7 @@ const ProductPage = () => {
     ));
 
     // Hàm sắp xếp sản phẩm
-    const sortProducts = (products: IProduct[], sortOption: SortOption): IProduct[] => {
+    const sortProducts = (products: Product[], sortOption: SortOption): Product[] => {
         const sortedProducts = [...products];
 
         switch (sortOption) {
@@ -135,7 +135,7 @@ const ProductPage = () => {
                 setLoading(true);
                 setError(null);
 
-                let products: IProduct[];
+                let products: Product[];
 
                 // Kiểm tra nếu không có filter nào được chọn
                 if (selectedCategory === '' && selectedTags.length === 0) {
@@ -224,7 +224,7 @@ const ProductPage = () => {
     };
 
     // Chức năng thêm vào giỏ hàng
-    const handleAddToCart = async (product: IProduct) => {
+    const handleAddToCart = async (product: Product) => {
         const { useCartStore } = await import('@/store/useCartStore');
         const { addItemToCart, getCart } = await import('@/lib/actions/cart');
         const { toast } = await import('react-hot-toast');

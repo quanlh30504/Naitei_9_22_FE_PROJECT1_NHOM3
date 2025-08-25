@@ -11,6 +11,7 @@ import SiteHeader from "@/Components/SiteHeader";
 import { getCart } from "@/lib/actions/cart";
 import CartStateSyncer from "@/Components/CartStateSyncer";
 import AblyClientProvider from "@/Components/providers/AblyClientProvider";
+import { FavoriteProvider } from "@/hooks/useFavorite";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -49,13 +50,15 @@ export default async function RootLayout({
           forcedTheme={undefined}
         >
           <AuthProvider>
-            <AblyClientProvider />
-            <BanWatcher />
-            <ToastProvider />
-            <CartStateSyncer serverCart={plainInitialCart} />
-            <ConditionalLayout header={<SiteHeader />} footer={<Footer />}>
-              {children}
-            </ConditionalLayout>
+            <FavoriteProvider>
+              <AblyClientProvider />
+              <BanWatcher />
+              <ToastProvider />
+              <CartStateSyncer serverCart={plainInitialCart} />
+              <ConditionalLayout header={<SiteHeader />} footer={<Footer />}>
+                {children}
+              </ConditionalLayout>
+            </FavoriteProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

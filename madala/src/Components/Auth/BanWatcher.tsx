@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { useEffect, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface SessionUser {
@@ -17,10 +16,10 @@ const BanWatcher = React.memo(function BanWatcher() {
     const { data: session, status, update } = useSession();
     const router = useRouter();
     const pathname = usePathname();
+    const searchParams = useSearchParams();
 
     const user: SessionUser & { error?: string } | undefined = session?.user as SessionUser & { error?: string } | undefined;
 
-    const searchParams = useSearchParams();
 
     const handleBanRedirect = useCallback(() => {
         if (pathname !== "/login" && pathname !== "/banned") {
@@ -34,6 +33,7 @@ const BanWatcher = React.memo(function BanWatcher() {
         localStorage.removeItem("lastPathBeforeBan");
         router.replace(lastPath && lastPath !== "/banned" ? lastPath : "/");
     }, [router]);
+
     useEffect(() => {
         if (status !== "authenticated") return;
         // Nếu có lỗi xác thực thì redirect về /login?error=...

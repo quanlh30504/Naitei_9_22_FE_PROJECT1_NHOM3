@@ -1,12 +1,12 @@
 'use client';
 import React from 'react';
-import { IProduct } from '@/models/Product';
+import { Product } from '@/types/product';
 import ProductListItem from './ProductListItem';
 
 interface ProductListProps {
-  products: IProduct[];
-  onAddToCart?: (product: IProduct) => void;
-  onToggleFavorite?: (product: IProduct) => void;
+  products: Product[];
+  onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (product: Product) => void;
 }
 
 const ProductList: React.FC<ProductListProps> = ({
@@ -18,7 +18,7 @@ const ProductList: React.FC<ProductListProps> = ({
     <div className="space-y-4">
       {products.map((product) => (
         <ProductListItem
-          key={String(product._id) || product.productId || product.id}
+          key={String(product._id) || product.productId}
           product={product}
           onAddToCart={onAddToCart}
           onToggleFavorite={onToggleFavorite}

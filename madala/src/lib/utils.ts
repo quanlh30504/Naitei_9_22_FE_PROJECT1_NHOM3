@@ -42,7 +42,7 @@ export const formatCurrency = (amount: number): string => {
  * @param product - Đối tượng sản phẩm.
  * @returns Một object chứa `hasDiscount` (boolean) và `discountPercent` (number).
  */
-export function getProductDiscount(product: IProduct): { hasDiscount: boolean; discountPercent: number } {
+export function getProductDiscount(product: any): { hasDiscount: boolean; discountPercent: number } {
   // Kiểm tra salePrice có tồn tại và nhỏ hơn giá gốc không
   const hasDiscount = typeof product.salePrice === 'number' && product.salePrice < product.price;
 

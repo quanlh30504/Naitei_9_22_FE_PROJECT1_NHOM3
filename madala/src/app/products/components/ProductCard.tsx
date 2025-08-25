@@ -3,25 +3,30 @@ import React, { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { buyNowAndRedirect } from "@/lib/actions/cart";
 import toast from "react-hot-toast";
-import { IProduct } from "@/models/Product";
+import { Product } from "@/types/product";
+import { useFavorite } from "@/hooks/useFavorite";
 import { Heart, ShoppingCart, Scale } from "lucide-react";
 import { Button } from "@/Components/ui/button";
 import SafeImage from "@/Components/SafeImage";
 import StarRating from "@/Components/products/StarRating";
 import { useCompareStore } from "@/store/useCompareStore";
-import { getProductDiscount } from "@/lib/utils";
 
 interface ProductCardProps {
-  product: IProduct;
-  onAddToCart?: (product: IProduct) => void;
-  onToggleFavorite?: (product: IProduct) => void;
+  product: Product;
+  onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (product: Product) => void;
 }
+
+
+import { getProductDiscount } from "@/lib/utils";
 
 const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onAddToCart,
   onToggleFavorite,
 }) => {
+  const { favoriteIds, refreshFavorites, setFavoriteIds } = useFavorite();
+  const isFavorite = favoriteIds.includes(String(product._id));
   const router = useRouter();
   const { isInCompare, addToCompare, removeFromCompare } = useCompareStore();
   const { hasDiscount, discountPercent } = getProductDiscount(product);
@@ -29,7 +34,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleCompareClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const productId = String(product._id) || product.productId || product.id;
+    const productId = String(product._id) || product.productId;
 
     if (isProductInCompare) {
       // Nếu đã có trong danh sách so sánh, loại bỏ
@@ -69,9 +74,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.035] hover:border-2 hover:border-green-700 dark:hover:border-green-600 border border-transparent transition-all duration-300 overflow-hidden flex flex-col h-full min-h-[400px] cursor-pointer ${
-        isProductInCompare ? "ring-2 ring-[#8ba63a] ring-opacity-50" : ""
-      }`}
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.035] hover:border-2 hover:border-green-700 dark:hover:border-green-600 border border-transparent transition-all duration-300 overflow-hidden flex flex-col h-full min-h-[400px] cursor-pointer ${isProductInCompare ? "ring-2 ring-green-600/50" : ""
+        }`}
       onClick={handleProductClick}
     >
       <div
@@ -100,11 +104,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
           size="icon"
           variant={isProductInCompare ? "default" : "secondary"}
           onClick={handleCompareClick}
-          className={`absolute top-2 right-2 w-10 h-10 rounded-full transition-all duration-300 ${
-            isProductInCompare
-              ? "bg-[#8ba63a] text-white hover:bg-red-500"
-              : "bg-white dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-90 text-gray-600 dark:text-gray-300 hover:bg-[#8ba63a] hover:text-white"
-          }`}
+          className={`absolute top-2 right-2 w-10 h-10 rounded-full transition-all duration-300 ${isProductInCompare
+              ? "bg-green-600 text-white hover:bg-red-500"
+              : "bg-white dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-90 text-gray-600 dark:text-gray-300 hover:bg-green-600 hover:text-white"
+            }`}
           title={
             isProductInCompare
               ? "Bỏ khỏi danh sách so sánh"
@@ -114,8 +117,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <Scale className="w-4 h-4" />
         </Button>
 
+
+        {/* Brand */}
+        <div className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+          {product.attributes?.brand ? product.attributes.brand : 'BRAND'}
+        </div>
         <h3
-          className="font-semibold text-gray-800 dark:text-gray-200 mb-2 line-clamp-2 cursor-pointer hover:text-[#8ba63a] dark:hover:text-[#9CCC65] transition-colors h-12 overflow-hidden leading-5"
+          className="font-semibold text-gray-800 dark:text-gray-200 mb-2 line-clamp-2 cursor-pointer hover:text-green-600 dark:hover:text-lime-400 transition-colors h-12 overflow-hidden leading-5"
           onClick={handleProductClick}
         >
           {product.name}
@@ -132,7 +140,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         <div className="mb-3 flex-1 flex items-start">
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-[#8ba63a] dark:text-[#9CCC65]">
+            <span className="text-lg font-bold text-green-600 dark:text-lime-400">
               {product.salePrice.toLocaleString("vi-VN")}₫
             </span>
             {hasDiscount && (
@@ -157,14 +165,32 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
           <Button
             size="icon"
-            variant="outline"
-            onClick={(e) => {
+            variant={isFavorite ? "default" : "outline"}
+            onClick={async (e) => {
               e.stopPropagation();
-              onToggleFavorite?.(product);
+              try {
+                const method = isFavorite ? 'DELETE' : 'POST';
+                const res = await fetch('/api/users/favorites', {
+                  method,
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ productId: String(product._id) })
+                });
+                const data = await res.json();
+                if (res.ok && Array.isArray(data.favorites)) {
+                  setFavoriteIds(data.favorites);
+                  toast.success(isFavorite ? 'Đã bỏ khỏi yêu thích' : 'Đã thêm vào yêu thích');
+                  refreshFavorites();
+                } else {
+                  toast.error(data.message || 'Có lỗi xảy ra');
+                }
+              } catch (err) {
+                toast.error('Có lỗi xảy ra');
+              }
             }}
-            className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors w-9 h-9"
+            className={`border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors w-9 h-9 flex items-center justify-center ${isFavorite ? 'bg-red-600' : ''}`}
+            title={isFavorite ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích'}
           >
-            <Heart className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors" />
+            <Heart className={`w-5 h-5 transition-colors ${isFavorite ? 'text-white fill-white' : 'text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400'}`} fill={isFavorite ? 'currentColor' : 'none'} />
           </Button>
         </div>
       </div>

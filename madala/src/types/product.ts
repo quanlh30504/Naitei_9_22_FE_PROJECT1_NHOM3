@@ -18,8 +18,6 @@ export interface Product {
     brand?: string;
     type?: string;
     size?: Record<string, string> | string;
-    type?: string;
-    size?: Record<string, string> | string;
     weight?: string;
   };
   rating: {
