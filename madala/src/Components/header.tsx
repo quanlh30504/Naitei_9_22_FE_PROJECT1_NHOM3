@@ -29,11 +29,12 @@ import {
   guestMenuItems,
   navigationItems,
 } from "@/constants/headerLinks";
-import { getUserForHeader, UserHeaderData } from "@/lib/actions/user";
-import { getImageUrl } from "@/lib/getImageUrl";
+import { UserHeaderData } from "@/lib/actions/user";
 import { useCartStore } from "@/store/useCartStore";
 import { ThemeToggle } from "@/Components/ui/ThemeToggle";
 import MandalaPayButton from "@/Components/mandala-pay/shared/MandalaPayButton";
+import NotificationBell from "@/Components/shared/NotificationBell";
+import SafeImage from "./SafeImage";
 
 interface HeaderProps {
   initialUserData: UserHeaderData | null;
@@ -438,6 +439,8 @@ function HeaderComponent({ initialUserData }: HeaderProps) {
                 </span>
               )}
             </Link>
+
+            {session?.user && <NotificationBell size="lg" />}
           </div>
         </div>
       </div>
@@ -565,15 +568,13 @@ function HeaderComponent({ initialUserData }: HeaderProps) {
                       idx === activeIndex ? "bg-gray-100 dark:bg-gray-700" : ""
                     } ${loadingId && loadingId !== sid ? "opacity-60" : ""}`}
                   >
-                    <img
-                      src={((): string => {
-                        const u = getImageUrl(s.image || "");
-                        return u === "/placeholder.svg"
-                          ? "/products/product_placeholder.png"
-                          : u;
-                      })()}
+                    <SafeImage
+                      src={s.image}
+                      fallbackSrc="/products/product_placeholder.png" 
                       alt={s.name}
-                      className="w-9 h-9 object-cover rounded"
+                      width={36} 
+                      height={36} 
+                      className="object-cover rounded"
                     />
                     <div className="flex-1">
                       <div className="font-medium truncate">

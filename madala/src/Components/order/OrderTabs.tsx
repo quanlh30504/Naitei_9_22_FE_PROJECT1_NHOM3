@@ -10,6 +10,7 @@ const TABS: { label: string; value?: OrderStatus }[] = [
     { label: "Đang xử lý", value: "processing" },
     { label: "Đang vận chuyển", value: "shipped" },
     { label: "Đã giao", value: "delivered" },
+    { label: "Hoàn thành", value: "completed" },
     { label: "Đã hủy", value: "cancelled" },
 ];
 

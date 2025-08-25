@@ -34,25 +34,24 @@ export default function CartView({ initialAddresses }: CartViewProps) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    const { items, selectedItemIds, toggleItemSelected } = useCartStore();
+    const { items, selectedItemIds, selectItemsByIds } = useCartStore(); 
 
     useEffect(() => {
-        const selectItemId = searchParams.get('selectItemId');
+        // Lấy các ID từ URL
+        const selectedFromUrl = searchParams.get('selected');
         
-        if (selectItemId) {
-            const itemExists = items.some(item => item._id === selectItemId);
-            const isAlreadySelected = selectedItemIds.includes(selectItemId);
+        if (selectedFromUrl) {
+            const idsToSelect = selectedFromUrl.split(',');
+            
+            // Gọi action từ store để chọn tất cả các item này
+            selectItemsByIds(idsToSelect);
 
-            if (itemExists && !isAlreadySelected) {
-                toggleItemSelected(selectItemId);
-            }
-
-            // Xóa param khỏi URL sau khi xử lý
+            // Xóa param khỏi URL sau khi xử lý để tránh chọn lại khi reload
             const newParams = new URLSearchParams(searchParams.toString());
-            newParams.delete('selectItemId');
+            newParams.delete('selected');
             router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
         }
-    }, [items, searchParams, selectedItemIds, pathname, router, toggleItemSelected]);
+    }, [searchParams, selectItemsByIds, pathname, router]);
 
 
     const handleAddressSelect = (address: AddressType) => {

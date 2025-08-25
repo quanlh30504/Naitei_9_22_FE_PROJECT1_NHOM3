@@ -40,6 +40,7 @@ interface CartState {
   clearOrderedItems: (orderedItemIds: string[]) => void;
   toggleItemSelected: (cartItemId: string) => void;
   toggleSelectAll: () => void;
+  selectItemsByIds: (ids: string[]) => void; 
 }
 
 // --- Store Creator (Đã xác thực) ---
@@ -137,6 +138,12 @@ const cartStateCreator: StateCreator<CartState> = (set, get) => ({
         ? []
         : state.items.map((item) => item._id),
     }));
+  },
+  
+  selectItemsByIds: (idsToSelect) => {
+    const currentSelected = new Set(get().selectedItemIds);
+    idsToSelect.forEach(id => currentSelected.add(id));
+    set({ selectedItemIds: Array.from(currentSelected) });
   },
 });
 
