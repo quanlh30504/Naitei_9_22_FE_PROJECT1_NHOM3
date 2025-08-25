@@ -1,10 +1,10 @@
 import { create } from "zustand";
-import { INotification } from "@/models/Notification"; // Sửa lại đường dẫn nếu cần
+import { INotification } from "@/models/Notification"; 
 import {
   getNotificationsForCurrentUser,
   markNotificationsAsRead,
-  markNotificationAsRead, // 1. Import action đúng
-} from "@/lib/actions/notification"; // Sửa lại đường dẫn nếu cần
+  markNotificationAsRead,
+} from "@/lib/actions/notification"; 
 import toast from "react-hot-toast";
 
 interface NotificationState {
@@ -77,7 +77,6 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         unreadCount: Math.max(0, state.unreadCount - 1),
       }));
 
-      // 2. GỌI ĐÚNG SERVER ACTION
       markNotificationAsRead(notificationId).catch((err) => {
         console.error("Failed to mark notification as read on server:", err);
       });

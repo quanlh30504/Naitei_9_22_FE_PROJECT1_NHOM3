@@ -1,27 +1,28 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useState } from "react";
 import { IOrder } from "@/models/Order";
 import { Button } from "@/Components/ui/button";
 import { Card, CardContent } from "@/Components/ui/card";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 import { confirmDelivery } from "@/lib/actions/order";
-import CancelOrderDialog from './CancelOrderDialog';
+import CancelOrderDialog from "./CancelOrderDialog";
+import BuyAgainModal from "./BuyAgainModal";
 
 interface UserOrderActionsProps {
   order: IOrder;
   onOrderUpdate: (updatedOrder: IOrder) => void;
-    reviewButtonSlot?: React.ReactNode; // "Slot" cho button đánh giá
-
+  reviewButtonSlot?: React.ReactNode; // "Slot" cho button đánh giá
 }
 
 export default function UserOrderActions({
   order,
   onOrderUpdate,
-  reviewButtonSlot
+  reviewButtonSlot,
 }: UserOrderActionsProps) {
   const [isPending, startTransition] = useTransition();
+  const [isBuyAgainModalOpen, setIsBuyAgainModalOpen] = useState(false);
 
   const handleAction = (action: Function) => {
     startTransition(async () => {
@@ -34,7 +35,6 @@ export default function UserOrderActions({
       }
     });
   };
-
 
   // Button cho hành động chính (có màu nền)
   const PrimaryButton = ({
@@ -97,9 +97,11 @@ export default function UserOrderActions({
           </div>
         );
       case "completed":
-         return (
+        return (
           <div className={actionListClasses}>
-            <PrimaryButton>Mua lại</PrimaryButton>
+            <PrimaryButton onClick={() => setIsBuyAgainModalOpen(true)}>
+              Mua lại
+            </PrimaryButton>
             {reviewButtonSlot}
           </div>
         );
@@ -107,10 +109,12 @@ export default function UserOrderActions({
       case "returned":
         return (
           <div className={actionListClasses}>
-            <PrimaryButton>Mua lại</PrimaryButton>
+            <PrimaryButton onClick={() => setIsBuyAgainModalOpen(true)}>
+              Mua lại
+            </PrimaryButton>
           </div>
         );
-      default: 
+      default:
         return (
           <div className={actionListClasses}>
             <PrimaryButton asChild>
@@ -122,10 +126,18 @@ export default function UserOrderActions({
   };
 
   return (
-    <Card className="mt-6 bg-transparent border-none shadow-none">
-      <CardContent className="p-0 flex justify-end">
-        {renderActions()}
-      </CardContent>
-    </Card>
+    <>
+      <Card className="mt-6 bg-transparent border-none shadow-none">
+        <CardContent className="p-0 flex justify-end">
+          {renderActions()}
+        </CardContent>
+      </Card>
+
+      <BuyAgainModal
+        isOpen={isBuyAgainModalOpen}
+        onClose={() => setIsBuyAgainModalOpen(false)}
+        order={order}
+      />
+    </>
   );
 }

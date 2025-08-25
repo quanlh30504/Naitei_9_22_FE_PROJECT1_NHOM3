@@ -11,6 +11,7 @@ interface SafeImageProps {
     alt: string;
     className?: string;
     fallbackClassName?: string;
+    fallbackSrc?: string; // Thêm prop fallbackSrc
     priority?: boolean;
     fill?: boolean;
     width?: number;
@@ -22,6 +23,7 @@ const SafeImage = React.memo(function SafeImage({
     alt,
     className = '',
     fallbackClassName = '',
+    fallbackSrc = '/placeholder.svg', // Thêm prop fallbackSrc với giá trị mặc định
     priority = false,
     fill = false,
     width,
