@@ -10,6 +10,17 @@ import { confirmDelivery } from "@/lib/actions/order";
 import CancelOrderDialog from "./CancelOrderDialog";
 import BuyAgainModal from "./BuyAgainModal";
 
+//  Thêm định nghĩa kiểu cho Tawk_API
+// Điều này giúp TypeScript hiểu được Tawk_API tồn tại trên đối tượng window
+declare global {
+  interface Window {
+    Tawk_API?: {
+      maximize: () => void;
+      // Thêm các hàm khác nếu bạn cần sử dụng trong tương lai
+    };
+  }
+}
+
 interface UserOrderActionsProps {
   order: IOrder;
   onOrderUpdate: (updatedOrder: IOrder) => void;
@@ -23,6 +34,18 @@ export default function UserOrderActions({
 }: UserOrderActionsProps) {
   const [isPending, startTransition] = useTransition();
   const [isBuyAgainModalOpen, setIsBuyAgainModalOpen] = useState(false);
+
+  const handleContactClick = () => {
+    // Kiểm tra xem Tawk_API đã được tải và sẵn sàng chưa
+    if (window.Tawk_API && typeof window.Tawk_API.maximize === "function") {
+      // Gọi hàm maximize() để mở to cửa sổ chat
+      window.Tawk_API.maximize();
+    } else {
+      // Fallback trong trường hợp script chưa tải xong hoặc bị chặn
+      toast.error("Không thể mở cửa sổ chat lúc này. Vui lòng thử lại sau.");
+      console.error("Tawk.to API is not available or hasn't loaded yet.");
+    }
+  };
 
   const handleAction = (action: Function) => {
     startTransition(async () => {
@@ -64,8 +87,8 @@ export default function UserOrderActions({
         return (
           <div className={actionListClasses}>
             <CancelOrderDialog order={order} onOrderUpdate={onOrderUpdate} />
-            <SecondaryButton asChild>
-              <Link href="/lien-he">Liên hệ Người bán</Link>
+            <SecondaryButton onClick={handleContactClick}>
+              Liên hệ Người bán
             </SecondaryButton>
           </div>
         );
@@ -78,8 +101,8 @@ export default function UserOrderActions({
                 Theo dõi đơn hàng
               </Link>
             </PrimaryButton>
-            <SecondaryButton asChild>
-              <Link href="/lien-he">Liên hệ Người bán</Link>
+            <SecondaryButton onClick={handleContactClick}>
+              Liên hệ Người bán
             </SecondaryButton>
           </div>
         );
@@ -117,8 +140,8 @@ export default function UserOrderActions({
       default:
         return (
           <div className={actionListClasses}>
-            <PrimaryButton asChild>
-              <Link href="/lien-he">Liên hệ Người bán</Link>
+            <PrimaryButton onClick={handleContactClick}>
+              Liên hệ Người bán
             </PrimaryButton>
           </div>
         );

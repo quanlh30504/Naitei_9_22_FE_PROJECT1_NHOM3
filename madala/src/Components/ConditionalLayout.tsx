@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import React from "react";
 import BottomNavBar from "@/Components/mandala-pay/shared/BottomNavBar";
-
+import TawkToChat from "@/Components/chat/TawkToChat";
 interface ConditionalLayoutProps {
   children: React.ReactNode;
   header: React.ReactNode; // Nhận Header từ props
@@ -40,6 +40,7 @@ export function ConditionalLayout({
       {header}
       <main className="min-h-screen">{children}</main>
       {footer}
+      <TawkToChat />
     </>
   );
 }

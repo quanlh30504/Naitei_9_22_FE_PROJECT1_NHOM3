@@ -12,6 +12,7 @@ import { getCart } from "@/lib/actions/cart";
 import CartStateSyncer from "@/Components/CartStateSyncer";
 import AblyClientProvider from "@/Components/providers/AblyClientProvider";
 import { FavoriteProvider } from "@/hooks/useFavorite";
+import TawkToChat from "@/Components/chat/TawkToChat";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -37,9 +38,7 @@ export default async function RootLayout({
     : null;
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} antialiased font-sans`}
-      >
+      <body className={`${inter.variable} antialiased font-sans`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

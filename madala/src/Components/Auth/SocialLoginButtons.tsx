@@ -12,7 +12,6 @@ type SocialProvider = 'google' | 'github';
 const SocialLoginButtons = React.memo(function SocialLoginButtons() {
     // Sử dụng kiểu dữ liệu đã định nghĩa để hàm trở nên linh hoạt hơn
     const handleSocialLogin = useCallback(async (provider: SocialProvider) => {
-        // Luôn yêu cầu người dùng chọn tài khoản để tránh tự động đăng nhập lại
         await signIn(provider, { callbackUrl: "/" }, { prompt: "select_account" });
     }, []);
 
